@@ -31,6 +31,7 @@
     "loadBooks": "Не удалось загрузить книги",
     "loadBook": "Не удалось загрузить книгу",
     "loadReviews": "Не удалось загрузить отзывы",
+    "submitReview": "Не удалось отправить отзыв",
     "fetchCategory": "Не удалось получить категорию",
     "categoryNotFound": "Категория не найдена",
     "bookNotFound": "Книга не найдена"
@@ -70,7 +71,8 @@
     "collapse": "Свернуть",
     "expand": "Показать больше",
     "confirm": "Оформить",
-    "showMore": "Показать ещё"
+    "showMore": "Показать ещё",
+    "cancel": "Отмена"
   },
   "book": {
     "cardAria": "Книга {{title}}",
@@ -137,7 +139,24 @@
     "emptyTitle": "Пока нет отзывов",
     "emptyDescription": "Будьте первым, кто поделится впечатлениями",
     "rating": "Оценка {{value}}",
-    "loadMore": "Показать ещё"
+    "loadMore": "Показать ещё",
+    "addButton": "Написать отзыв",
+    "form": {
+      "title": "Поделитесь впечатлениями",
+      "nameLabel": "Имя",
+      "namePlaceholder": "Как вас представить?",
+      "defaultName": "Читатель",
+      "ratingLabel": "Оценка",
+      "ratingOption": "{{value}} из 5",
+      "textLabel": "Отзыв",
+      "textPlaceholder": "Расскажите, что вам понравилось",
+      "submit": "Отправить отзыв",
+      "validation": "Заполните имя и текст отзыва"
+    },
+    "toast": {
+      "success": "Отзыв добавлен",
+      "error": "Не удалось отправить отзыв"
+    }
   },
   "similar": {
     "empty": "Пока нечего посоветовать",

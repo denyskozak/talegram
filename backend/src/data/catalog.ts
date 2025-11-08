@@ -322,6 +322,31 @@ export function listReviews(
   return { items: slice, nextCursor };
 }
 
+export function createReview(
+  bookId: ID,
+  params: { authorName: string; rating: number; text: string },
+): Review {
+  const book = books.find((entry) => entry.id === bookId);
+  if (!book) {
+    throw new Error('Book not found');
+  }
+
+  const normalizedRating = Math.max(1, Math.min(5, Math.round(params.rating)));
+  const review: Review = {
+    id: randomUUID(),
+    bookId,
+    authorName: params.authorName,
+    rating: normalizedRating,
+    text: params.text,
+    createdAt: new Date().toISOString(),
+  };
+
+  reviews.unshift(review);
+  book.reviewsCount += 1;
+
+  return review;
+}
+
 export function listCategoryTags(categoryId: ID, limit = 9): string[] {
   const relatedBooks = books.filter((book) => book.categories.includes(categoryId));
   const tagFrequency = new Map<string, number>();

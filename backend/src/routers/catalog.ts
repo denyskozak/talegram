@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import {
+  createReview,
   getBook,
   listBooks,
   listCategories,
@@ -37,6 +38,13 @@ const listCategoryTagsInput = z.object({
   limit: z.number().int().min(1).max(20).optional(),
 });
 
+const createReviewInput = z.object({
+  bookId: z.string().trim().min(1),
+  authorName: z.string().trim().min(1).max(128),
+  rating: z.number().int().min(1).max(5),
+  text: z.string().trim().min(1).max(2048),
+});
+
 export const catalogRouter = createRouter({
   listCategories: procedure
     .input(listCategoriesInput.optional())
@@ -56,4 +64,16 @@ export const catalogRouter = createRouter({
   listCategoryTags: procedure
     .input(listCategoryTagsInput)
     .query(({ input }) => listCategoryTags(input.categoryId, input.limit)),
+  createReview: procedure.input(createReviewInput).mutation(({ input }) => {
+    const book = getBook(input.bookId);
+    if (!book) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
+    }
+
+    return createReview(input.bookId, {
+      authorName: input.authorName,
+      rating: input.rating,
+      text: input.text,
+    });
+  }),
 });

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Title } from "@telegram-apps/telegram-ui";
@@ -29,15 +29,11 @@ export default function CategoryBooks(): JSX.Element {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<BookSort>("popular");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   const debouncedSearch = useDebouncedValue(search, 250);
 
   useScrollRestoration(`category-${id ?? "unknown"}`);
 
-  const language = i18n.language;
-  const availableTags = useMemo(
-    () => (id ? getCategoryTags(id, language) : []),
-    [id, language],
-  );
   const cursorRef = useRef<string | undefined>();
 
   const loadCategory = useCallback(async () => {
@@ -86,6 +82,35 @@ export default function CategoryBooks(): JSX.Element {
   useEffect(() => {
     cursorRef.current = cursor;
   }, [cursor]);
+
+  useEffect(() => {
+    if (!id) {
+      setAvailableTags([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadTags = async () => {
+      try {
+        const tags = await getCategoryTags(id, 9);
+        if (!cancelled) {
+          setAvailableTags(tags);
+        }
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) {
+          setAvailableTags([]);
+        }
+      }
+    };
+
+    void loadTags();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, i18n.language]);
 
   useEffect(() => {
     void loadCategory();
