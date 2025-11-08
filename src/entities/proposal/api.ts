@@ -4,7 +4,7 @@ import type {
   SubmitProposalVoteResult,
 } from './types';
 import { arrayBufferToBase64 } from '@/shared/lib/base64';
-import { callTrpcProcedure } from '@/shared/api/trpc';
+import { trpc } from '@/shared/api/trpc';
 
 export type SubmitProposalPayload = {
   title: string;
@@ -22,7 +22,7 @@ export async function submitBookProposal(
   const coverBuffer = await payload.coverFile.arrayBuffer();
   const coverBase64 = await arrayBufferToBase64(coverBuffer);
 
-  return callTrpcProcedure<BookProposal>('proposals.create', {
+  return trpc.mutation('proposals.create', {
     title: payload.title,
     author: payload.author,
     description: payload.description,
@@ -44,7 +44,7 @@ export async function submitBookProposal(
 export async function fetchProposalsForVoting(
   telegramUserId: string,
 ): Promise<ProposalVotingListResponse> {
-  return callTrpcProcedure<ProposalVotingListResponse>('proposals.listForVoting', {
+  return trpc.query('proposals.listForVoting', {
     telegramUserId,
   });
 }
@@ -58,5 +58,5 @@ export type SubmitProposalVotePayload = {
 export async function submitProposalVote(
   payload: SubmitProposalVotePayload,
 ): Promise<SubmitProposalVoteResult> {
-  return callTrpcProcedure<SubmitProposalVoteResult>('proposals.vote', payload);
+  return trpc.mutation('proposals.vote', payload);
 }

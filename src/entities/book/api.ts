@@ -1,5 +1,5 @@
 import type { Category } from "@/entities/category/types";
-import { callTrpcProcedure } from "@/shared/api/trpc";
+import { trpc } from "@/shared/api/trpc";
 
 import type { Book, CatalogApi, ID, Review } from "./types";
 
@@ -31,27 +31,30 @@ type CreateReviewPayload = {
 
 export const catalogApi: CatalogApi = {
   listCategories(query) {
-    return callTrpcProcedure<Category[]>("catalog.listCategories", query satisfies ListCategoriesPayload);
+    return trpc.query("catalog.listCategories", query satisfies ListCategoriesPayload);
   },
   listBooks(params) {
-    return callTrpcProcedure<{ items: Book[]; nextCursor?: string }>("catalog.listBooks", params satisfies ListBooksPayload);
+    return trpc.query(
+      "catalog.listBooks",
+      params satisfies ListBooksPayload,
+    );
   },
   getBook(id) {
-    return callTrpcProcedure<Book>("catalog.getBook", { id });
+    return trpc.query("catalog.getBook", { id });
   },
   listReviews(bookId, cursor, limit) {
-    return callTrpcProcedure<{ items: Review[]; nextCursor?: string }>("catalog.listReviews", {
+    return trpc.query("catalog.listReviews", {
       bookId,
       cursor,
       limit,
     } satisfies ListReviewsPayload);
   },
   createReview(payload) {
-    return callTrpcProcedure<Review>("catalog.createReview", payload satisfies CreateReviewPayload);
+    return trpc.mutation("catalog.createReview", payload satisfies CreateReviewPayload);
   },
 };
 
 export function getCategoryTags(categoryId: ID, limit?: number): Promise<string[]> {
-  return callTrpcProcedure<string[]>("catalog.listCategoryTags", { categoryId, limit });
+  return trpc.query("catalog.listCategoryTags", { categoryId, limit });
 }
 
