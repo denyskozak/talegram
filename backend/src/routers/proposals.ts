@@ -10,6 +10,7 @@ import {
 } from '../utils/telegram.js';
 
 const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 
 const createProposalInput = z.object({
   title: z.string().min(1).max(512),
@@ -19,6 +20,12 @@ const createProposalInput = z.object({
     name: z.string().min(1).max(512),
     mimeType: z.string().min(1).max(128).optional(),
     size: z.number().int().nonnegative().max(MAX_FILE_SIZE_BYTES).optional(),
+    content: z.string().min(1),
+  }),
+  cover: z.object({
+    name: z.string().min(1).max(512),
+    mimeType: z.string().min(1).max(128).optional(),
+    size: z.number().int().nonnegative().max(MAX_COVER_FILE_SIZE_BYTES).optional(),
     content: z.string().min(1),
   }),
 });
@@ -36,6 +43,7 @@ const voteOnProposalInput = z.object({
 export const proposalsRouter = createRouter({
   create: procedure.input(createProposalInput).mutation(async ({ input }) => {
     const fileBuffer = Buffer.from(input.file.content, 'base64');
+    const coverBuffer = Buffer.from(input.cover.content, 'base64');
 
     if (input.file.size && input.file.size > MAX_FILE_SIZE_BYTES) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'File size exceeds the allowed limit' });
@@ -49,10 +57,28 @@ export const proposalsRouter = createRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'File size exceeds the allowed limit' });
     }
 
+    if (input.cover.size && input.cover.size > MAX_COVER_FILE_SIZE_BYTES) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
+    }
+
+    if (coverBuffer.byteLength === 0) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Uploaded cover is empty' });
+    }
+
+    if (coverBuffer.byteLength > MAX_COVER_FILE_SIZE_BYTES) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
+    }
+
     const uploadResult = await uploadToTonStorage({
       data: fileBuffer,
       fileName: input.file.name,
       contentType: input.file.mimeType,
+    });
+
+    const coverUploadResult = await uploadToTonStorage({
+      data: coverBuffer,
+      fileName: input.cover.name,
+      contentType: input.cover.mimeType,
     });
 
     const proposal = await prisma.bookProposal.create({
@@ -62,6 +88,11 @@ export const proposalsRouter = createRouter({
         description: input.description,
         tonStorageKey: uploadResult.key,
         tonStorageUrl: uploadResult.url,
+        coverTonStorageKey: coverUploadResult.key,
+        coverTonStorageUrl: coverUploadResult.url,
+        coverMimeType: coverUploadResult.mimeType,
+        coverFileName: input.cover.name,
+        coverFileSize: coverUploadResult.size,
         fileName: input.file.name,
         fileSize: uploadResult.size,
         mimeType: uploadResult.mimeType,
@@ -114,7 +145,7 @@ export const proposalsRouter = createRouter({
 
     const allowedVotersCount = getAllowedTelegramVoterIds().length;
 
-    const result = await prisma.$transaction(async (tx: typeof prisma) => {
+    const result = await prisma.$transaction(async (tx) => {
       const proposal = await tx.bookProposal.findUnique({ where: { id: input.proposalId } });
       if (!proposal) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
@@ -162,6 +193,11 @@ export const proposalsRouter = createRouter({
             description: proposal.description,
             tonStorageKey: proposal.tonStorageKey,
             tonStorageUrl: proposal.tonStorageUrl,
+            coverTonStorageKey: proposal.coverTonStorageKey ?? undefined,
+            coverTonStorageUrl: proposal.coverTonStorageUrl ?? undefined,
+            coverMimeType: proposal.coverMimeType ?? undefined,
+            coverFileName: proposal.coverFileName ?? undefined,
+            coverFileSize: proposal.coverFileSize ?? undefined,
             mimeType: proposal.mimeType,
             fileName: proposal.fileName,
             fileSize: proposal.fileSize,

@@ -7,6 +7,11 @@ export type BookProposal = {
   description: string;
   tonStorageKey: string;
   tonStorageUrl: string;
+  coverTonStorageKey?: string | null;
+  coverTonStorageUrl?: string | null;
+  coverMimeType?: string | null;
+  coverFileName?: string | null;
+  coverFileSize?: number | null;
   mimeType?: string | null;
   fileName: string;
   fileSize?: number | null;

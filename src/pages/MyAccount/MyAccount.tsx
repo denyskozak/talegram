@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-import { Button, Card, Chip, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
+import { Button, Card, Chip, Modal, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/app/providers/ThemeProvider";
@@ -24,6 +24,8 @@ import type { ProposalForVoting } from "@/entities/proposal/types";
 const BOOK_SECTION = "myBooks" as const;
 const PUBLISH_SECTION = "publish" as const;
 const VOTE_SECTION = "voting" as const;
+
+const HARDCODED_ALLOWED_VOTER_IDS = ["1001", "1002", "1003"] as const;
 
 const mockBooks = [
   {
@@ -65,7 +67,11 @@ type PublishFormState = {
   description: string;
   fileName: string;
   file: File | null;
+  coverFileName: string;
+  coverFile: File | null;
 };
+
+type PublishResultState = { status: "success"; title: string } | { status: "error" };
 
 const createInitialFormState = (): PublishFormState => ({
   title: "",
@@ -73,6 +79,8 @@ const createInitialFormState = (): PublishFormState => ({
   description: "",
   fileName: "",
   file: null,
+  coverFileName: "",
+  coverFile: null,
 });
 
 export default function MyAccount(): JSX.Element {
@@ -84,17 +92,22 @@ export default function MyAccount(): JSX.Element {
   const [formState, setFormState] = useState<PublishFormState>(() => createInitialFormState());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [publishResult, setPublishResult] = useState<PublishResultState | null>(null);
   const allowedVoterIds = useMemo(() => {
+    const hardcoded = new Set<string>(HARDCODED_ALLOWED_VOTER_IDS);
     const raw = import.meta.env.VITE_ALLOWED_TELEGRAM_IDS;
     if (!raw) {
-      return new Set<string>();
+      return hardcoded;
     }
-    return new Set(
-      raw
-        .split(',')
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0),
-    );
+
+    raw
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0)
+      .forEach((id) => hardcoded.add(id));
+
+    return hardcoded;
   }, []);
   const fallbackTelegramId = import.meta.env.VITE_MOCK_TELEGRAM_ID;
   const telegramUserId = useMemo(() => {
@@ -142,6 +155,15 @@ export default function MyAccount(): JSX.Element {
       ...prev,
       fileName: file ? file.name : "",
       file: file ?? null,
+    }));
+  };
+
+  const handleCoverSelect = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    setFormState((prev) => ({
+      ...prev,
+      coverFileName: file ? file.name : "",
+      coverFile: file ?? null,
     }));
   };
 
@@ -236,6 +258,19 @@ export default function MyAccount(): JSX.Element {
     void loadVotingProposals();
   }, [loadVotingProposals]);
 
+  const handlePublishModalClose = useCallback(() => {
+    setPublishResult(null);
+  }, []);
+
+  const handlePublishModalOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        handlePublishModalClose();
+      }
+    },
+    [handlePublishModalClose],
+  );
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting) {
@@ -247,6 +282,11 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
+    if (!formState.coverFile) {
+      showToast(t("account.publish.toastMissingCover"));
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       await submitBookProposal({
@@ -254,17 +294,21 @@ export default function MyAccount(): JSX.Element {
         author: formState.author,
         description: formState.description,
         file: formState.file,
+        coverFile: formState.coverFile,
       });
 
       const title = formState.title || t("account.publish.toastFallbackTitle");
-      showToast(t("account.publish.toastSuccess", { title }));
+      setPublishResult({ status: "success", title });
       setFormState(createInitialFormState());
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+      if (coverInputRef.current) {
+        coverInputRef.current.value = "";
+      }
     } catch (error) {
       console.error("Failed to submit book proposal", error);
-      showToast(t("account.publish.toastError"));
+      setPublishResult({ status: "error" });
     } finally {
       setIsSubmitting(false);
     }
@@ -413,6 +457,29 @@ export default function MyAccount(): JSX.Element {
                 />
               </label>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text weight="2">{t("account.publish.form.cover.label")}</Text>
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverSelect}
+                  style={{ display: "none" }}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <Button
+                    type="button"
+                    mode="outline"
+                    size="s"
+                    onClick={() => coverInputRef.current?.click()}
+                  >
+                    {t("account.publish.form.cover.cta")}
+                  </Button>
+                  <Text style={{ color: theme.subtitle }}>
+                    {formState.coverFileName || t("account.publish.form.cover.placeholder")}
+                  </Text>
+                </div>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Text weight="2">{t("account.publish.form.file.label")}</Text>
                 <input
                   ref={fileInputRef}
@@ -435,7 +502,7 @@ export default function MyAccount(): JSX.Element {
                 mode="filled"
                 size="m"
                 loading={isSubmitting}
-                disabled={!formState.file}
+                disabled={!formState.file || !formState.coverFile}
               >
                 {t("account.publish.form.submit")}
               </Button>
@@ -536,6 +603,27 @@ export default function MyAccount(): JSX.Element {
           )}
         </section>
       )}
+      <Modal open={publishResult !== null} onOpenChange={handlePublishModalOpenChange}>
+        {publishResult && (
+          <>
+            <Modal.Header>
+              {publishResult.status === "success"
+                ? t("account.publish.modal.successTitle")
+                : t("account.publish.modal.errorTitle")}
+            </Modal.Header>
+            <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+              <Text style={{ color: theme.text }}>
+                {publishResult.status === "success"
+                  ? t("account.publish.modal.successDescription", { title: publishResult.title })
+                  : t("account.publish.modal.errorDescription")}
+              </Text>
+              <Button mode="filled" size="m" onClick={handlePublishModalClose}>
+                {t("account.publish.modal.close")}
+              </Button>
+            </div>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
