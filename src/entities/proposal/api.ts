@@ -48,6 +48,7 @@ export type SubmitProposalPayload = {
   author: string;
   description: string;
   file: File;
+  coverFile: File;
 };
 
 export async function submitBookProposal(
@@ -55,6 +56,8 @@ export async function submitBookProposal(
 ): Promise<BookProposal> {
   const fileBuffer = await payload.file.arrayBuffer();
   const base64 = await arrayBufferToBase64(fileBuffer);
+  const coverBuffer = await payload.coverFile.arrayBuffer();
+  const coverBase64 = await arrayBufferToBase64(coverBuffer);
 
   return callTrpcProcedure<BookProposal>('proposals.create', {
     title: payload.title,
@@ -65,6 +68,12 @@ export async function submitBookProposal(
       mimeType: payload.file.type || undefined,
       size: payload.file.size,
       content: base64,
+    },
+    cover: {
+      name: payload.coverFile.name,
+      mimeType: payload.coverFile.type || undefined,
+      size: payload.coverFile.size,
+      content: coverBase64,
     },
   });
 }

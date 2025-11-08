@@ -1,10 +1,15 @@
 import { TRPCError } from '@trpc/server';
 
+const DEFAULT_ALLOWED_TELEGRAM_IDS = ['1001', '1002', '1003'];
+
 const allowedTelegramIds = new Set(
-  (process.env.ALLOWED_TELEGRAM_IDS ?? '')
-    .split(',')
-    .map((id) => id.trim())
-    .filter((id) => id.length > 0),
+  [
+    ...DEFAULT_ALLOWED_TELEGRAM_IDS,
+    ...(process.env.ALLOWED_TELEGRAM_IDS ?? '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0),
+  ],
 );
 
 export function getAllowedTelegramVoterIds(): readonly string[] {
