@@ -97,6 +97,10 @@ export default function BookPage(): JSX.Element {
     setIsReading(false);
   }, []);
 
+  const handleReviewCreated = useCallback(() => {
+    setBook((prev) => (prev ? { ...prev, reviewsCount: prev.reviewsCount + 1 } : prev));
+  }, []);
+
   const handleDownload = useCallback(() => {
     if (!id) {
       return;
@@ -322,7 +326,7 @@ export default function BookPage(): JSX.Element {
                 <Title level="2" weight="2">
                   {t("book.reviewsSection")}
                 </Title>
-                <ReviewsList api={catalogApi} bookId={book.id} />
+                <ReviewsList api={catalogApi} bookId={book.id} onReviewCreated={handleReviewCreated} />
               </section>
               <section
                 aria-label={t("book.similarSection")}

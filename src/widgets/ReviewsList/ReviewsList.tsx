@@ -1,10 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 
-import { Avatar, Button, Card, Text, Title } from "@telegram-apps/telegram-ui";
+import { Avatar, Button, Card, Input, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
+import { useTMA } from "@/app/providers/TMAProvider";
 import type { CatalogApi, ID, Review } from "@/entities/book/types";
 import { formatRating } from "@/shared/lib/rating";
+import { useToast } from "@/shared/ui/ToastProvider";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { ReviewSkeleton } from "@/shared/ui/Skeletons";
@@ -12,24 +21,66 @@ import { ReviewSkeleton } from "@/shared/ui/Skeletons";
 interface ReviewsListProps {
   api: CatalogApi;
   bookId: ID;
+  onReviewCreated?: (review: Review) => void;
 }
 
-export function ReviewsList({ api, bookId }: ReviewsListProps): JSX.Element {
+export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps): JSX.Element {
   const [items, setItems] = useState<Review[]>([]);
-  const [cursor, setCursor] = useState<string | undefined>();
+  const [cursorState, setCursorState] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { t, i18n } = useTranslation();
+  const { launchParams } = useTMA();
+  const { showToast } = useToast();
+  const cursorRef = useRef<string | undefined>();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [authorName, setAuthorName] = useState("");
+  const [rating, setRating] = useState(5);
+  const [text, setText] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const hasMore = useMemo(() => Boolean(cursor), [cursor]);
+  const hasMore = useMemo(() => Boolean(cursorState), [cursorState]);
+
+  const defaultAuthorName = useMemo(() => {
+    const user = (launchParams?.initData as {
+      user?: { first_name?: string; last_name?: string };
+    } | undefined)?.user;
+    const firstName = user?.first_name?.trim();
+    const lastName = user?.last_name?.trim();
+
+    if (firstName && lastName) {
+      return `${firstName} ${lastName}`.trim();
+    }
+
+    if (firstName) {
+      return firstName;
+    }
+
+    return t("reviews.form.defaultName");
+  }, [launchParams, t]);
+
+  useEffect(() => {
+    setAuthorName((current) => (current.trim().length > 0 ? current : defaultAuthorName));
+  }, [defaultAuthorName]);
+
+  const updateCursor = useCallback((nextCursor: string | undefined) => {
+    cursorRef.current = nextCursor;
+    setCursorState(nextCursor);
+  }, []);
 
   const load = useCallback(
-    async (reset = false) => {
+    async (options?: { reset?: boolean }) => {
+      const reset = options?.reset === true;
       try {
         setIsLoading(true);
         setError(null);
-        const response = await api.listReviews(bookId, reset ? undefined : cursor);
-        setCursor(response.nextCursor);
+        if (reset) {
+          setItems([]);
+          updateCursor(undefined);
+        }
+        const response = await api.listReviews(bookId, reset ? undefined : cursorRef.current);
+        updateCursor(response.nextCursor);
         setItems((prev) => (reset ? response.items : [...prev, ...response.items]));
       } catch (err) {
         console.error(err);
@@ -38,29 +89,164 @@ export function ReviewsList({ api, bookId }: ReviewsListProps): JSX.Element {
         setIsLoading(false);
       }
     },
-    [api, bookId, cursor, t],
+    [api, bookId, t, updateCursor],
   );
 
   useEffect(() => {
     setItems([]);
-    setCursor(undefined);
-    void load(true);
+    setError(null);
+    setIsFormOpen(false);
+    setText("");
+    setRating(5);
+    setSubmitError(null);
+    cursorRef.current = undefined;
+    setCursorState(undefined);
+    void load({ reset: true });
   }, [bookId, load]);
 
-  if (error) {
-    return <ErrorBanner message={error} onRetry={() => load(true)} />;
-  }
+  const handleOpenForm = useCallback(() => {
+    setIsFormOpen(true);
+    setSubmitError(null);
+    setText("");
+    setRating(5);
+  }, []);
 
-  if (!isLoading && items.length === 0) {
-    return (
-      <EmptyState title={t("reviews.emptyTitle")} description={t("reviews.emptyDescription")} />
-    );
-  }
+  const handleCancelForm = useCallback(() => {
+    setIsFormOpen(false);
+    setSubmitError(null);
+  }, []);
+
+  const handleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+
+      const normalizedName = authorName.trim();
+      const normalizedText = text.trim();
+      if (normalizedName.length === 0 || normalizedText.length === 0) {
+        setSubmitError(t("reviews.form.validation"));
+        return;
+      }
+
+      try {
+        setIsSubmitting(true);
+        setSubmitError(null);
+        const createdReview = await api.createReview({
+          bookId,
+          authorName: normalizedName,
+          rating,
+          text: normalizedText,
+        });
+        showToast(t("reviews.toast.success"));
+        setIsFormOpen(false);
+        setText("");
+        setRating(5);
+        await load({ reset: true });
+        onReviewCreated?.(createdReview);
+      } catch (err) {
+        console.error(err);
+        setSubmitError(t("errors.submitReview"));
+        showToast(t("reviews.toast.error"));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [api, authorName, bookId, load, onReviewCreated, rating, showToast, t, text],
+  );
+
+  const isSubmitDisabled =
+    isSubmitting || authorName.trim().length === 0 || text.trim().length === 0 || rating < 1 || rating > 5;
 
   const locale = i18n.language.startsWith("ru") ? "ru-RU" : "en-US";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <Card style={{ padding: 16, borderRadius: 20 }}>
+        {isFormOpen ? (
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: 12 }}
+            noValidate
+          >
+            <Title level="3" weight="2">
+              {t("reviews.form.title")}
+            </Title>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <Text weight="2">{t("reviews.form.nameLabel")}</Text>
+              <Input
+                value={authorName}
+                onChange={(event) => setAuthorName(event.target.value)}
+                placeholder={t("reviews.form.namePlaceholder")}
+                disabled={isSubmitting}
+                required
+              />
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <Text weight="2">{t("reviews.form.ratingLabel")}</Text>
+              <select
+                value={rating}
+                onChange={(event) => setRating(Number.parseInt(event.target.value, 10))}
+                disabled={isSubmitting}
+                style={{
+                  padding: "12px",
+                  borderRadius: 16,
+                  border: "1px solid var(--app-border-color, rgba(0,0,0,0.08))",
+                  background: "var(--tg-theme-bg-color, var(--app-bg-color))",
+                  color: "inherit",
+                }}
+              >
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <option key={value} value={value}>
+                    {t("reviews.form.ratingOption", { value })}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <Text weight="2">{t("reviews.form.textLabel")}</Text>
+              <textarea
+                value={text}
+                onChange={(event) => setText(event.target.value)}
+                placeholder={t("reviews.form.textPlaceholder")}
+                rows={4}
+                disabled={isSubmitting}
+                style={{
+                  padding: 12,
+                  borderRadius: 16,
+                  border: "1px solid var(--app-border-color, rgba(0,0,0,0.08))",
+                  background: "var(--tg-theme-bg-color, var(--app-bg-color))",
+                  resize: "vertical",
+                  font: "inherit",
+                }}
+                required
+              />
+            </label>
+            {submitError && (
+              <Text style={{ color: "var(--tg-theme-destructive-text-color, #d84b4b)" }}>{submitError}</Text>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              <Button
+                type="submit"
+                loading={isSubmitting}
+                disabled={isSubmitDisabled}
+                style={{ flex: 1 }}
+              >
+                {t("reviews.form.submit")}
+              </Button>
+              <Button type="button" mode="outline" onClick={handleCancelForm} disabled={isSubmitting}>
+                {t("buttons.cancel")}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <Button mode="outline" onClick={handleOpenForm} aria-label={t("reviews.addButton")}>
+            {t("reviews.addButton")}
+          </Button>
+        )}
+      </Card>
+      {error && <ErrorBanner message={error} onRetry={() => load({ reset: true })} />}
+      {!error && !isLoading && items.length === 0 && (
+        <EmptyState title={t("reviews.emptyTitle")} description={t("reviews.emptyDescription")} />
+      )}
       {items.map((review) => (
         <Card key={review.id} style={{ padding: 16, borderRadius: 20 }}>
           <div style={{ display: "flex", gap: 12 }}>
@@ -91,7 +277,7 @@ export function ReviewsList({ api, bookId }: ReviewsListProps): JSX.Element {
         </Card>
       )}
       {hasMore && !isLoading && (
-        <Button mode="outline" onClick={() => load(false)}>
+        <Button mode="outline" onClick={() => load()}>
           {t("reviews.loadMore")}
         </Button>
       )}

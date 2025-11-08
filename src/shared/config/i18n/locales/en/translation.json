@@ -31,6 +31,7 @@
     "loadBooks": "Failed to load books",
     "loadBook": "Failed to load the book",
     "loadReviews": "Failed to load reviews",
+    "submitReview": "Could not submit review",
     "fetchCategory": "Failed to fetch category",
     "categoryNotFound": "Category not found",
     "bookNotFound": "Book not found"
@@ -70,7 +71,8 @@
     "collapse": "Show less",
     "expand": "Show more",
     "confirm": "Complete",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "cancel": "Cancel"
   },
   "book": {
     "cardAria": "Book {{title}}",
@@ -133,7 +135,24 @@
     "emptyTitle": "No reviews yet",
     "emptyDescription": "Be the first to share your impressions",
     "rating": "Rating {{value}}",
-    "loadMore": "Show more"
+    "loadMore": "Show more",
+    "addButton": "Write a review",
+    "form": {
+      "title": "Share your thoughts",
+      "nameLabel": "Name",
+      "namePlaceholder": "How should we call you?",
+      "defaultName": "Guest reader",
+      "ratingLabel": "Rating",
+      "ratingOption": "{{value}} out of 5",
+      "textLabel": "Review",
+      "textPlaceholder": "Tell others what you liked",
+      "submit": "Send review",
+      "validation": "Please fill in your name and review text"
+    },
+    "toast": {
+      "success": "Review added",
+      "error": "Could not submit review"
+    }
   },
   "similar": {
     "empty": "Nothing to recommend yet",
