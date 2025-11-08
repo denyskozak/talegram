@@ -40,7 +40,7 @@
     "searchPlaceholder": "Search categories",
     "alphaBanner": {
       "title": "Alpha version",
-      "description": "We are actively building the experience. Some features may be unstable."
+      "description": "Most functions disabled."
     },
     "emptyTitle": "Nothing found",
     "emptyDescription": "Try changing the query"

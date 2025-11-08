@@ -112,7 +112,7 @@ function NavigationControls(): null {
 
 function AppContent(): JSX.Element {
   const { isTelegram } = useTMA();
-  const { tgWebAppFullscreen } = useLaunchParams();
+  const { tgWebAppFullscreen, ...rest } = useLaunchParams();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
     useEffect(() => {
@@ -123,7 +123,7 @@ function AppContent(): JSX.Element {
     }, []);
 
   return (
-    <AppRoot style={{ marginTop: tgWebAppFullscreen ? "10vh" : 0 }}>
+    <AppRoot style={{ paddingTop: tgWebAppFullscreen ? "10vh" : 0 }}>
       <ToastProvider>
         <div
           style={{

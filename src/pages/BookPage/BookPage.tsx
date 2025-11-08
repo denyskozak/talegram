@@ -102,7 +102,7 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    window.location.href = `/api/books/${id}/download`;
+    // window.location.href = `/api/books/${id}/download`;
   }, [id]);
 
   const handleMockAction = useCallback(
