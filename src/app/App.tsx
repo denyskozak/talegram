@@ -112,9 +112,10 @@ function NavigationControls(): null {
 
 function AppContent(): JSX.Element {
   const { isTelegram } = useTMA();
-  const { tgWebAppFullscreen, ...rest } = useLaunchParams();
+  const { tgWebAppFullscreen, tgWebAppPlatform, ...rest } = useLaunchParams();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
-
+    console.log("rest: ", rest);
+  
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
             setIsSplashVisible(false);
@@ -123,7 +124,7 @@ function AppContent(): JSX.Element {
     }, []);
 
   return (
-    <AppRoot style={{ paddingTop: tgWebAppFullscreen ? "10vh" : 0 }}>
+    <AppRoot style={{ paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0 }}>
       <ToastProvider>
         <div
           style={{

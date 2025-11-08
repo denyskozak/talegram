@@ -21,6 +21,7 @@
     "@telegram-apps/sdk-react": "^3.3.6",
     "@telegram-apps/telegram-ui": "^2.1.9",
     "@tonconnect/ui-react": "^2.2.0",
+    "@trpc/client": "^11.7.1",
     "eruda": "^3.4.3",
     "i18next": "^25.6.0",
     "react": "^18.3.1",

@@ -22,7 +22,8 @@ export async function submitBookProposal(
   const coverBuffer = await payload.coverFile.arrayBuffer();
   const coverBase64 = await arrayBufferToBase64(coverBuffer);
 
-  return trpc.mutation('proposals.create', {
+
+  return trpc.proposals.create.mutate({
     title: payload.title,
     author: payload.author,
     description: payload.description,
@@ -44,7 +45,7 @@ export async function submitBookProposal(
 export async function fetchProposalsForVoting(
   telegramUserId: string,
 ): Promise<ProposalVotingListResponse> {
-  return trpc.query('proposals.listForVoting', {
+  return trpc.proposals.listForVoting.query({
     telegramUserId,
   });
 }
@@ -58,5 +59,5 @@ export type SubmitProposalVotePayload = {
 export async function submitProposalVote(
   payload: SubmitProposalVotePayload,
 ): Promise<SubmitProposalVoteResult> {
-  return trpc.mutation('proposals.vote', payload);
+  return trpc.proposals.vote.mutation(payload);
 }

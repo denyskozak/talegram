@@ -5,14 +5,15 @@ interface ErrorBannerProps {
   message: string;
   onRetry?: () => void;
   actionLabel?: string;
+    style: Record<string, string>
 }
 
-export function ErrorBanner({ message, onRetry, actionLabel }: ErrorBannerProps): JSX.Element {
+export function ErrorBanner({ message, style = {}, onRetry, actionLabel }: ErrorBannerProps): JSX.Element {
   const { t } = useTranslation();
   const retryLabel = actionLabel ?? t("buttons.retry");
 
   return (
-    <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+    <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12, ...style }}>
       <div>
         <Title level="3" weight="2">
           {t("errors.genericTitle")}

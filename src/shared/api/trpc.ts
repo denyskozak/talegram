@@ -1,5 +1,5 @@
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import type { AppRouter } from "../../../../backend/src/index";
+import type { AppRouter } from "../../../backend/src/index";
 
 const DEFAULT_BACKEND_URL = "http://localhost:3000";
 
@@ -21,6 +21,7 @@ export const trpc = createTRPCClient<AppRouter>({
       headers() {
         return {
           "X-Test-Env": "true",
+          "ngrok-skip-browser-warning": "true"
         };
       },
     }),

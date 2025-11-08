@@ -42,7 +42,8 @@ const voteOnProposalInput = z.object({
 
 export const proposalsRouter = createRouter({
   create: procedure.input(createProposalInput).mutation(async ({ input }) => {
-    const fileBuffer = Buffer.from(input.file.content, 'base64');
+      console.log("2: ", 2);
+      const fileBuffer = Buffer.from(input.file.content, 'base64');
     const coverBuffer = Buffer.from(input.cover.content, 'base64');
 
     if (input.file.size && input.file.size > MAX_FILE_SIZE_BYTES) {

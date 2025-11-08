@@ -18,6 +18,7 @@ import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { CategoryTileSkeleton } from "@/shared/ui/Skeletons";
+import {trpc} from "@/shared/api/trpc.ts";
 
 export default function HomeCategories(): JSX.Element {
   const navigate = useNavigate();
@@ -40,13 +41,14 @@ export default function HomeCategories(): JSX.Element {
       })),
     [t],
   );
-
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
         setIsLoading(true);
         setError(null);
+
+          console.log("33: ", debouncedSearch, 1, refreshToken);
         const items = await catalogApi.listCategories(
           debouncedSearch ? { search: debouncedSearch } : undefined,
         );
@@ -109,7 +111,7 @@ export default function HomeCategories(): JSX.Element {
         aria-label={t("homeCategories.searchPlaceholder")}
         style={{ marginBottom: 16 }}
       />
-      {error && <ErrorBanner message={error} onRetry={() => setRefreshToken((prev) => prev + 1)} />}
+      {error && <ErrorBanner  style={{  margin: "16px 0" }} message={error} onRetry={() => setRefreshToken((prev) => prev + 1)} />}
       {isLoading && displayedCategories.length === 0 ? (
         <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
           {Array.from({ length: 6 }).map((_, index) => (

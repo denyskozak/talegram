@@ -31,30 +31,29 @@ type CreateReviewPayload = {
 
 export const catalogApi: CatalogApi = {
   listCategories(query) {
-    return trpc.query("catalog.listCategories", query satisfies ListCategoriesPayload);
+    return trpc.catalog.listCategories.query(query satisfies ListCategoriesPayload);
   },
   listBooks(params) {
-    return trpc.query(
-      "catalog.listBooks",
+    return trpc.catalog.listBooks.query(
       params satisfies ListBooksPayload,
     );
   },
   getBook(id) {
-    return trpc.query("catalog.getBook", { id });
+    return trpc.catalog.getBook.query({ id });
   },
   listReviews(bookId, cursor, limit) {
-    return trpc.query("catalog.listReviews", {
+    return trpc.catalog.listReviews.query({
       bookId,
       cursor,
       limit,
     } satisfies ListReviewsPayload);
   },
   createReview(payload) {
-    return trpc.mutation("catalog.createReview", payload satisfies CreateReviewPayload);
+    return trpc.catalog.createReview.mutation(payload satisfies CreateReviewPayload);
   },
 };
 
 export function getCategoryTags(categoryId: ID, limit?: number): Promise<string[]> {
-  return trpc.query("catalog.listCategoryTags", { categoryId, limit });
+  return trpc.catalog.listCategoryTags.query({ categoryId, limit });
 }
 

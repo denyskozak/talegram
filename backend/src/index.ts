@@ -4,8 +4,8 @@ import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { appRouter } from './trpc/root.js';
 import { createTRPCContext } from './trpc/context.js';
 import {
-  TON_STORAGE_PROXY_PREFIX,
-  handleTonStorageProxyRequest,
+    TON_STORAGE_PROXY_PREFIX,
+    handleTonStorageProxyRequest,
 } from './routers/ton-storage-proxy.js';
 
 config();
@@ -13,44 +13,83 @@ config();
 const port = Number(process.env.PORT) || 3000;
 
 const trpcHandler = createHTTPHandler({
-  router: appRouter,
-  createContext: createTRPCContext,
+    router: appRouter,
+    createContext: createTRPCContext,
 });
 
-const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
-  'Access-Control-Allow-Credentials': 'true',
-};
+// Разрешённые источники. Добавь сюда свои фронтовые домены при необходимости.
+const ALLOWED_ORIGINS = new Set<string>([
+    'https://192.168.1.80:5173',
+    'https://bridgette-nonfertile-nonimmanently.ngrok-free.dev',
+    // если фронт иногда открыт по http в локалке, добавь:
+    // 'http://192.168.1.80:5173',
+]);
+
+const ALLOWED_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
+// Базовый список заголовков, если браузер не прислал Access-Control-Request-Headers
+const DEFAULT_ALLOWED_HEADERS =
+    'content-type,authorization,x-requested-with,x-test-env,trpc-batch-mode,trpc-batch-partial';
+
+function applyCors(req: http.IncomingMessage, res: http.ServerResponse) {
+    const origin = (req.headers.origin as string) || '';
+
+    // Для корректного кэширования прокси/CDN
+    res.setHeader('Vary', 'Origin');
+
+    if (ALLOWED_ORIGINS.has(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        // Нужны ли куки/Authorization — оставляем true
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
+    if (req.method === 'OPTIONS') {
+        // Разрешаем методы
+        res.setHeader('Access-Control-Allow-Methods', ALLOWED_METHODS);
+
+        // Эхоим запрошенные заголовки, иначе — дефолтный список (включая x-test-env)
+        const reqHeaders = req.headers['access-control-request-headers'];
+        res.setHeader(
+            'Access-Control-Allow-Headers',
+            typeof reqHeaders === 'string' && reqHeaders.length
+                ? reqHeaders
+                : DEFAULT_ALLOWED_HEADERS
+        );
+
+        // Кэшируем preflight, чтобы браузер реже дергал OPTIONS
+        res.setHeader('Access-Control-Max-Age', '600');
+    }
+}
 
 const server = http.createServer((req, res) => {
-  for (const [header, value] of Object.entries(corsHeaders)) {
-    res.setHeader(header, value);
-  }
+    applyCors(req, res);
 
-  if (req.method === 'OPTIONS') {
-    res.statusCode = 204;
-    res.end();
-    return;
-  }
+    res.setHeader('ngrok-skip-browser-warning', 'true');
 
-  if (req.url?.startsWith(TON_STORAGE_PROXY_PREFIX)) {
-    handleTonStorageProxyRequest(req, res).catch((error) => {
-      console.error('Unhandled TON Storage proxy error', error);
-      if (!res.headersSent) {
-        res.statusCode = 500;
-        res.end('Internal Server Error');
-      }
-    });
-    return;
-  }
+    // Preflight: отвечаем сразу
+    if (req.method === 'OPTIONS') {
+        res.statusCode = 204;
+        res.end();
+        return;
+    }
 
-  trpcHandler(req, res);
+    // Твой прокси в TON Storage
+    if (req.url?.startsWith(TON_STORAGE_PROXY_PREFIX)) {
+        handleTonStorageProxyRequest(req, res).catch((error) => {
+            console.error('Unhandled TON Storage proxy error', error);
+            if (!res.headersSent) {
+                res.statusCode = 500;
+                res.end('Internal Server Error');
+            }
+        });
+        return;
+    }
+    console.log("1: ", 1);
+
+        trpcHandler(req, res).catch(error => console.error(error));
 });
 
 server.listen(port, () => {
-  console.log(`tRPC server listening on http://localhost:${port}`);
+    console.log(`tRPC server listening on http://localhost:${port}`);
 });
 
 export type AppRouter = typeof appRouter;
