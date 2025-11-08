@@ -17,7 +17,24 @@ const trpcHandler = createHTTPHandler({
   createContext: createTRPCContext,
 });
 
+const corsHeaders: Record<string, string> = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With',
+  'Access-Control-Allow-Credentials': 'true',
+};
+
 const server = http.createServer((req, res) => {
+  for (const [header, value] of Object.entries(corsHeaders)) {
+    res.setHeader(header, value);
+  }
+
+  if (req.method === 'OPTIONS') {
+    res.statusCode = 204;
+    res.end();
+    return;
+  }
+
   if (req.url?.startsWith(TON_STORAGE_PROXY_PREFIX)) {
     handleTonStorageProxyRequest(req, res).catch((error) => {
       console.error('Unhandled TON Storage proxy error', error);
