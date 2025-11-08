@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Input, Title } from "@telegram-apps/telegram-ui";
+import { Banner, Input, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { CategoryTile } from "@/entities/category/components/CategoryTile";
@@ -93,6 +93,11 @@ export default function HomeCategories(): JSX.Element {
 
   return (
     <main style={{ padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720 }}>
+      <Banner
+        header={t("homeCategories.alphaBanner.title")}
+        subheader={t("homeCategories.alphaBanner.description")}
+        style={{ marginBottom: 16 }}
+      />
       <Title level="1" weight="2" style={{ marginBottom: 16 }}>
         {t("homeCategories.title")}
       </Title>

@@ -38,6 +38,10 @@
   "homeCategories": {
     "title": "Categories",
     "searchPlaceholder": "Search categories",
+    "alphaBanner": {
+      "title": "Alpha version",
+      "description": "We are actively building the experience. Some features may be unstable."
+    },
     "emptyTitle": "Nothing found",
     "emptyDescription": "Try changing the query"
   },
