@@ -38,6 +38,10 @@
   "homeCategories": {
     "title": "Категории",
     "searchPlaceholder": "Поиск по категориям",
+    "alphaBanner": {
+      "title": "Альфа-версия",
+      "description": "Мы активно развиваем приложение. Возможны нестабильности."
+    },
     "emptyTitle": "Ничего не найдено",
     "emptyDescription": "Попробуйте изменить запрос"
   },
