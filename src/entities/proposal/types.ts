@@ -5,10 +5,10 @@ export type BookProposal = {
   title: string;
   author: string;
   description: string;
-  tonStorageKey: string;
-  tonStorageUrl: string;
-  coverTonStorageKey?: string | null;
-  coverTonStorageUrl?: string | null;
+  walrusBlobId: string;
+  walrusBlobUrl: string;
+  coverWalrusBlobId?: string | null;
+  coverWalrusBlobUrl?: string | null;
   coverMimeType?: string | null;
   coverFileName?: string | null;
   coverFileSize?: number | null;

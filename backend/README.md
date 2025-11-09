@@ -38,3 +38,17 @@ curl -H "X-Test-Env: true" \
 ```
 
 Use your preferred tRPC client on the frontend to call the same procedures.
+
+## Walrus Storage integration
+
+Proposal uploads are sent to [Walrus Storage](https://sdk.mystenlabs.com/walrus)
+through the Walrus TypeScript SDK client that lives in `src/services/walrus-storage.ts`.
+Configure the integration through environment variables when running the API:
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `WALRUS_AGGREGATOR_URL` | Walrus aggregator base URL used for uploads | `https://aggregator.walrus-testnet.mystenlabs.com` |
+| `WALRUS_GATEWAY_URL` | Gateway URL used to retrieve stored blobs | `https://gateway.walrus-testnet.mystenlabs.com` |
+| `WALRUS_EPOCHS_TO_STORE_FOR` | Optional number of epochs to request blob retention for | _(unset)_ |
+
+Uploaded blob metadata (blob ids, URLs, file size, MIME types, etc.) is persisted in the application's database for future access.

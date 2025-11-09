@@ -18,10 +18,10 @@ model BookProposal {
   title         String
   author        String
   description   String
-  tonStorageKey String          @map("ton_storage_key")
-  tonStorageUrl String          @map("ton_storage_url")
-  coverTonStorageKey String?   @map("cover_ton_storage_key")
-  coverTonStorageUrl String?   @map("cover_ton_storage_url")
+  walrusBlobId  String          @map("walrus_blob_id")
+  walrusBlobUrl String          @map("walrus_blob_url")
+  coverWalrusBlobId  String?   @map("cover_walrus_blob_id")
+  coverWalrusBlobUrl String?   @map("cover_walrus_blob_url")
   coverMimeType      String?   @map("cover_mime_type")
   coverFileName      String?   @map("cover_file_name")
   coverFileSize      Int?      @map("cover_file_size")
@@ -43,10 +43,10 @@ model Book {
   title         String
   author        String
   description   String
-  tonStorageKey String         @map("ton_storage_key")
-  tonStorageUrl String         @map("ton_storage_url")
-  coverTonStorageKey String?  @map("cover_ton_storage_key")
-  coverTonStorageUrl String?  @map("cover_ton_storage_url")
+  walrusBlobId  String         @map("walrus_blob_id")
+  walrusBlobUrl String         @map("walrus_blob_url")
+  coverWalrusBlobId  String?  @map("cover_walrus_blob_id")
+  coverWalrusBlobUrl String?  @map("cover_walrus_blob_url")
   coverMimeType      String?  @map("cover_mime_type")
   coverFileName      String?  @map("cover_file_name")
   coverFileSize      Int?     @map("cover_file_size")
