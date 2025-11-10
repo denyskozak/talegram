@@ -3,10 +3,6 @@ import http from 'node:http';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { appRouter } from './trpc/root.js';
 import { createTRPCContext } from './trpc/context.js';
-import {
-    TON_STORAGE_PROXY_PREFIX,
-    handleTonStorageProxyRequest,
-} from './routers/ton-storage-proxy.js';
 
 config();
 
@@ -72,20 +68,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Твой прокси в TON Storage
-    if (req.url?.startsWith(TON_STORAGE_PROXY_PREFIX)) {
-        handleTonStorageProxyRequest(req, res).catch((error) => {
-            console.error('Unhandled TON Storage proxy error', error);
-            if (!res.headersSent) {
-                res.statusCode = 500;
-                res.end('Internal Server Error');
-            }
-        });
-        return;
-    }
-    console.log("1: ", 1);
-
-        trpcHandler(req, res).catch(error => console.error(error));
+    trpcHandler(req, res).catch((error) => console.error(error));
 });
 
 server.listen(port, () => {

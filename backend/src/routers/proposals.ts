@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import { prisma } from '../utils/prisma.js';
-import { uploadToTonStorage } from '../services/ton-storage.js';
+import { uploadToWalrusStorage } from '../services/walrus-storage.js';
 import {
   assertAllowedTelegramVoter,
   getAllowedTelegramVoterIds,
@@ -42,7 +42,6 @@ const voteOnProposalInput = z.object({
 
 export const proposalsRouter = createRouter({
   create: procedure.input(createProposalInput).mutation(async ({ input }) => {
-      console.log("2: ", 2);
       const fileBuffer = Buffer.from(input.file.content, 'base64');
     const coverBuffer = Buffer.from(input.cover.content, 'base64');
 
@@ -70,13 +69,13 @@ export const proposalsRouter = createRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
     }
 
-    const uploadResult = await uploadToTonStorage({
+    const uploadResult = await uploadToWalrusStorage({
       data: fileBuffer,
       fileName: input.file.name,
       contentType: input.file.mimeType,
     });
 
-    const coverUploadResult = await uploadToTonStorage({
+    const coverUploadResult = await uploadToWalrusStorage({
       data: coverBuffer,
       fileName: input.cover.name,
       contentType: input.cover.mimeType,
@@ -87,10 +86,10 @@ export const proposalsRouter = createRouter({
         title: input.title,
         author: input.author,
         description: input.description,
-        tonStorageKey: uploadResult.key,
-        tonStorageUrl: uploadResult.url,
-        coverTonStorageKey: coverUploadResult.key,
-        coverTonStorageUrl: coverUploadResult.url,
+        walrusBlobId: uploadResult.blobId,
+        walrusBlobUrl: uploadResult.url,
+        coverWalrusBlobId: coverUploadResult.blobId,
+        coverWalrusBlobUrl: coverUploadResult.url,
         coverMimeType: coverUploadResult.mimeType,
         coverFileName: input.cover.name,
         coverFileSize: coverUploadResult.size,
@@ -192,10 +191,10 @@ export const proposalsRouter = createRouter({
             title: proposal.title,
             author: proposal.author,
             description: proposal.description,
-            tonStorageKey: proposal.tonStorageKey,
-            tonStorageUrl: proposal.tonStorageUrl,
-            coverTonStorageKey: proposal.coverTonStorageKey ?? undefined,
-            coverTonStorageUrl: proposal.coverTonStorageUrl ?? undefined,
+            walrusBlobId: proposal.walrusBlobId,
+            walrusBlobUrl: proposal.walrusBlobUrl,
+            coverWalrusBlobId: proposal.coverWalrusBlobId ?? undefined,
+            coverWalrusBlobUrl: proposal.coverWalrusBlobUrl ?? undefined,
             coverMimeType: proposal.coverMimeType ?? undefined,
             coverFileName: proposal.coverFileName ?? undefined,
             coverFileSize: proposal.coverFileSize ?? undefined,
