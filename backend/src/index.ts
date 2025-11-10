@@ -1,9 +1,11 @@
+import 'reflect-metadata';
 import { config } from 'dotenv';
 import http from 'node:http';
 import { Buffer } from 'node:buffer';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { appRouter } from './trpc/root.js';
 import { createTRPCContext } from './trpc/context.js';
+import { initializeDataSource } from './utils/data-source.js';
 import {
     MAX_COVER_FILE_SIZE_BYTES,
     MAX_FILE_SIZE_BYTES,
@@ -11,6 +13,8 @@ import {
 } from './services/proposals/create.js';
 
 config();
+
+await initializeDataSource();
 
 const port = Number(process.env.PORT) || 3000;
 

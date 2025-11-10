@@ -1,8 +1,12 @@
 import { Buffer } from 'node:buffer';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
+import { EntityManager } from 'typeorm';
+import { Book } from '../entities/Book.js';
+import { BookProposal, ProposalStatus } from '../entities/BookProposal.js';
+import { ProposalVote } from '../entities/ProposalVote.js';
 import { createRouter, procedure } from '../trpc/trpc.js';
-import { prisma } from '../utils/prisma.js';
+import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import {
   MAX_COVER_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_BYTES,
@@ -75,28 +79,32 @@ export const proposalsRouter = createRouter({
     return proposal;
   }),
   list: procedure.query(async () => {
-    const proposals = await prisma.bookProposal.findMany({
-      orderBy: { createdAt: 'desc' },
+    await initializeDataSource();
+    const bookProposalRepository = appDataSource.getRepository(BookProposal);
+    const proposals = await bookProposalRepository.find({
+      order: { createdAt: 'DESC' },
     });
 
     return proposals;
   }),
   listForVoting: procedure.input(listForVotingInput).query(async ({ input }) => {
     assertAllowedTelegramVoter(input.telegramUserId);
+    await initializeDataSource();
+    const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
-    const proposals = await prisma.bookProposal.findMany({
-      where: { status: 'PENDING' },
-      orderBy: { createdAt: 'desc' },
-      include: { votes: true },
+    const proposals = await bookProposalRepository.find({
+      where: { status: ProposalStatus.PENDING },
+      order: { createdAt: 'DESC' },
+      relations: { votes: true },
     });
 
-    const normalized = proposals.map((proposal: (typeof proposals)[number]) => {
-      const { votes, ...rest } = proposal;
-      const positiveVotes = votes.filter((vote: (typeof votes)[number]) => vote.isPositive).length;
+    const normalized = proposals.map((proposal: BookProposal & { votes: ProposalVote[] }) => {
+      const votes = proposal.votes ?? [];
+      const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
       const negativeVotes = votes.length - positiveVotes;
-      const userVote = votes.find(
-        (vote: (typeof votes)[number]) => vote.telegramUserId === input.telegramUserId,
-      );
+      const userVote = votes.find((vote: ProposalVote) => vote.telegramUserId === input.telegramUserId);
+
+      const { votes: _votes, ...rest } = proposal;
 
       return {
         ...rest,
@@ -117,67 +125,85 @@ export const proposalsRouter = createRouter({
     assertAllowedTelegramVoter(input.telegramUserId);
 
     const allowedVotersCount = getAllowedTelegramVoterIds().length;
+    await initializeDataSource();
 
-    const result = await prisma.$transaction(async (tx) => {
-      const proposal = await tx.bookProposal.findUnique({ where: { id: input.proposalId } });
+    const result = await appDataSource.transaction(async (manager: EntityManager) => {
+      const proposalRepository = manager.getRepository(BookProposal);
+      const voteRepository = manager.getRepository(ProposalVote);
+      const bookRepository = manager.getRepository(Book);
+
+      const proposal = await proposalRepository.findOne({ where: { id: input.proposalId } });
       if (!proposal) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
       }
 
-      await tx.proposalVote.upsert({
+      let vote = await voteRepository.findOne({
         where: {
-          proposalId_telegramUserId: {
-            proposalId: input.proposalId,
-            telegramUserId: input.telegramUserId,
-          },
-        },
-        create: {
           proposalId: input.proposalId,
           telegramUserId: input.telegramUserId,
-          isPositive: input.isPositive,
-        },
-        update: {
-          isPositive: input.isPositive,
         },
       });
 
-      const groupedVotes = await tx.proposalVote.groupBy({
-        by: ['isPositive'],
-        where: { proposalId: input.proposalId },
-        _count: { _all: true },
-      });
+      if (!vote) {
+        vote = voteRepository.create({
+          proposalId: input.proposalId,
+          telegramUserId: input.telegramUserId,
+          isPositive: input.isPositive,
+        });
+      } else {
+        vote.isPositive = input.isPositive;
+      }
+
+      await voteRepository.save(vote);
+
+      const groupedVotesRaw = await voteRepository
+        .createQueryBuilder('vote')
+        .select('vote.isPositive', 'isPositive')
+        .addSelect('COUNT(*)', 'count')
+        .where('vote.proposalId = :proposalId', { proposalId: input.proposalId })
+        .groupBy('vote.isPositive')
+        .getRawMany();
+
+      const groupedVotes = groupedVotesRaw as Array<{ isPositive: number | string | boolean; count: string }>;
 
       let positiveVotes = 0;
       let negativeVotes = 0;
       for (const group of groupedVotes) {
-        if (group.isPositive) {
-          positiveVotes = group._count._all;
+        const count = Number(group.count);
+        const isPositive = group.isPositive === 1 || group.isPositive === '1' || group.isPositive === true;
+        if (isPositive) {
+          positiveVotes = count;
         } else {
-          negativeVotes = group._count._all;
+          negativeVotes = count;
         }
       }
 
       const totalVotes = positiveVotes + negativeVotes;
       if (totalVotes > 0 && positiveVotes / totalVotes > 0.5) {
-        await tx.book.create({
-          data: {
-            title: proposal.title,
-            author: proposal.author,
-            description: proposal.description,
-            walrusBlobId: proposal.walrusBlobId,
-            walrusBlobUrl: proposal.walrusBlobUrl,
-            coverWalrusBlobId: proposal.coverWalrusBlobId ?? undefined,
-            coverWalrusBlobUrl: proposal.coverWalrusBlobUrl ?? undefined,
-            coverMimeType: proposal.coverMimeType ?? undefined,
-            coverFileName: proposal.coverFileName ?? undefined,
-            coverFileSize: proposal.coverFileSize ?? undefined,
-            mimeType: proposal.mimeType,
-            fileName: proposal.fileName,
-            fileSize: proposal.fileSize,
-          },
+        const walrusBlobUrl = proposal.walrusBlobUrl;
+        if (!walrusBlobUrl) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing walrus blob URL for approved proposal' });
+        }
+
+        const book = bookRepository.create({
+          title: proposal.title,
+          author: proposal.author,
+          description: proposal.description,
+          walrusBlobId: proposal.walrusBlobId,
+          walrusBlobUrl,
+          coverWalrusBlobId: proposal.coverWalrusBlobId,
+          coverWalrusBlobUrl: proposal.coverWalrusBlobUrl,
+          coverMimeType: proposal.coverMimeType,
+          coverFileName: proposal.coverFileName,
+          coverFileSize: proposal.coverFileSize,
+          mimeType: proposal.mimeType,
+          fileName: proposal.fileName,
+          fileSize: proposal.fileSize,
+          proposalId: proposal.id,
         });
-        await tx.proposalVote.deleteMany({ where: { proposalId: input.proposalId } });
-        await tx.bookProposal.delete({ where: { id: input.proposalId } });
+        await bookRepository.save(book);
+        await voteRepository.delete({ proposalId: input.proposalId });
+        await proposalRepository.delete({ id: input.proposalId });
 
         return {
           status: 'APPROVED' as const,
@@ -187,8 +213,8 @@ export const proposalsRouter = createRouter({
       }
 
       if (totalVotes > 0 && negativeVotes / totalVotes > 0.5) {
-        await tx.proposalVote.deleteMany({ where: { proposalId: input.proposalId } });
-        await tx.bookProposal.delete({ where: { id: input.proposalId } });
+        await voteRepository.delete({ proposalId: input.proposalId });
+        await proposalRepository.delete({ id: input.proposalId });
 
         return {
           status: 'REJECTED' as const,
