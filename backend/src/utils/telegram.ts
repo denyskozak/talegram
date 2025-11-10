@@ -1,6 +1,6 @@
 import { TRPCError } from '@trpc/server';
 
-const DEFAULT_ALLOWED_TELEGRAM_IDS = ['1001', '1002', '1003'];
+const DEFAULT_ALLOWED_TELEGRAM_IDS: string[] = [];
 
 const allowedTelegramIds = new Set(
   [
