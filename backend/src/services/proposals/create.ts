@@ -90,7 +90,7 @@ export async function createBookProposal(
   });
 
   const [uploadResult, coverUploadResult] = await suiClient.walrus.writeFiles({
-    files: [coverFile, bookFile],
+    files: [bookFile, coverFile],
     epochs: 3,
     deletable: true,
     signer: keypair,

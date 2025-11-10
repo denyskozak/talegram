@@ -18,6 +18,7 @@
     "predeploy": "npm run build"
   },
   "dependencies": {
+    "@mysten/walrus": "^0.8.3",
     "@telegram-apps/sdk-react": "^3.3.6",
     "@telegram-apps/telegram-ui": "^2.1.9",
     "@tonconnect/ui-react": "^2.2.0",
