@@ -15,6 +15,7 @@ import {
 import {
   assertAllowedTelegramVoter,
   getAllowedTelegramVoterIds,
+  isAllowedTelegramVoter,
 } from '../utils/telegram.js';
 
 const createProposalInput = z.object({
@@ -36,7 +37,7 @@ const createProposalInput = z.object({
 });
 
 const listForVotingInput = z.object({
-  telegramUserId: z.string().min(1),
+  telegramUserId: z.string().min(1).optional(),
 });
 
 const voteOnProposalInput = z.object({
@@ -89,7 +90,10 @@ export const proposalsRouter = createRouter({
     return proposals;
   }),
   listForVoting: procedure.input(listForVotingInput).query(async ({ input }) => {
-    assertAllowedTelegramVoter(input.telegramUserId);
+    const telegramUserId = input.telegramUserId;
+    const isAllowedToViewVotes =
+      typeof telegramUserId === 'string' && isAllowedTelegramVoter(telegramUserId);
+
     await initializeDataSource();
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
@@ -103,7 +107,10 @@ export const proposalsRouter = createRouter({
       const votes = proposal.votes ?? [];
       const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
       const negativeVotes = votes.length - positiveVotes;
-      const userVote = votes.find((vote: ProposalVote) => vote.telegramUserId === input.telegramUserId);
+      const userVote =
+        isAllowedToViewVotes && telegramUserId
+          ? votes.find((vote: ProposalVote) => vote.telegramUserId === telegramUserId)
+          : undefined;
 
       const { votes: _votes, ...rest } = proposal;
 
