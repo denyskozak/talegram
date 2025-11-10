@@ -9,8 +9,6 @@ import {
 } from '../stores/purchasesStore.js';
 import { getBook } from '../data/catalog.js';
 import { fetchStarsInvoiceStatus, markInvoiceAsFailed } from '../services/telegram-payments.js';
-import {suiClient, uploadToWalrusStorage} from '../services/walrus-storage.js';
-import {WalrusFile} from "@mysten/walrus/dist/esm";
 
 const bookIdInput = z.object({
   bookId: z.string().trim().min(1),

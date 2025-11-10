@@ -19,6 +19,8 @@ npm run dev
 
 The development server runs on port `3000` by default. Override the port using a `.env` file with `PORT=4000`, or set the `PORT` environment variable when starting the server.
 
+By default the API stores data in a local SQLite database located at `database.sqlite` in the backend directory. Override the path by setting `DATABASE_URL=/path/to/database.sqlite` before starting the server.
+
 ## Example Requests
 
 All requests must include the header `X-Test-Env: true` and follow the JSON-RPC payload that `@trpc/server` expects.
