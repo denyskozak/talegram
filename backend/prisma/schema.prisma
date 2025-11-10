@@ -18,10 +18,10 @@ model BookProposal {
   title         String
   author        String
   description   String
+  walrusFileId  String          @map("walrus_file_id")
   walrusBlobId  String          @map("walrus_blob_id")
-  walrusBlobUrl String          @map("walrus_blob_url")
+  coverWalrusFileId  String?   @map("cover_walrus_file_id")
   coverWalrusBlobId  String?   @map("cover_walrus_blob_id")
-  coverWalrusBlobUrl String?   @map("cover_walrus_blob_url")
   coverMimeType      String?   @map("cover_mime_type")
   coverFileName      String?   @map("cover_file_name")
   coverFileSize      Int?      @map("cover_file_size")

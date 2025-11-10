@@ -9,7 +9,8 @@ import {
 } from '../stores/purchasesStore.js';
 import { getBook } from '../data/catalog.js';
 import { fetchStarsInvoiceStatus, markInvoiceAsFailed } from '../services/telegram-payments.js';
-import { uploadToWalrusStorage } from '../services/walrus-storage.js';
+import {suiClient, uploadToWalrusStorage} from '../services/walrus-storage.js';
+import {WalrusFile} from "@mysten/walrus/dist/esm";
 
 const bookIdInput = z.object({
   bookId: z.string().trim().min(1),
@@ -41,23 +42,11 @@ export const purchasesRouter = createRouter({
     }
 
     const purchasedAt = new Date().toISOString();
-    const walrusUpload = await uploadToWalrusStorage({
-      data: Buffer.from(
-        JSON.stringify({
-          bookId: book.id,
-          title: book.title,
-          purchasedAt,
-        }),
-      ),
-      fileName: `${book.id}.json`,
-      contentType: 'application/json',
-    });
+
 
     const purchaseDetails = {
       paymentId: invoiceStatus.paymentId,
       purchasedAt,
-      walrusBlobId: walrusUpload.blobId,
-      downloadUrl: walrusUpload.url,
     };
 
     setPurchased(book.id, purchaseDetails);

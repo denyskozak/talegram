@@ -1,8 +1,6 @@
 export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
-  walrusBlobId: string;
-  downloadUrl: string;
 };
 
 type PurchaseRecord = PurchaseDetails & { purchased: true };
@@ -23,9 +21,9 @@ export const getPurchaseDetails = (bookId: string): PurchaseDetails | undefined 
     return undefined;
   }
 
-  const { paymentId, purchasedAt, walrusBlobId, downloadUrl } = record;
+  const { paymentId, purchasedAt } = record;
 
-  return { paymentId, purchasedAt, walrusBlobId, downloadUrl };
+  return { paymentId, purchasedAt };
 };
 
 export const listPurchasedBooks = (): Array<{ bookId: string } & PurchaseDetails> => {
@@ -34,8 +32,6 @@ export const listPurchasedBooks = (): Array<{ bookId: string } & PurchaseDetails
     .map(([bookId, value]) => ({
       bookId,
       paymentId: value.paymentId,
-      purchasedAt: value.purchasedAt,
-      walrusBlobId: value.walrusBlobId,
-      downloadUrl: value.downloadUrl,
+      purchasedAt: value.purchasedAt
     }));
 };
