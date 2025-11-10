@@ -73,7 +73,6 @@ export async function createBookProposal(
     walrusBlobUrl: (uploadResult as Record<string, unknown>).blobUrl as string | undefined ?? null,
     coverWalrusFileId: coverUploadResult.id,
     coverWalrusBlobId: coverUploadResult.blobId,
-    coverWalrusBlobUrl: (coverUploadResult as Record<string, unknown>).blobUrl as string | undefined ?? null,
     coverMimeType: params.cover.mimeType ?? null,
     coverFileName: params.cover.name,
     coverFileSize: params.cover.size ?? null,

@@ -8,7 +8,6 @@ export type BookProposal = {
   walrusBlobId: string;
   walrusBlobUrl: string;
   coverWalrusBlobId?: string | null;
-  coverWalrusBlobUrl?: string | null;
   coverMimeType?: string | null;
   coverFileName?: string | null;
   coverFileSize?: number | null;

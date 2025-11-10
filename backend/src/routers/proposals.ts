@@ -192,7 +192,6 @@ export const proposalsRouter = createRouter({
           walrusBlobId: proposal.walrusBlobId,
           walrusBlobUrl,
           coverWalrusBlobId: proposal.coverWalrusBlobId,
-          coverWalrusBlobUrl: proposal.coverWalrusBlobUrl,
           coverMimeType: proposal.coverMimeType,
           coverFileName: proposal.coverFileName,
           coverFileSize: proposal.coverFileSize,

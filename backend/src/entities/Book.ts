@@ -34,9 +34,6 @@ export class Book {
   @Column({ name: 'cover_walrus_blob_id', type: 'text', nullable: true })
   coverWalrusBlobId!: string | null;
 
-  @Column({ name: 'cover_walrus_blob_url', type: 'text', nullable: true })
-  coverWalrusBlobUrl!: string | null;
-
   @Column({ name: 'cover_mime_type', type: 'text', nullable: true })
   coverMimeType!: string | null;
 
