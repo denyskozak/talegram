@@ -3,8 +3,7 @@ import type {
   ProposalVotingListResponse,
   SubmitProposalVoteResult,
 } from './types';
-import { arrayBufferToBase64 } from '@/shared/lib/base64';
-import { trpc } from '@/shared/api/trpc';
+import { trpc, resolveBackendUrl } from '@/shared/api/trpc';
 
 export type SubmitProposalPayload = {
   title: string;
@@ -17,29 +16,31 @@ export type SubmitProposalPayload = {
 export async function submitBookProposal(
   payload: SubmitProposalPayload,
 ): Promise<BookProposal> {
-  const fileBuffer = await payload.file.arrayBuffer();
-  const base64 = await arrayBufferToBase64(fileBuffer);
-  const coverBuffer = await payload.coverFile.arrayBuffer();
-  const coverBase64 = await arrayBufferToBase64(coverBuffer);
+  const backendUrl = resolveBackendUrl();
+  const formData = new FormData();
+  formData.append("title", payload.title);
+  formData.append("author", payload.author);
+  formData.append("description", payload.description);
+  formData.append("file", payload.file, payload.file.name);
+  formData.append("cover", payload.coverFile, payload.coverFile.name);
 
-
-  return trpc.proposals.create.mutate({
-    title: payload.title,
-    author: payload.author,
-    description: payload.description,
-    file: {
-      name: payload.file.name,
-      mimeType: payload.file.type || undefined,
-      size: payload.file.size,
-      content: base64,
-    },
-    cover: {
-      name: payload.coverFile.name,
-      mimeType: payload.coverFile.type || undefined,
-      size: payload.coverFile.size,
-      content: coverBase64,
+  const response = await fetch(`${backendUrl}/proposals`, {
+    method: "POST",
+    body: formData,
+    headers: {
+      "ngrok-skip-browser-warning": "true",
     },
   });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(
+      `Failed to submit proposal (status ${response.status}): ${errorText || "Unknown error"}`,
+    );
+  }
+
+  const proposal = (await response.json()) as BookProposal;
+  return proposal;
 }
 
 export async function fetchProposalsForVoting(
