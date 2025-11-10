@@ -124,24 +124,22 @@
     "toast": {
       "linkCopied": "Ссылка скопирована",
       "linkFailed": "Не удалось скопировать ссылку",
-      "accessGranted": "NFT отправлен на ваш TON-кошелёк",
+      "accessGranted": "Доступ открыт. Ссылка на книгу готова.",
       "invoiceFailed": "Не удалось создать счёт TON Stars",
-      "confirmFailed": "Не удалось подтвердить оплату"
+      "confirmFailed": "Не удалось подтвердить оплату",
+      "paymentCancelled": "Оплата отменена",
+      "paymentFailed": "Оплата не прошла"
     },
     "purchase": {
-      "statusTitle": "Статус покупки",
-      "nftDescription": "Коллекционка отправлена на {{wallet}}",
-      "transactionLabel": "Транзакция",
-      "nftAddressLabel": "Адрес NFT",
+      "statusTitle": "Детали покупки",
+      "downloadDescription": "Сохраните ссылку ниже, чтобы не потерять доступ к книге.",
+      "downloadLabel": "Ссылка на скачивание",
+      "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Покупка оформлена",
-      "sentAtLabel": "NFT отправлен",
-      "invoiceDescription": "Откройте счёт TON Stars в Telegram, завершите оплату и вернитесь, чтобы получить NFT.",
+      "invoiceDescription": "Откройте счёт TON Stars в Telegram, завершите оплату и вернитесь сюда, чтобы открыть книгу.",
       "openInvoice": "Открыть счёт",
-      "walletLabel": "TON-кошелёк",
-      "walletPlaceholder": "Введите адрес TON-кошелька",
-      "walletHint": "Мы отправим NFT-издание на этот адрес после подтверждения оплаты.",
-      "walletError": "Укажите адрес TON-кошелька",
-      "invoiceIdLabel": "Номер платежа"
+      "invoiceIdLabel": "Номер платежа",
+      "confirmHelp": "Уже оплатили? Нажмите кнопку ниже, чтобы обновить статус."
     },
     "reviewsCount_one": "{{count}} отзыв",
     "reviewsCount_few": "{{count}} отзыва",

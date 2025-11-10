@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Buffer } from 'node:buffer';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import {
   getPurchaseDetails,
@@ -6,7 +7,9 @@ import {
   listPurchasedBooks,
   setPurchased,
 } from '../stores/purchasesStore.js';
-import { sendBookNft } from '../services/ton-contract.js';
+import { getBook } from '../data/catalog.js';
+import { fetchStarsInvoiceStatus, markInvoiceAsFailed } from '../services/telegram-payments.js';
+import { uploadToWalrusStorage } from '../services/walrus-storage.js';
 
 const bookIdInput = z.object({
   bookId: z.string().trim().min(1),
@@ -14,7 +17,6 @@ const bookIdInput = z.object({
 
 const confirmPurchaseInput = bookIdInput.extend({
   paymentId: z.string().trim().min(1),
-  tonWalletAddress: z.string().trim().min(3),
 });
 
 export const purchasesRouter = createRouter({
@@ -23,29 +25,47 @@ export const purchasesRouter = createRouter({
     details: getPurchaseDetails(input.bookId) ?? null,
   })),
   confirm: procedure.input(confirmPurchaseInput).mutation(async ({ input }) => {
-    const minted = await sendBookNft({
-      bookId: input.bookId,
-      paymentId: input.paymentId,
-      recipientTonAddress: input.tonWalletAddress,
+    const book = getBook(input.bookId);
+    if (!book) {
+      throw new Error('Book not found');
+    }
+
+    const invoiceStatus = await fetchStarsInvoiceStatus(input.paymentId).catch((error) => {
+      markInvoiceAsFailed(input.paymentId);
+      throw error;
     });
 
+    if (invoiceStatus.status !== 'paid') {
+      markInvoiceAsFailed(input.paymentId);
+      throw new Error('Payment is not completed');
+    }
+
     const purchasedAt = new Date().toISOString();
+    const walrusUpload = await uploadToWalrusStorage({
+      data: Buffer.from(
+        JSON.stringify({
+          bookId: book.id,
+          title: book.title,
+          purchasedAt,
+        }),
+      ),
+      fileName: `${book.id}.json`,
+      contentType: 'application/json',
+    });
 
     const purchaseDetails = {
-      paymentId: input.paymentId,
+      paymentId: invoiceStatus.paymentId,
       purchasedAt,
-      tonWalletAddress: minted.recipientTonAddress,
-      tonTransactionId: minted.transactionId,
-      nftAddress: minted.nftAddress,
-      nftSentAt: minted.mintedAt,
+      walrusBlobId: walrusUpload.blobId,
+      downloadUrl: walrusUpload.url,
     };
 
-    setPurchased(input.bookId, purchaseDetails);
+    setPurchased(book.id, purchaseDetails);
 
     return {
       ok: true,
       purchase: {
-        bookId: input.bookId,
+        bookId: book.id,
         ...purchaseDetails,
       },
     };

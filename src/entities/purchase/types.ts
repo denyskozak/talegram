@@ -3,10 +3,8 @@ import type { ID } from "@/entities/book/types";
 export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
-  tonWalletAddress: string;
-  tonTransactionId: string;
-  nftAddress: string;
-  nftSentAt: string;
+  walrusBlobId: string;
+  downloadUrl: string;
 };
 
 export type PurchaseStatus = {
@@ -17,7 +15,6 @@ export type PurchaseStatus = {
 export type ConfirmPurchasePayload = {
   bookId: ID;
   paymentId: string;
-  tonWalletAddress: string;
 };
 
 export type ConfirmPurchaseResponse = {

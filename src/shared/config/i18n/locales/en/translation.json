@@ -124,24 +124,22 @@
     "toast": {
       "linkCopied": "Link copied",
       "linkFailed": "Could not copy the link",
-      "accessGranted": "NFT sent to your TON wallet",
+      "accessGranted": "Access granted. Your download link is ready.",
       "invoiceFailed": "Could not create a TON Stars invoice",
-      "confirmFailed": "Could not confirm the payment"
+      "confirmFailed": "Could not confirm the payment",
+      "paymentCancelled": "Payment was cancelled",
+      "paymentFailed": "Payment failed"
     },
     "purchase": {
-      "statusTitle": "Purchase status",
-      "nftDescription": "The collectible has been sent to {{wallet}}",
-      "transactionLabel": "Transaction",
-      "nftAddressLabel": "NFT address",
+      "statusTitle": "Purchase details",
+      "downloadDescription": "Save the link below to keep access to the purchased book.",
+      "downloadLabel": "Download link",
+      "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Purchased",
-      "sentAtLabel": "NFT sent",
-      "invoiceDescription": "Open the TON Stars invoice in Telegram, complete the payment and return here to receive your NFT.",
+      "invoiceDescription": "Open the TON Stars invoice in Telegram, complete the payment and return here to unlock the book.",
       "openInvoice": "Open invoice",
-      "walletLabel": "TON wallet",
-      "walletPlaceholder": "Enter TON wallet address",
-      "walletHint": "We will deliver the NFT edition to this wallet after the payment is confirmed.",
-      "walletError": "Enter your TON wallet address",
-      "invoiceIdLabel": "Payment ID"
+      "invoiceIdLabel": "Payment ID",
+      "confirmHelp": "Already paid? Tap the button below to refresh the status."
     },
     "reviewsCount": "{{count}} review",
     "reviewsCount_plural": "{{count}} reviews",
