@@ -1,6 +1,7 @@
 import {
   ChangeEvent,
   FormEvent,
+  KeyboardEvent,
   useCallback,
   useEffect,
   useMemo,
@@ -10,6 +11,7 @@ import {
 
 import { Button, Card, Chip, Modal, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { useTMA } from "@/app/providers/TMAProvider";
@@ -26,6 +28,9 @@ const PUBLISH_SECTION = "publish" as const;
 const VOTE_SECTION = "voting" as const;
 
 const HARDCODED_ALLOWED_VOTER_IDS = ["1001", "1002", "1003"] as const;
+
+const MAX_HASHTAGS = 8;
+const HASHTAG_MAX_LENGTH = 32;
 
 const mockBooks = [
   {
@@ -65,6 +70,9 @@ type PublishFormState = {
   title: string;
   author: string;
   description: string;
+  category: string;
+  hashtags: string[];
+  hashtagsInput: string;
   fileName: string;
   file: File | null;
   coverFileName: string;
@@ -77,6 +85,9 @@ const createInitialFormState = (): PublishFormState => ({
   title: "",
   author: "",
   description: "",
+  category: "",
+  hashtags: [],
+  hashtagsInput: "",
   fileName: "",
   file: null,
   coverFileName: "",
@@ -88,6 +99,7 @@ export default function MyAccount(): JSX.Element {
   const theme = useTheme();
   const { launchParams } = useTMA();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<AccountSection>(BOOK_SECTION);
   const [formState, setFormState] = useState<PublishFormState>(() => createInitialFormState());
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -135,6 +147,102 @@ export default function MyAccount(): JSX.Element {
     proposalId: string;
     direction: VoteDirection;
   } | null>(null);
+
+  const sanitizeHashtag = useCallback((rawValue: string): string | null => {
+    if (typeof rawValue !== "string") {
+      return null;
+    }
+
+    const trimmed = rawValue.replace(/^#+/, "").trim();
+    if (trimmed.length === 0) {
+      return null;
+    }
+
+    return trimmed.slice(0, HASHTAG_MAX_LENGTH);
+  }, []);
+
+  const collectSubmissionHashtags = useCallback(
+    (state: PublishFormState): string[] => {
+      const normalized = new Map<string, string>();
+
+      for (const tag of state.hashtags) {
+        const sanitized = sanitizeHashtag(tag);
+        if (!sanitized) {
+          continue;
+        }
+
+        const key = sanitized.toLowerCase();
+        if (!normalized.has(key) && normalized.size < MAX_HASHTAGS) {
+          normalized.set(key, sanitized);
+        }
+      }
+
+      if (state.hashtagsInput) {
+        const sanitized = sanitizeHashtag(state.hashtagsInput);
+        if (sanitized) {
+          const key = sanitized.toLowerCase();
+          if (!normalized.has(key) && normalized.size < MAX_HASHTAGS) {
+            normalized.set(key, sanitized);
+          }
+        }
+      }
+
+      return Array.from(normalized.values());
+    },
+    [sanitizeHashtag],
+  );
+
+  const handleHashtagAdd = useCallback(
+    (rawValue: string) => {
+      const sanitized = sanitizeHashtag(rawValue);
+      if (!sanitized) {
+        showToast(t("account.publish.toastHashtagInvalid"));
+        return;
+      }
+
+      let limitReached = false;
+      setFormState((prev) => {
+        if (prev.hashtags.length >= MAX_HASHTAGS) {
+          limitReached = true;
+          return prev.hashtagsInput.length > 0
+            ? { ...prev, hashtagsInput: "" }
+            : prev;
+        }
+
+        const exists = prev.hashtags.some(
+          (tag) => tag.toLowerCase() === sanitized.toLowerCase(),
+        );
+        if (exists) {
+          return { ...prev, hashtagsInput: "" };
+        }
+
+        return {
+          ...prev,
+          hashtags: [...prev.hashtags, sanitized],
+          hashtagsInput: "",
+        };
+      });
+
+      if (limitReached) {
+        showToast(t("account.publish.toastHashtagLimit", { count: MAX_HASHTAGS }));
+      }
+    },
+    [sanitizeHashtag, showToast, t],
+  );
+
+  const handleHashtagKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      handleHashtagAdd(event.currentTarget.value);
+    }
+  };
+
+  const handleHashtagRemove = useCallback((tagToRemove: string) => {
+    setFormState((prev) => ({
+      ...prev,
+      hashtags: prev.hashtags.filter((tag) => tag !== tagToRemove),
+    }));
+  }, []);
 
   const menuItems = useMemo(
     () => [
@@ -283,12 +391,21 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
+    if (formState.category.trim().length === 0) {
+      showToast(t("account.publish.toastMissingCategory"));
+      return;
+    }
+
+    const submissionHashtags = collectSubmissionHashtags(formState);
+
     setIsSubmitting(true);
     try {
       await submitBookProposal({
         title: formState.title,
         author: formState.author,
         description: formState.description,
+        category: formState.category.trim(),
+        hashtags: submissionHashtags,
         file: formState.file,
         coverFile: formState.coverFile,
       });
@@ -431,6 +548,104 @@ export default function MyAccount(): JSX.Element {
                   }}
                 />
               </label>
+              <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text weight="2">{t("account.publish.form.category.label")}</Text>
+                <input
+                  required
+                  name="category"
+                  value={formState.category}
+                  onChange={handleInputChange}
+                  placeholder={t("account.publish.form.category.placeholder")}
+                  style={{
+                    padding: "12px 14px",
+                    borderRadius: 12,
+                    border: `1px solid ${theme.separator}`,
+                    background: theme.section,
+                    color: theme.text,
+                  }}
+                />
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <Text weight="2">{t("account.publish.form.hashtags.label")}</Text>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <input
+                    name="hashtagsInput"
+                    value={formState.hashtagsInput}
+                    onChange={handleInputChange}
+                    onKeyDown={handleHashtagKeyDown}
+                    placeholder={t("account.publish.form.hashtags.placeholder")}
+                    maxLength={HASHTAG_MAX_LENGTH + 1}
+                    autoComplete="off"
+                    style={{
+                      flex: "1 1 220px",
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      border: `1px solid ${theme.separator}`,
+                      background: theme.section,
+                      color: theme.text,
+                      minWidth: 180,
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    mode="outline"
+                    size="s"
+                    onClick={() => handleHashtagAdd(formState.hashtagsInput)}
+                    disabled={formState.hashtagsInput.trim().length === 0}
+                  >
+                    {t("account.publish.form.hashtags.add")}
+                  </Button>
+                </div>
+                <Text style={{ color: theme.hint }}>
+                  {t("account.publish.form.hashtags.hint", { count: MAX_HASHTAGS })}
+                </Text>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {formState.hashtags.length === 0 ? (
+                    <Text style={{ color: theme.subtitle }}>
+                      {t("account.publish.form.hashtags.empty")}
+                    </Text>
+                  ) : (
+                    formState.hashtags.map((tag) => (
+                      <div
+                        key={tag}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          padding: "4px 10px",
+                          borderRadius: 999,
+                          border: `1px solid ${theme.separator}`,
+                          background: theme.section,
+                        }}
+                      >
+                        <span style={{ color: theme.text }}>#{tag}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleHashtagRemove(tag)}
+                          style={{
+                            border: "none",
+                            background: "transparent",
+                            color: theme.subtitle,
+                            cursor: "pointer",
+                            padding: 0,
+                            lineHeight: 1,
+                            fontSize: 14,
+                          }}
+                          aria-label={t("account.publish.form.hashtags.remove", { tag })}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
               <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 <Text weight="2">{t("account.publish.form.description.label")}</Text>
                 <textarea
@@ -591,6 +806,14 @@ export default function MyAccount(): JSX.Element {
                           >
                             {proposal.description}
                           </Text>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
+                            <Chip mode="outline">{proposal.category}</Chip>
+                            {proposal.hashtags.map((tag) => (
+                              <Chip key={tag} mode="elevated">
+                                #{tag}
+                              </Chip>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       <Text style={{ color: theme.subtitle }}>
@@ -608,6 +831,14 @@ export default function MyAccount(): JSX.Element {
                         </Text>
                       )}
                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <Button
+                          type="button"
+                          size="s"
+                          mode="outline"
+                          onClick={() => navigate(`/proposals/${proposal.id}`)}
+                        >
+                          {t("account.voting.actions.viewDetails")}
+                        </Button>
                         <Button
                           size="s"
                           mode={proposal.votes.userVote === "positive" && canVote ? "filled" : "outline"}

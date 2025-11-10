@@ -216,6 +216,18 @@
           "label": "Author",
           "placeholder": "Enter the author name"
         },
+        "category": {
+          "label": "Category",
+          "placeholder": "Select the genre or collection"
+        },
+        "hashtags": {
+          "label": "Hashtags",
+          "placeholder": "Type a hashtag and press Enter",
+          "add": "Add hashtag",
+          "hint": "Use up to {{count}} hashtags to help discovery.",
+          "empty": "No hashtags yet.",
+          "remove": "Remove hashtag {{tag}}"
+        },
         "description": {
           "label": "Description",
           "placeholder": "Short synopsis or pitch"
@@ -238,6 +250,9 @@
       "toastError": "Failed to submit the book. Try again later.",
       "toastMissingFile": "Attach the EPUB file before submitting.",
       "toastMissingCover": "Add a cover image.",
+      "toastMissingCategory": "Choose a category for the book.",
+      "toastHashtagInvalid": "Enter a hashtag before adding it.",
+      "toastHashtagLimit": "You can add up to {{count}} hashtags.",
       "modal": {
         "successTitle": "Proposal submitted",
         "successDescription": "Book \"{{title}}\" is now pending review. We'll notify you once it's processed.",
@@ -262,7 +277,8 @@
       },
       "actions": {
         "approve": "Approve",
-        "reject": "Reject"
+        "reject": "Reject",
+        "viewDetails": "View details"
       },
       "toast": {
         "submitted": "Vote saved",
@@ -270,6 +286,32 @@
         "rejected": "Proposal rejected",
         "error": "Could not submit the vote. Try again later."
       }
+    },
+    "proposalDetails": {
+      "back": "Back to proposals",
+      "loading": "Loading proposal...",
+      "loadError": "We couldn't load this proposal. Try again later.",
+      "sections": {
+        "overview": "Overview",
+        "description": "Description",
+        "files": "Submitted files"
+      },
+      "category": "Category",
+      "hashtags": "Hashtags",
+      "noHashtags": "No hashtags were provided.",
+      "status": {
+        "label": "Status",
+        "PENDING": "Pending review",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "submitted": "Submitted on {{value}}",
+      "updated": "Last updated {{value}}",
+      "manuscript": "Manuscript",
+      "cover": "Cover image",
+      "download": "Download manuscript",
+      "noDownload": "File stored on Walrus decentralized storage",
+      "noCover": "Cover file unavailable"
     }
   }
 }

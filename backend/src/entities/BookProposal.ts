@@ -7,6 +7,7 @@ import {
   OneToMany,
   PrimaryColumn,
   UpdateDateColumn,
+  type ValueTransformer,
 } from 'typeorm';
 import { Book } from './Book.js';
 import { ProposalVote } from './ProposalVote.js';
@@ -30,6 +31,39 @@ export class BookProposal {
 
   @Column({ type: 'text' })
   description!: string;
+
+  @Column({ type: 'text' })
+  category!: string;
+
+  @Column({
+    type: 'text',
+    transformer: {
+      to(value: string[] | null): string {
+        const items = Array.isArray(value) ? value : [];
+        return JSON.stringify(items);
+      },
+      from(value: string | null): string[] {
+        if (typeof value !== 'string' || value.length === 0) {
+          return [];
+        }
+
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            return parsed
+              .filter((item) => typeof item === 'string')
+              .map((item) => item.trim())
+              .filter((item) => item.length > 0);
+          }
+        } catch (error) {
+          // Ignore malformed JSON and fall back to an empty list
+        }
+
+        return [];
+      },
+    } satisfies ValueTransformer,
+  })
+  hashtags!: string[];
 
   @Column({ name: 'walrus_file_id', type: 'text' })
   walrusFileId!: string;

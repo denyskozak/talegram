@@ -5,6 +5,8 @@ export type BookProposal = {
   title: string;
   author: string;
   description: string;
+  category: string;
+  hashtags: string[];
   walrusBlobId: string;
   walrusBlobUrl: string;
   coverWalrusBlobId?: string | null;

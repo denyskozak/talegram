@@ -9,6 +9,8 @@ export type SubmitProposalPayload = {
   title: string;
   author: string;
   description: string;
+  category: string;
+  hashtags: string[];
   file: File;
   coverFile: File;
 };
@@ -21,6 +23,8 @@ export async function submitBookProposal(
   formData.append("title", payload.title);
   formData.append("author", payload.author);
   formData.append("description", payload.description);
+  formData.append("category", payload.category);
+  formData.append("hashtags", JSON.stringify(payload.hashtags));
   formData.append("file", payload.file, payload.file.name);
   formData.append("cover", payload.coverFile, payload.coverFile.name);
 
@@ -49,6 +53,10 @@ export async function fetchProposalsForVoting(
   return trpc.proposals.listForVoting.query({
     telegramUserId,
   });
+}
+
+export async function fetchProposalById(proposalId: string): Promise<BookProposal> {
+  return trpc.proposals.getById.query({ proposalId });
 }
 
 export type SubmitProposalVotePayload = {
