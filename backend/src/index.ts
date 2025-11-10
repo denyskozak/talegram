@@ -119,10 +119,12 @@ async function handleCreateProposalRequest(
         const title = fields['title'];
         const author = fields['author'];
         const description = fields['description'];
+        const category = fields['category'];
+        const hashtagsRaw = fields['hashtags'];
         const file = files['file'];
         const cover = files['cover'];
 
-        if (!title || !author || !description) {
+        if (!title || !author || !description || !category) {
             res.statusCode = 400;
             res.end('Missing required fields');
             return;
@@ -156,6 +158,8 @@ async function handleCreateProposalRequest(
             title,
             author,
             description,
+            category,
+            hashtags: parseHashtagsField(hashtagsRaw),
             file: {
                 name: file.filename,
                 mimeType: file.mimeType,
@@ -178,6 +182,27 @@ async function handleCreateProposalRequest(
         res.statusCode = 500;
         res.end('Failed to process proposal upload');
     }
+}
+
+function parseHashtagsField(rawValue: string | undefined): string[] {
+    if (typeof rawValue !== 'string' || rawValue.length === 0) {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(rawValue);
+        if (Array.isArray(parsed)) {
+            return parsed.filter((item) => typeof item === 'string').map((item) => item.trim());
+        }
+    } catch (error) {
+        // Fallback to comma-separated parsing if JSON decoding fails
+        return rawValue
+            .split(',')
+            .map((item) => item.trim())
+            .filter((item) => item.length > 0);
+    }
+
+    return [];
 }
 
 function isMultipartForm(req: http.IncomingMessage): boolean {

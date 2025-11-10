@@ -19,9 +19,43 @@ export type CreateBookProposalParams = {
   title: string;
   author: string;
   description: string;
+  category: string;
+  hashtags: string[];
   file: CreateProposalFileInput;
   cover: CreateProposalFileInput;
 };
+
+const MAX_HASHTAGS = 8;
+
+function normalizeHashtags(rawHashtags: string[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const rawHashtag of rawHashtags) {
+    if (typeof rawHashtag !== 'string') {
+      continue;
+    }
+
+    const cleaned = rawHashtag.replace(/^#+/, '').trim();
+    if (cleaned.length === 0) {
+      continue;
+    }
+
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    normalized.push(cleaned);
+
+    if (normalized.length >= MAX_HASHTAGS) {
+      break;
+    }
+  }
+
+  return normalized;
+}
 
 export async function createBookProposal(
   params: CreateBookProposalParams,
@@ -64,10 +98,17 @@ export async function createBookProposal(
 
   await initializeDataSource();
   const bookProposalRepository = appDataSource.getRepository(BookProposal);
+  const category = params.category.trim();
+  if (category.length === 0) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Category is required' });
+  }
+
   const proposal = bookProposalRepository.create({
     title: params.title,
     author: params.author,
     description: params.description,
+    category,
+    hashtags: normalizeHashtags(params.hashtags),
     walrusFileId: uploadResult.id,
     walrusBlobId: uploadResult.blobId,
     walrusBlobUrl: (uploadResult as Record<string, unknown>).blobUrl as string | undefined ?? null,

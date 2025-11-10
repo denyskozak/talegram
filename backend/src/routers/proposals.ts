@@ -18,10 +18,16 @@ import {
   isAllowedTelegramVoter,
 } from '../utils/telegram.js';
 
+const MAX_HASHTAGS = 8;
+
+const hashtagSchema = z.string().min(1).max(64);
+
 const createProposalInput = z.object({
   title: z.string().min(1).max(512),
   author: z.string().min(1).max(512),
   description: z.string().min(1),
+  category: z.string().min(1).max(256),
+  hashtags: z.array(hashtagSchema).max(MAX_HASHTAGS).optional(),
   file: z.object({
     name: z.string().min(1).max(512),
     mimeType: z.string().min(1).max(128).optional(),
@@ -46,6 +52,10 @@ const voteOnProposalInput = z.object({
   isPositive: z.boolean(),
 });
 
+const getProposalByIdInput = z.object({
+  proposalId: z.string().uuid(),
+});
+
 export const proposalsRouter = createRouter({
   create: procedure.input(createProposalInput).mutation(async ({ input }) => {
     const fileBuffer = Buffer.from(input.file.content, 'base64');
@@ -63,6 +73,8 @@ export const proposalsRouter = createRouter({
       title: input.title,
       author: input.author,
       description: input.description,
+      category: input.category,
+      hashtags: input.hashtags ?? [],
       file: {
         name: input.file.name,
         mimeType: input.file.mimeType,
@@ -128,6 +140,17 @@ export const proposalsRouter = createRouter({
       allowedVotersCount: getAllowedTelegramVoterIds().length,
       proposals: normalized,
     };
+  }),
+  getById: procedure.input(getProposalByIdInput).query(async ({ input }) => {
+    await initializeDataSource();
+    const bookProposalRepository = appDataSource.getRepository(BookProposal);
+
+    const proposal = await bookProposalRepository.findOne({ where: { id: input.proposalId } });
+    if (!proposal) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
+    }
+
+    return proposal;
   }),
   vote: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
     assertAllowedTelegramVoter(input.telegramUserId);
