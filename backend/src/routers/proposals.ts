@@ -85,6 +85,7 @@ export const proposalsRouter = createRouter({
       order: { createdAt: 'DESC' },
     });
 
+      console.log("proposals: ", proposals);
     return proposals;
   }),
   listForVoting: procedure.input(listForVotingInput).query(async ({ input }) => {

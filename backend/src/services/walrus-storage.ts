@@ -9,6 +9,5 @@ export const suiClient = new SuiJsonRpcClient({
     network: 'testnet',
 }).$extend(walrus());
 
-console.log("process.env.SECRET_KEY: ", process.env);
 export const keypair = Ed25519Keypair.fromSecretKey(process.env.SECRET_KEY!);
 
