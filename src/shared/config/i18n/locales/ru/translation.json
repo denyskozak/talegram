@@ -124,7 +124,24 @@
     "toast": {
       "linkCopied": "Ссылка скопирована",
       "linkFailed": "Не удалось скопировать ссылку",
-      "accessGranted": "Доступ к книге открыт (демо)"
+      "accessGranted": "NFT отправлен на ваш TON-кошелёк",
+      "invoiceFailed": "Не удалось создать счёт TON Stars",
+      "confirmFailed": "Не удалось подтвердить оплату"
+    },
+    "purchase": {
+      "statusTitle": "Статус покупки",
+      "nftDescription": "Коллекционка отправлена на {{wallet}}",
+      "transactionLabel": "Транзакция",
+      "nftAddressLabel": "Адрес NFT",
+      "purchasedAtLabel": "Покупка оформлена",
+      "sentAtLabel": "NFT отправлен",
+      "invoiceDescription": "Откройте счёт TON Stars в Telegram, завершите оплату и вернитесь, чтобы получить NFT.",
+      "openInvoice": "Открыть счёт",
+      "walletLabel": "TON-кошелёк",
+      "walletPlaceholder": "Введите адрес TON-кошелька",
+      "walletHint": "Мы отправим NFT-издание на этот адрес после подтверждения оплаты.",
+      "walletError": "Укажите адрес TON-кошелька",
+      "invoiceIdLabel": "Номер платежа"
     },
     "reviewsCount_one": "{{count}} отзыв",
     "reviewsCount_few": "{{count}} отзыва",

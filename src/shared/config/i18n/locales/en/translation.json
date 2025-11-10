@@ -124,7 +124,24 @@
     "toast": {
       "linkCopied": "Link copied",
       "linkFailed": "Could not copy the link",
-      "accessGranted": "Book access granted (demo)"
+      "accessGranted": "NFT sent to your TON wallet",
+      "invoiceFailed": "Could not create a TON Stars invoice",
+      "confirmFailed": "Could not confirm the payment"
+    },
+    "purchase": {
+      "statusTitle": "Purchase status",
+      "nftDescription": "The collectible has been sent to {{wallet}}",
+      "transactionLabel": "Transaction",
+      "nftAddressLabel": "NFT address",
+      "purchasedAtLabel": "Purchased",
+      "sentAtLabel": "NFT sent",
+      "invoiceDescription": "Open the TON Stars invoice in Telegram, complete the payment and return here to receive your NFT.",
+      "openInvoice": "Open invoice",
+      "walletLabel": "TON wallet",
+      "walletPlaceholder": "Enter TON wallet address",
+      "walletHint": "We will deliver the NFT edition to this wallet after the payment is confirmed.",
+      "walletError": "Enter your TON wallet address",
+      "invoiceIdLabel": "Payment ID"
     },
     "reviewsCount": "{{count}} review",
     "reviewsCount_plural": "{{count}} reviews",
