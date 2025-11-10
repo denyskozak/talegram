@@ -38,9 +38,8 @@ export default function BookPage(): JSX.Element {
   const [activeAction, setActiveAction] = useState<"buy" | "subscribe" | null>(null);
   const [isPurchaseModalOpen, setPurchaseModalOpen] = useState(false);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [tonWalletAddress, setTonWalletAddress] = useState("");
-  const [tonWalletError, setTonWalletError] = useState<string | null>(null);
   const [isConfirmingPurchase, setIsConfirmingPurchase] = useState(false);
+  const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
   const [isReading, setIsReading] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -78,9 +77,6 @@ export default function BookPage(): JSX.Element {
       const status = await purchasesApi.getStatus(id);
       setIsPurchased(status.purchased);
       setPurchaseDetails(status.details);
-      if (status.details?.tonWalletAddress) {
-        setTonWalletAddress((prev) => (prev.trim().length > 0 ? prev : status.details?.tonWalletAddress ?? ""));
-      }
     } catch (err) {
       console.error(err);
     }
@@ -128,12 +124,12 @@ export default function BookPage(): JSX.Element {
   }, []);
 
   const handleDownload = useCallback(() => {
-    if (!id) {
+    if (!purchaseDetails?.downloadUrl) {
       return;
     }
 
-    // window.location.href = `/api/books/${id}/download`;
-  }, [id]);
+    window.open(purchaseDetails.downloadUrl, "_blank", "noopener,noreferrer");
+  }, [purchaseDetails]);
 
   const handleStartPurchase = useCallback(
     async (action: "buy" | "subscribe") => {
@@ -143,11 +139,11 @@ export default function BookPage(): JSX.Element {
 
       setActiveAction(action);
       setIsActionLoading(true);
-      setTonWalletError(null);
 
       try {
         const invoiceResponse = await paymentsApi.createInvoice({ bookId: book.id });
         setInvoice(invoiceResponse);
+        invoiceStatusRef.current = null;
         setPurchaseModalOpen(true);
       } catch (err) {
         console.error(err);
@@ -161,35 +157,27 @@ export default function BookPage(): JSX.Element {
   );
 
   const handleConfirmPurchase = useCallback(async () => {
-    if (!book || !invoice) {
+    if (!book || !invoice || isConfirmingPurchase) {
       return;
     }
 
-    const trimmedWallet = tonWalletAddress.trim();
-    if (!trimmedWallet) {
-      setTonWalletError(t("book.purchase.walletError"));
-      return;
-    }
-
-    setTonWalletError(null);
     setIsConfirmingPurchase(true);
 
     try {
       const { purchase } = await purchasesApi.confirm({
         bookId: book.id,
         paymentId: invoice.paymentId,
-        tonWalletAddress: trimmedWallet,
       });
 
       const { bookId: _bookId, ...details } = purchase;
       setPurchaseDetails(details);
-      setTonWalletAddress(details.tonWalletAddress);
       setIsPurchased(true);
       setPurchaseModalOpen(false);
       setActiveAction(null);
       setInvoice(null);
       setIsPreviewMode(false);
       setIsReading(false);
+      invoiceStatusRef.current = 'paid';
       showToast(t("book.toast.accessGranted"));
     } catch (err) {
       console.error(err);
@@ -198,7 +186,7 @@ export default function BookPage(): JSX.Element {
       setIsConfirmingPurchase(false);
       setIsActionLoading(false);
     }
-  }, [book, invoice, showToast, t, tonWalletAddress]);
+  }, [book, invoice, isConfirmingPurchase, showToast, t]);
 
   const handleModalOpenChange = useCallback(
     (open: boolean) => {
@@ -206,12 +194,10 @@ export default function BookPage(): JSX.Element {
 
       if (!open && !isPurchased) {
         setActiveAction(null);
+        setInvoice(null);
       }
       if (!open) {
-        setTonWalletError(null);
-        if (!isPurchased) {
-          setInvoice(null);
-        }
+        invoiceStatusRef.current = null;
       }
     },
     [isPurchased],
@@ -219,6 +205,16 @@ export default function BookPage(): JSX.Element {
 
   const handleOpenInvoice = useCallback(() => {
     if (!invoice) {
+      return;
+    }
+
+    const webApp = (window as any)?.Telegram?.WebApp;
+    if (webApp?.openInvoice) {
+      webApp.openInvoice(invoice.invoiceLink);
+      return;
+    }
+    if (webApp?.openTelegramLink) {
+      webApp.openTelegramLink(invoice.invoiceLink);
       return;
     }
 
@@ -244,11 +240,10 @@ export default function BookPage(): JSX.Element {
     setPurchaseModalOpen(false);
     setIsActionLoading(false);
     setInvoice(null);
-    setTonWalletAddress("");
-    setTonWalletError(null);
     setIsConfirmingPurchase(false);
     setIsPreviewMode(false);
     setIsReading(false);
+    invoiceStatusRef.current = null;
   }, [id]);
 
   useEffect(() => {
@@ -256,6 +251,56 @@ export default function BookPage(): JSX.Element {
       setIsReading(false);
     }
   }, [isPurchased, isPreviewMode, isReading]);
+
+  useEffect(() => {
+    if (!invoice) {
+      return;
+    }
+
+    const webApp = (window as any)?.Telegram?.WebApp;
+    const onEvent = webApp?.onEvent?.bind(webApp);
+    if (!onEvent) {
+      return;
+    }
+
+    const handler = (event: { status?: string } | undefined) => {
+      if (!event?.status) {
+        return;
+      }
+
+      if (event.status === 'paid') {
+        if (invoiceStatusRef.current === 'paid') {
+          return;
+        }
+        invoiceStatusRef.current = 'paid';
+        void handleConfirmPurchase();
+        return;
+      }
+
+      if (event.status === 'cancelled') {
+        if (invoiceStatusRef.current === 'cancelled') {
+          return;
+        }
+        invoiceStatusRef.current = 'cancelled';
+        showToast(t('book.toast.paymentCancelled'));
+        return;
+      }
+
+      if (event.status === 'failed') {
+        if (invoiceStatusRef.current === 'failed') {
+          return;
+        }
+        invoiceStatusRef.current = 'failed';
+        showToast(t('book.toast.paymentFailed'));
+      }
+    };
+
+    onEvent('invoiceClosed', handler);
+
+    return () => {
+      webApp?.offEvent?.('invoiceClosed', handler);
+    };
+  }, [handleConfirmPurchase, invoice, showToast, t]);
 
   useEffect(() => {
     void loadBook();
@@ -370,24 +415,36 @@ export default function BookPage(): JSX.Element {
                         {t("book.purchase.statusTitle")}
                       </Title>
                       <div style={{ color: "var(--app-subtitle-color)" }}>
-                        {t("book.purchase.nftDescription", { wallet: purchaseDetails.tonWalletAddress })}
+                        {t("book.purchase.downloadDescription")}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                         <div>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.transactionLabel")}</div>
-                          <code style={{ wordBreak: "break-all" }}>{purchaseDetails.tonTransactionId}</code>
+                          <div style={{ fontWeight: 600 }}>{t("book.purchase.downloadLabel")}</div>
+                          <a
+                            href={purchaseDetails.downloadUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              wordBreak: "break-all",
+                              color: "var(--tg-theme-link-color, #3390ec)",
+                              textDecoration: "none",
+                              fontWeight: 600,
+                            }}
+                          >
+                            {purchaseDetails.downloadUrl}
+                          </a>
                         </div>
                         <div>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.nftAddressLabel")}</div>
-                          <code style={{ wordBreak: "break-all" }}>{purchaseDetails.nftAddress}</code>
+                          <div style={{ fontWeight: 600 }}>{t("book.purchase.blobLabel")}</div>
+                          <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusBlobId}</code>
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{t("book.purchase.invoiceIdLabel")}</div>
+                          <code style={{ wordBreak: "break-all" }}>{purchaseDetails.paymentId}</code>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                           <div style={{ fontWeight: 600 }}>{t("book.purchase.purchasedAtLabel")}</div>
                           <span>{new Date(purchaseDetails.purchasedAt).toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.sentAtLabel")}</div>
-                          <span>{new Date(purchaseDetails.nftSentAt).toLocaleString()}</span>
                         </div>
                       </div>
                     </Card>
@@ -472,7 +529,9 @@ export default function BookPage(): JSX.Element {
             <Card style={{ padding: 12, borderRadius: 16, display: "flex", flexDirection: "column", gap: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontWeight: 600 }}>{book.title}</span>
-                <span style={{ fontWeight: 600 }}>{book.priceStars} ⭐</span>
+                <span style={{ fontWeight: 600 }}>
+                  {(invoice?.amountStars ?? book.priceStars)} ⭐
+                </span>
               </div>
               {invoice && (
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -488,32 +547,11 @@ export default function BookPage(): JSX.Element {
               <Button mode="outline" onClick={handleOpenInvoice}>
                 {t("book.purchase.openInvoice")}
               </Button>
+              <p style={{ margin: 0, lineHeight: 1.5, color: "var(--app-subtitle-color)" }}>
+                {t("book.purchase.confirmHelp")}
+              </p>
             </>
           )}
-          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={{ fontWeight: 600 }}>{t("book.purchase.walletLabel")}</span>
-            <input
-              value={tonWalletAddress}
-              onChange={(event) => setTonWalletAddress(event.target.value)}
-              placeholder={t("book.purchase.walletPlaceholder")}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 12,
-                border: "1px solid var(--app-border-color, rgba(0, 0, 0, 0.1))",
-                backgroundColor: "var(--tgui--secondary_bg_color, #f5f5f5)",
-                color: "inherit",
-                fontSize: 16,
-              }}
-            />
-            <span style={{ color: "var(--app-subtitle-color)", fontSize: 14 }}>
-              {t("book.purchase.walletHint")}
-            </span>
-            {tonWalletError && (
-              <span style={{ color: "var(--tg-theme-destructive-text-color, #d84a4a)", fontSize: 14 }}>
-                {tonWalletError}
-              </span>
-            )}
-          </label>
           <Button
             size="l"
             mode="filled"

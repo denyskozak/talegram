@@ -1,10 +1,8 @@
 export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
-  tonWalletAddress: string;
-  tonTransactionId: string;
-  nftAddress: string;
-  nftSentAt: string;
+  walrusBlobId: string;
+  downloadUrl: string;
 };
 
 type PurchaseRecord = PurchaseDetails & { purchased: true };
@@ -25,9 +23,9 @@ export const getPurchaseDetails = (bookId: string): PurchaseDetails | undefined 
     return undefined;
   }
 
-  const { paymentId, purchasedAt, tonWalletAddress, tonTransactionId, nftAddress, nftSentAt } = record;
+  const { paymentId, purchasedAt, walrusBlobId, downloadUrl } = record;
 
-  return { paymentId, purchasedAt, tonWalletAddress, tonTransactionId, nftAddress, nftSentAt };
+  return { paymentId, purchasedAt, walrusBlobId, downloadUrl };
 };
 
 export const listPurchasedBooks = (): Array<{ bookId: string } & PurchaseDetails> => {
@@ -37,9 +35,7 @@ export const listPurchasedBooks = (): Array<{ bookId: string } & PurchaseDetails
       bookId,
       paymentId: value.paymentId,
       purchasedAt: value.purchasedAt,
-      tonWalletAddress: value.tonWalletAddress,
-      tonTransactionId: value.tonTransactionId,
-      nftAddress: value.nftAddress,
-      nftSentAt: value.nftSentAt,
+      walrusBlobId: value.walrusBlobId,
+      downloadUrl: value.downloadUrl,
     }));
 };
