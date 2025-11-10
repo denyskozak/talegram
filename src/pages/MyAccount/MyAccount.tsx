@@ -126,6 +126,7 @@ export default function MyAccount(): JSX.Element {
     return undefined;
   }, [fallbackTelegramId, launchParams]);
   const isAllowedVoter = telegramUserId ? allowedVoterIds.has(telegramUserId) : false;
+  const canVote = Boolean(telegramUserId && isAllowedVoter);
   const [votingProposals, setVotingProposals] = useState<ProposalForVoting[]>([]);
   const [allowedVotersCount, setAllowedVotersCount] = useState<number>(() => allowedVoterIds.size);
   const [isVotingLoading, setIsVotingLoading] = useState(false);
@@ -168,18 +169,10 @@ export default function MyAccount(): JSX.Element {
   };
 
   const loadVotingProposals = useCallback(async () => {
-    if (!telegramUserId || !isAllowedVoter) {
-      setVotingProposals([]);
-      setVotingError(null);
-      setIsVotingLoading(false);
-      setAllowedVotersCount(allowedVoterIds.size);
-      return;
-    }
-
     setIsVotingLoading(true);
     setVotingError(null);
     try {
-      const response = await fetchProposalsForVoting(telegramUserId);
+      const response = await fetchProposalsForVoting(telegramUserId ?? undefined);
       setVotingProposals(response.proposals);
       setAllowedVotersCount(
         typeof response.allowedVotersCount === "number"
@@ -192,11 +185,14 @@ export default function MyAccount(): JSX.Element {
     } finally {
       setIsVotingLoading(false);
     }
-  }, [allowedVoterIds, isAllowedVoter, t, telegramUserId]);
+  }, [allowedVoterIds, t, telegramUserId]);
 
   const handleVote = useCallback(
     async (proposalId: string, direction: VoteDirection) => {
-      if (!telegramUserId || !isAllowedVoter) {
+      if (!canVote || !telegramUserId) {
+        showToast(
+          t(telegramUserId ? "account.voting.notAllowed" : "account.voting.notTelegram"),
+        );
         return;
       }
 
@@ -245,7 +241,7 @@ export default function MyAccount(): JSX.Element {
         setPendingVote(null);
       }
     },
-    [allowedVoterIds, isAllowedVoter, showToast, t, telegramUserId],
+    [allowedVoterIds, canVote, showToast, t, telegramUserId],
   );
 
   useEffect(() => {
@@ -523,84 +519,130 @@ export default function MyAccount(): JSX.Element {
               {t("account.voting.threshold", { count: displayedAllowedVoters })}
             </Text>
           </div>
-          {!telegramUserId ? (
-            <Card style={{ padding: 16 }}>
-              <Text style={{ color: theme.subtitle }}>{t("account.voting.notTelegram")}</Text>
-            </Card>
-          ) : !isAllowedVoter ? (
-            <Card style={{ padding: 16 }}>
-              <Text style={{ color: theme.subtitle }}>{t("account.voting.notAllowed")}</Text>
-            </Card>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {votingError ? (
-                <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                  <Text style={{ color: theme.subtitle }}>{votingError}</Text>
-                  <Button type="button" mode="outline" size="s" onClick={handleRetryVoting}>
-                    {t("buttons.retry")}
-                  </Button>
-                </Card>
-              ) : isVotingLoading ? (
-                <Card style={{ padding: 16 }}>
-                  <Text style={{ color: theme.subtitle }}>{t("account.voting.loading")}</Text>
-                </Card>
-              ) : votingProposals.length === 0 ? (
-                <Card style={{ padding: 16 }}>
-                  <Text style={{ color: theme.subtitle }}>{t("account.voting.empty")}</Text>
-                </Card>
-              ) : (
-                votingProposals.map((proposal) => (
-                  <Card key={proposal.id} style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                      <Title level="3" weight="2">
-                        {proposal.title}
-                      </Title>
-                      <Text style={{ color: theme.subtitle }}>{proposal.author}</Text>
-                    </div>
-                    <Text style={{ color: theme.text }}>{proposal.description}</Text>
-                    <Text style={{ color: theme.subtitle }}>
-                      {t("account.voting.progress", {
-                        positive: proposal.votes.positiveVotes,
-                        total: displayedAllowedVoters,
-                        negative: proposal.votes.negativeVotes,
-                      })}
-                    </Text>
-                    {proposal.votes.userVote && (
-                      <Text style={{ color: theme.hint }}>
-                        {proposal.votes.userVote === "positive"
-                          ? t("account.voting.youVoted.approve")
-                          : t("account.voting.youVoted.reject")}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {!telegramUserId && (
+              <Card style={{ padding: 16 }}>
+                <Text style={{ color: theme.subtitle }}>{t("account.voting.notTelegram")}</Text>
+              </Card>
+            )}
+            {votingError ? (
+              <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                <Text style={{ color: theme.subtitle }}>{votingError}</Text>
+                <Button type="button" mode="outline" size="s" onClick={handleRetryVoting}>
+                  {t("buttons.retry")}
+                </Button>
+              </Card>
+            ) : isVotingLoading ? (
+              <Card style={{ padding: 16 }}>
+                <Text style={{ color: theme.subtitle }}>{t("account.voting.loading")}</Text>
+              </Card>
+            ) : votingProposals.length === 0 ? (
+              <Card style={{ padding: 16 }}>
+                <Text style={{ color: theme.subtitle }}>{t("account.voting.empty")}</Text>
+              </Card>
+            ) : (
+              <>
+                {!canVote && telegramUserId && (
+                  <Text style={{ color: theme.hint }}>{t("account.voting.notAllowed")}</Text>
+                )}
+                {votingProposals.map((proposal) => {
+                  const normalizedTitle = proposal.title.trim();
+                  const coverInitial =
+                    normalizedTitle.length > 0
+                      ? normalizedTitle.charAt(0).toUpperCase()
+                      : "📘";
+
+                  return (
+                    <Card
+                      key={proposal.id}
+                      style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}
+                    >
+                      <div style={{ display: "flex", gap: 12 }}>
+                        <div
+                          aria-hidden={true}
+                          style={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: 16,
+                            background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}33 100%)`,
+                            color: "#ffffff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontWeight: 600,
+                            fontSize: 24,
+                          }}
+                        >
+                          {coverInitial}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                          <Title level="3" weight="2">
+                            {proposal.title}
+                          </Title>
+                          <Text style={{ color: theme.subtitle }}>{proposal.author}</Text>
+                          <Text
+                            style={{
+                              color: theme.text,
+                              display: "-webkit-box",
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: "vertical" as const,
+                              overflow: "hidden",
+                            }}
+                          >
+                            {proposal.description}
+                          </Text>
+                        </div>
+                      </div>
+                      <Text style={{ color: theme.subtitle }}>
+                        {t("account.voting.progress", {
+                          positive: proposal.votes.positiveVotes,
+                          total: displayedAllowedVoters,
+                          negative: proposal.votes.negativeVotes,
+                        })}
                       </Text>
-                    )}
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <Button
-                        size="s"
-                        mode={proposal.votes.userVote === "positive" ? "filled" : "outline"}
-                        onClick={() => handleVote(proposal.id, "positive")}
-                        loading={
-                          pendingVote?.proposalId === proposal.id && pendingVote.direction === "positive"
-                        }
-                        disabled={pendingVote?.proposalId === proposal.id}
-                      >
-                        {t("account.voting.actions.approve")}
-                      </Button>
-                      <Button
-                        size="s"
-                        mode={proposal.votes.userVote === "negative" ? "filled" : "outline"}
-                        onClick={() => handleVote(proposal.id, "negative")}
-                        loading={
-                          pendingVote?.proposalId === proposal.id && pendingVote.direction === "negative"
-                        }
-                        disabled={pendingVote?.proposalId === proposal.id}
-                      >
-                        {t("account.voting.actions.reject")}
-                      </Button>
-                    </div>
-                  </Card>
-                ))
-              )}
-            </div>
-          )}
+                      {proposal.votes.userVote && canVote && (
+                        <Text style={{ color: theme.hint }}>
+                          {proposal.votes.userVote === "positive"
+                            ? t("account.voting.youVoted.approve")
+                            : t("account.voting.youVoted.reject")}
+                        </Text>
+                      )}
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <Button
+                          size="s"
+                          mode={proposal.votes.userVote === "positive" && canVote ? "filled" : "outline"}
+                          onClick={() => handleVote(proposal.id, "positive")}
+                          loading={
+                            pendingVote?.proposalId === proposal.id &&
+                            pendingVote.direction === "positive"
+                          }
+                          disabled={
+                            !canVote || pendingVote?.proposalId === proposal.id
+                          }
+                        >
+                          {t("account.voting.actions.approve")}
+                        </Button>
+                        <Button
+                          size="s"
+                          mode={proposal.votes.userVote === "negative" && canVote ? "filled" : "outline"}
+                          onClick={() => handleVote(proposal.id, "negative")}
+                          loading={
+                            pendingVote?.proposalId === proposal.id &&
+                            pendingVote.direction === "negative"
+                          }
+                          disabled={
+                            !canVote || pendingVote?.proposalId === proposal.id
+                          }
+                        >
+                          {t("account.voting.actions.reject")}
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </>
+            )}
+          </div>
         </section>
       )}
       <Modal open={publishResult !== null} onOpenChange={handlePublishModalOpenChange}>

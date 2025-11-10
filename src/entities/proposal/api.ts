@@ -44,7 +44,7 @@ export async function submitBookProposal(
 }
 
 export async function fetchProposalsForVoting(
-  telegramUserId: string,
+  telegramUserId?: string,
 ): Promise<ProposalVotingListResponse> {
   return trpc.proposals.listForVoting.query({
     telegramUserId,
