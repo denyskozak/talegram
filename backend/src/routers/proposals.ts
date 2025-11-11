@@ -235,9 +235,25 @@ export const proposalsRouter = createRouter({
           fileSize: proposal.fileSize,
           proposalId: proposal.id,
         });
-        await bookRepository.save(book);
+        const savedBook = await bookRepository.save(book);
+
+        const persistedBook = await bookRepository.findOne({ where: { id: savedBook.id } });
+        if (!persistedBook) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to move approved proposal to books table",
+          });
+        }
+
         await voteRepository.delete({ proposalId: input.proposalId });
-        await proposalRepository.delete({ id: input.proposalId });
+
+        const deleteResult = await proposalRepository.delete({ id: input.proposalId });
+        if (!deleteResult.affected) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to remove proposal after publishing",
+          });
+        }
 
         return {
           status: 'APPROVED' as const,
