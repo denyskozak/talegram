@@ -1,0 +1,102 @@
+.book-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.book-list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.book-list__header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.book-list__header p {
+  margin: 4px 0 0;
+  color: #5a5a72;
+}
+
+.book-list__new {
+  background: #1c1cff;
+  color: #ffffff;
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(28, 28, 255, 0.35);
+}
+
+.book-list__new:hover {
+  background: #1010e0;
+}
+
+.book-list__error {
+  background: rgba(229, 72, 77, 0.15);
+  color: #a02028;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.book-list__empty {
+  padding: 48px;
+  text-align: center;
+  border: 2px dashed rgba(28, 28, 40, 0.1);
+  border-radius: 16px;
+  color: #5a5a72;
+}
+
+.book-list__table-wrapper {
+  overflow: auto;
+}
+
+.book-list__table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.book-list__table th,
+.book-list__table td {
+  padding: 16px 20px;
+  text-align: left;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.book-list__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.book-list__title {
+  font-weight: 600;
+}
+
+.book-list__meta {
+  display: block;
+  color: #7a7a92;
+  font-size: 13px;
+}
+
+.book-list__actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.book-list__actions button {
+  background: none;
+  border: none;
+  color: #e5484d;
+  font-weight: 600;
+}
+
+.book-list__actions button:hover {
+  text-decoration: underline;
+}

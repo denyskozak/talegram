@@ -1,0 +1,124 @@
+.book-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: #ffffff;
+  padding: 32px;
+  border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.1);
+}
+
+.book-form label,
+.book-form fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #3f3f55;
+}
+
+.book-form input,
+.book-form textarea {
+  border: 1px solid rgba(63, 63, 85, 0.2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.book-form textarea {
+  resize: vertical;
+}
+
+.book-form input:focus,
+.book-form textarea:focus {
+  outline: none;
+  border-color: #1c1cff;
+  box-shadow: 0 0 0 3px rgba(28, 28, 255, 0.15);
+}
+
+.book-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.book-form__description {
+  grid-column: 1 / -1;
+}
+
+.book-form__categories {
+  border: 1px solid rgba(63, 63, 85, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px 20px;
+}
+
+.book-form__categories legend {
+  font-weight: 600;
+  padding: 0 6px;
+}
+
+.book-form__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(63, 63, 85, 0.2);
+  background: #ffffff;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip input {
+  accent-color: #1c1cff;
+}
+
+.chip--active {
+  background: rgba(28, 28, 255, 0.1);
+  border-color: rgba(28, 28, 255, 0.5);
+}
+
+.book-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.book-form__primary,
+.book-form__secondary {
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+}
+
+.book-form__primary {
+  background: #1c1cff;
+  color: #ffffff;
+}
+
+.book-form__primary:hover:enabled {
+  background: #1010e0;
+}
+
+.book-form__secondary {
+  background: rgba(63, 63, 85, 0.1);
+  color: #3f3f55;
+}
+
+.book-form__secondary:hover:enabled {
+  background: rgba(63, 63, 85, 0.2);
+}
+
+.book-form__error {
+  background: rgba(229, 72, 77, 0.15);
+  color: #a02028;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
