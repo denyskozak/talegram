@@ -230,6 +230,47 @@ const categories: Category[] = baseCategories.map((category) => ({
   booksCount: books.filter((book) => book.categories.includes(category.id)).length,
 }));
 
+function sanitizeStringArray(values: string[]): string[] {
+  return values.map((value) => value.trim()).filter((value) => value.length > 0);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
+
+function recalculateCategoryCounts(): void {
+  for (const category of categories) {
+    category.booksCount = 0;
+  }
+
+  for (const book of books) {
+    for (const categoryId of book.categories) {
+      const category = categories.find((entry) => entry.id === categoryId);
+      if (category) {
+        category.booksCount += 1;
+      }
+    }
+  }
+}
+
+function ensureCategoriesExist(categoryIds: ID[]): void {
+  for (const categoryId of categoryIds) {
+    if (!categories.some((category) => category.id === categoryId)) {
+      throw new Error(`Unknown category: ${categoryId}`);
+    }
+  }
+}
+
+function cloneBook(book: Book): Book {
+  return {
+    ...book,
+    authors: [...book.authors],
+    categories: [...book.categories],
+    rating: { ...book.rating },
+    tags: [...book.tags],
+  };
+}
+
 function normalize(value: string): string {
   return value.trim().toLocaleLowerCase();
 }
@@ -303,6 +344,119 @@ export function listBooks(params: {
 
 export function getBook(bookId: ID): Book | undefined {
   return books.find((book) => book.id === bookId);
+}
+
+export function listAllBooks(): Book[] {
+  return books
+    .slice()
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .map((book) => cloneBook(book));
+}
+
+export function createBookMetadata(
+  params: Omit<Book, 'reviewsCount'> & { reviewsCount?: number },
+): Book {
+  if (books.some((book) => book.id === params.id)) {
+    throw new Error('Book with this id already exists');
+  }
+
+  ensureCategoriesExist(params.categories);
+
+  const book: Book = {
+    ...params,
+    authors: sanitizeStringArray(params.authors),
+    categories: sanitizeStringArray(params.categories),
+    tags: sanitizeStringArray(params.tags),
+    reviewsCount: params.reviewsCount ?? 0,
+    priceStars: Math.round(clamp(params.priceStars, 0, 10)),
+    rating: {
+      average: clamp(params.rating.average, 0, 5),
+      votes: Math.max(0, Math.round(params.rating.votes)),
+    },
+  };
+
+  books.push(book);
+  recalculateCategoryCounts();
+
+  return cloneBook(book);
+}
+
+export function updateBookMetadata(
+  bookId: ID,
+  patch: Partial<Omit<Book, 'id'>>,
+): Book {
+  const book = books.find((entry) => entry.id === bookId);
+  if (!book) {
+    throw new Error('Book not found');
+  }
+
+  if (patch.categories) {
+    ensureCategoriesExist(patch.categories);
+  }
+
+  if (patch.title !== undefined) {
+    book.title = patch.title;
+  }
+
+  if (patch.authors) {
+    book.authors = sanitizeStringArray(patch.authors);
+  }
+
+  if (patch.categories) {
+    book.categories = sanitizeStringArray(patch.categories);
+  }
+
+  if (patch.coverUrl !== undefined) {
+    book.coverUrl = patch.coverUrl;
+  }
+
+  if (patch.description !== undefined) {
+    book.description = patch.description;
+  }
+
+  if (patch.priceStars !== undefined) {
+    book.priceStars = Math.round(clamp(patch.priceStars, 0, 10));
+  }
+
+  if (patch.rating) {
+    book.rating = {
+      average: clamp(patch.rating.average, 0, 5),
+      votes: Math.max(0, Math.round(patch.rating.votes)),
+    };
+  }
+
+  if (patch.tags) {
+    book.tags = sanitizeStringArray(patch.tags);
+  }
+
+  if (patch.publishedAt !== undefined) {
+    book.publishedAt = patch.publishedAt;
+  }
+
+  if (patch.reviewsCount !== undefined) {
+    book.reviewsCount = Math.max(0, Math.round(patch.reviewsCount));
+  }
+
+  recalculateCategoryCounts();
+
+  return cloneBook(book);
+}
+
+export function deleteBookMetadata(bookId: ID): void {
+  const index = books.findIndex((book) => book.id === bookId);
+  if (index === -1) {
+    throw new Error('Book not found');
+  }
+
+  books.splice(index, 1);
+
+  for (let i = reviews.length - 1; i >= 0; i -= 1) {
+    if (reviews[i]?.bookId === bookId) {
+      reviews.splice(i, 1);
+    }
+  }
+
+  recalculateCategoryCounts();
 }
 
 export function listReviews(
