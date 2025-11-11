@@ -48,10 +48,10 @@ export async function submitBookProposal(
 }
 
 export async function fetchProposalsForVoting(
-  telegramUserId?: string,
+  telegramUsername?: string,
 ): Promise<ProposalVotingListResponse> {
   return trpc.proposals.listForVoting.query({
-    telegramUserId,
+    telegramUsername,
   });
 }
 
@@ -61,7 +61,7 @@ export async function fetchProposalById(proposalId: string): Promise<BookProposa
 
 export type SubmitProposalVotePayload = {
   proposalId: string;
-  telegramUserId: string;
+  telegramUsername: string;
   isPositive: boolean;
 };
 

@@ -1,30 +1,58 @@
 import { TRPCError } from '@trpc/server';
 
-const DEFAULT_ALLOWED_TELEGRAM_IDS: string[] = [];
+const DEFAULT_ALLOWED_TELEGRAM_USERNAMES: readonly string[] = [
+  '@lawyerdsupport',
+  '@oxfrrdd',
+];
 
-const allowedTelegramIds = new Set(
+function normalizeTelegramUsername(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  const prefixed = trimmed.startsWith('@') ? trimmed : `@${trimmed}`;
+  return prefixed.toLowerCase();
+}
+
+const allowedTelegramUsernames = new Set(
   [
-    ...DEFAULT_ALLOWED_TELEGRAM_IDS,
-    ...(process.env.ALLOWED_TELEGRAM_IDS ?? '')
+    ...DEFAULT_ALLOWED_TELEGRAM_USERNAMES,
+    ...(process.env.ALLOWED_TELEGRAM_USERNAMES ?? '')
       .split(',')
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0),
-  ],
+      .map((username) => normalizeTelegramUsername(username))
+      .filter((username): username is string => Boolean(username)),
+  ]
+    .map((username) => normalizeTelegramUsername(username))
+    .filter((username): username is string => Boolean(username)),
 );
 
-export function getAllowedTelegramVoterIds(): readonly string[] {
-  return Array.from(allowedTelegramIds);
+export function getAllowedTelegramVoterUsernames(): readonly string[] {
+  return Array.from(allowedTelegramUsernames);
 }
 
-export function isAllowedTelegramVoter(telegramUserId: string): boolean {
-  return allowedTelegramIds.has(telegramUserId);
+export function isAllowedTelegramVoter(telegramUsername: string): boolean {
+  const normalized = normalizeTelegramUsername(telegramUsername);
+  if (!normalized) {
+    return false;
+  }
+  return allowedTelegramUsernames.has(normalized);
 }
 
-export function assertAllowedTelegramVoter(telegramUserId: string): void {
-  if (!isAllowedTelegramVoter(telegramUserId)) {
+export function assertAllowedTelegramVoter(telegramUsername: string): string {
+  const normalized = normalizeTelegramUsername(telegramUsername);
+  if (!normalized || !allowedTelegramUsernames.has(normalized)) {
     throw new TRPCError({
       code: 'FORBIDDEN',
       message: 'Voting is not available for this Telegram user',
     });
   }
+
+  return normalized;
 }
+
+export { normalizeTelegramUsername };

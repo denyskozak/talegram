@@ -238,8 +238,8 @@
           "placeholder": "No image selected"
         },
         "file": {
-          "label": "EPUB file",
-          "cta": "Upload .epub",
+          "label": "PDF file",
+          "cta": "Upload .pdf",
           "placeholder": "No file selected"
         },
         "submit": "Submit for review",
@@ -248,7 +248,7 @@
       "toastSuccess": "Book \"{{title}}\" submitted for review.",
       "toastFallbackTitle": "your book",
       "toastError": "Failed to submit the book. Try again later.",
-      "toastMissingFile": "Attach the EPUB file before submitting.",
+      "toastMissingFile": "Attach the PDF file before submitting.",
       "toastMissingCover": "Add a cover image.",
       "toastMissingCategory": "Choose a category for the book.",
       "toastHashtagInvalid": "Enter a hashtag before adding it.",
@@ -264,13 +264,13 @@
     "voting": {
       "title": "Editorial voting",
       "description": "Review incoming book proposals and decide their future.",
-      "threshold": "More than 50% approvals are required. Authorized voters: {{count}}.",
+      "threshold": "{{required}} approvals are required. Authorized voters: {{count}}.",
       "notTelegram": "Open the mini app inside Telegram to participate in voting.",
-      "notAllowed": "Voting is limited to the editorial team.",
+      "notAllowed": "Voting is limited to @lawyerdsupport and @oxfrrdd.",
       "empty": "No book proposals are waiting for your vote.",
       "loading": "Loading proposals...",
       "loadError": "Failed to load proposals.",
-      "progress": "{{positive}} / {{total}} approvals • {{negative}} rejections",
+      "progress": "{{positive}} / {{required}} approvals • {{negative}} rejections",
       "youVoted": {
         "approve": "You voted to approve this book.",
         "reject": "You voted to reject this book."

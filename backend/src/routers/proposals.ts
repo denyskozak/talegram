@@ -14,11 +14,14 @@ import {
 } from '../services/proposals/create.js';
 import {
   assertAllowedTelegramVoter,
-  getAllowedTelegramVoterIds,
+  getAllowedTelegramVoterUsernames,
   isAllowedTelegramVoter,
+  normalizeTelegramUsername,
 } from '../utils/telegram.js';
 
 const MAX_HASHTAGS = 8;
+const REQUIRED_APPROVALS = 2;
+const REQUIRED_REJECTIONS = 2;
 
 const hashtagSchema = z.string().min(1).max(64);
 
@@ -43,12 +46,12 @@ const createProposalInput = z.object({
 });
 
 const listForVotingInput = z.object({
-  telegramUserId: z.string().min(1).optional(),
+  telegramUsername: z.string().min(1).optional(),
 });
 
 const voteOnProposalInput = z.object({
   proposalId: z.string().uuid(),
-  telegramUserId: z.string().min(1),
+  telegramUsername: z.string().min(1),
   isPositive: z.boolean(),
 });
 
@@ -98,13 +101,13 @@ export const proposalsRouter = createRouter({
       order: { createdAt: 'DESC' },
     });
 
-      console.log("proposals: ", proposals);
     return proposals;
   }),
   listForVoting: procedure.input(listForVotingInput).query(async ({ input }) => {
-    const telegramUserId = input.telegramUserId;
+    const normalizedTelegramUsername = normalizeTelegramUsername(input.telegramUsername ?? null);
     const isAllowedToViewVotes =
-      typeof telegramUserId === 'string' && isAllowedTelegramVoter(telegramUserId);
+      typeof normalizedTelegramUsername === 'string' &&
+      isAllowedTelegramVoter(normalizedTelegramUsername);
 
     await initializeDataSource();
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
@@ -120,8 +123,10 @@ export const proposalsRouter = createRouter({
       const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
       const negativeVotes = votes.length - positiveVotes;
       const userVote =
-        isAllowedToViewVotes && telegramUserId
-          ? votes.find((vote: ProposalVote) => vote.telegramUserId === telegramUserId)
+        isAllowedToViewVotes && normalizedTelegramUsername
+          ? votes.find(
+              (vote: ProposalVote) => vote.telegramUsername === normalizedTelegramUsername,
+            )
           : undefined;
 
       const { votes: _votes, ...rest } = proposal;
@@ -137,7 +142,7 @@ export const proposalsRouter = createRouter({
     });
 
     return {
-      allowedVotersCount: getAllowedTelegramVoterIds().length,
+      allowedVotersCount: getAllowedTelegramVoterUsernames().length,
       proposals: normalized,
     };
   }),
@@ -153,9 +158,9 @@ export const proposalsRouter = createRouter({
     return proposal;
   }),
   vote: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
-    assertAllowedTelegramVoter(input.telegramUserId);
+    const normalizedTelegramUsername = assertAllowedTelegramVoter(input.telegramUsername);
 
-    const allowedVotersCount = getAllowedTelegramVoterIds().length;
+    const allowedVotersCount = getAllowedTelegramVoterUsernames().length;
     await initializeDataSource();
 
     const result = await appDataSource.transaction(async (manager: EntityManager) => {
@@ -171,14 +176,14 @@ export const proposalsRouter = createRouter({
       let vote = await voteRepository.findOne({
         where: {
           proposalId: input.proposalId,
-          telegramUserId: input.telegramUserId,
+          telegramUsername: normalizedTelegramUsername,
         },
       });
 
       if (!vote) {
         vote = voteRepository.create({
           proposalId: input.proposalId,
-          telegramUserId: input.telegramUserId,
+          telegramUsername: normalizedTelegramUsername,
           isPositive: input.isPositive,
         });
       } else {
@@ -209,8 +214,7 @@ export const proposalsRouter = createRouter({
         }
       }
 
-      const totalVotes = positiveVotes + negativeVotes;
-      if (totalVotes > 0 && positiveVotes / totalVotes > 0.5) {
+      if (positiveVotes >= REQUIRED_APPROVALS) {
         const walrusBlobUrl = proposal.walrusBlobUrl;
         if (!walrusBlobUrl) {
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing walrus blob URL for approved proposal' });
@@ -242,7 +246,7 @@ export const proposalsRouter = createRouter({
         };
       }
 
-      if (totalVotes > 0 && negativeVotes / totalVotes > 0.5) {
+      if (negativeVotes >= REQUIRED_REJECTIONS) {
         await voteRepository.delete({ proposalId: input.proposalId });
         await proposalRepository.delete({ id: input.proposalId });
 
