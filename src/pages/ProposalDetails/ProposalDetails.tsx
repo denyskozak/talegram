@@ -41,9 +41,7 @@ export default function ProposalDetails(): JSX.Element {
             setError(null);
             try {
                 const data = await fetchProposalById(id);
-                console.log("data: ", data);
                 const [book, coverImage] = await suiClient.walrus.getFiles({ids: [data?.walrusFileId!, data.coverWalrusFileId!]});
-                console.log("book: ", await coverImage.getIdentifier());
                 const bookURL = URL.createObjectURL(new Blob([new Uint8Array(await book.bytes())]));
                 const coverImageURL = URL.createObjectURL(new Blob([new Uint8Array(await coverImage.bytes())]));
                 if (!isCancelled) {
