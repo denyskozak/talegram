@@ -12,7 +12,7 @@ import {
 import { BookProposal } from './BookProposal.js';
 
 @Entity({ name: 'proposal_votes' })
-@Index(['proposalId', 'telegramUserId'], { unique: true })
+@Index(['proposalId', 'telegramUsername'], { unique: true })
 export class ProposalVote {
   @PrimaryColumn({ type: 'text' })
   id!: string;
@@ -26,8 +26,8 @@ export class ProposalVote {
   @JoinColumn({ name: 'proposal_id' })
   proposal!: BookProposal;
 
-  @Column({ name: 'telegram_user_id', type: 'text' })
-  telegramUserId!: string;
+  @Column({ name: 'telegram_username', type: 'text' })
+  telegramUsername!: string;
 
   @Column({ name: 'is_positive', type: 'boolean' })
   isPositive!: boolean;

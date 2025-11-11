@@ -6,13 +6,13 @@ export type BookProposal = {
     author: string;
     description: string;
     category: string;
-    coverImageURL: string;
-    bookURL: string;
+    coverImageURL?: string | null;
+    bookURL?: string | null;
     hashtags: string[];
     walrusBlobId: string;
     walrusFileId: string;
-    coverWalrusFileId: string;
-    walrusBlobUrl: string;
+    coverWalrusFileId: string | null;
+    walrusBlobUrl: string | null;
     coverWalrusBlobId?: string | null;
     coverMimeType?: string | null;
     coverFileName?: string | null;
