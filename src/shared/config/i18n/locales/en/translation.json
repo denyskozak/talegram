@@ -278,8 +278,10 @@
       "actions": {
         "approve": "Approve",
         "reject": "Reject",
-        "viewDetails": "View details"
+        "viewDetails": "View details",
+        "download": "Download book"
       },
+      "coverAlt": "Cover of \"{{title}}\"",
       "toast": {
         "submitted": "Vote saved",
         "approved": "Proposal approved and moved to the library",

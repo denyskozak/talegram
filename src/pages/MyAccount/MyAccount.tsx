@@ -766,6 +766,13 @@ export default function MyAccount(): JSX.Element {
                     normalizedTitle.length > 0
                       ? normalizedTitle.charAt(0).toUpperCase()
                       : "📘";
+                  const handleDownload = () => {
+                    if (!proposal.walrusBlobUrl) {
+                      return;
+                    }
+
+                    window.open(proposal.walrusBlobUrl, "_blank", "noopener,noreferrer");
+                  };
 
                   return (
                     <Card
@@ -774,21 +781,35 @@ export default function MyAccount(): JSX.Element {
                     >
                       <div style={{ display: "flex", gap: 12 }}>
                         <div
-                          aria-hidden={true}
                           style={{
-                            width: 64,
-                            height: 64,
+                            width: 72,
+                            height: 96,
                             borderRadius: 16,
+                            overflow: "hidden",
                             background: `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}33 100%)`,
-                            color: "#ffffff",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
+                            color: "#ffffff",
                             fontWeight: 600,
                             fontSize: 24,
+                            flexShrink: 0,
                           }}
                         >
-                          {coverInitial}
+                          {proposal.coverImageURL ? (
+                            <img
+                              src={proposal.coverImageURL}
+                              alt={t("account.voting.coverAlt", { title: proposal.title })}
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                display: "block",
+                              }}
+                            />
+                          ) : (
+                            coverInitial
+                          )}
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
                           <Title level="3" weight="2">
@@ -839,6 +860,16 @@ export default function MyAccount(): JSX.Element {
                         >
                           {t("account.voting.actions.viewDetails")}
                         </Button>
+                        {proposal.walrusBlobUrl && (
+                          <Button
+                            type="button"
+                            size="s"
+                            mode="outline"
+                            onClick={handleDownload}
+                          >
+                            {t("account.voting.actions.download")}
+                          </Button>
+                        )}
                         <Button
                           size="s"
                           mode={proposal.votes.userVote === "positive" && canVote ? "filled" : "outline"}

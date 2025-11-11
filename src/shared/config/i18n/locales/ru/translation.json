@@ -284,8 +284,10 @@
       "actions": {
         "approve": "Одобрить",
         "reject": "Отклонить",
-        "viewDetails": "Подробнее"
+        "viewDetails": "Подробнее",
+        "download": "Скачать книгу"
       },
+      "coverAlt": "Обложка книги «{{title}}»",
       "toast": {
         "submitted": "Голос сохранён",
         "approved": "Заявка одобрена и перенесена в библиотеку",
