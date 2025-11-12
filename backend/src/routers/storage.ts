@@ -8,6 +8,45 @@ import { BookProposal } from '../entities/BookProposal.js';
 import { suiClient } from '../services/walrus-storage.js';
 import { decryptBookFile } from '../services/encryption.js';
 
+const MAX_CACHE_SIZE = 100;
+
+type CachedDecryptedBlob = {
+  blobId: string;
+  fileName: string | null;
+  mimeType: string | null;
+  data: string;
+};
+
+const decryptedBlobCache = new Map<string, CachedDecryptedBlob>();
+
+const getCachedDecryptedBlob = (blobId: string): CachedDecryptedBlob | null => {
+  const cached = decryptedBlobCache.get(blobId);
+  if (!cached) {
+    return null;
+  }
+
+  // Refresh entry usage for LRU behaviour
+  decryptedBlobCache.delete(blobId);
+  decryptedBlobCache.set(blobId, cached);
+
+  return cached;
+};
+
+const cacheDecryptedBlob = (blobId: string, value: CachedDecryptedBlob) => {
+  if (decryptedBlobCache.has(blobId)) {
+    decryptedBlobCache.delete(blobId);
+  }
+
+  decryptedBlobCache.set(blobId, value);
+
+  if (decryptedBlobCache.size > MAX_CACHE_SIZE) {
+    const oldestKey = decryptedBlobCache.keys().next().value;
+    if (oldestKey) {
+      decryptedBlobCache.delete(oldestKey);
+    }
+  }
+};
+
 const getDecryptedBlobInput = z.object({
   blobId: z.string().trim().min(1),
 });
@@ -21,6 +60,11 @@ const getWalrusFilesInput = z.object({
 
 export const storageRouter = createRouter({
   getDecryptedBlob: procedure.input(getDecryptedBlobInput).query(async ({ input }) => {
+    const cached = getCachedDecryptedBlob(input.blobId);
+    if (cached) {
+      return cached;
+    }
+
     await initializeDataSource();
 
     const bookRepository = appDataSource.getRepository(Book);
@@ -54,12 +98,16 @@ export const storageRouter = createRouter({
     }
 
     if (isCoverBlob) {
-      return {
+      const result: CachedDecryptedBlob = {
         blobId: input.blobId,
         fileName: source.coverFileName ?? null,
         mimeType: source.coverMimeType ?? null,
         data: blobBytes.toString('base64'),
       };
+
+      cacheDecryptedBlob(input.blobId, result);
+
+      return result;
     }
 
     if (!source.fileEncryptionIv || !source.fileEncryptionTag) {
@@ -73,12 +121,16 @@ export const storageRouter = createRouter({
         Buffer.from(source.fileEncryptionTag, 'base64'),
       );
 
-      return {
+      const result: CachedDecryptedBlob = {
         blobId: input.blobId,
-        fileName: source.fileName,
+        fileName: source.fileName ?? null,
         mimeType: source.mimeType ?? null,
         data: decrypted.toString('base64'),
       };
+
+      cacheDecryptedBlob(input.blobId, result);
+
+      return result;
     } catch (error) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to decrypt blob' });
     }
