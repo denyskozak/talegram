@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next";
 
 import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
-import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
 import type { Book, ID } from "@/entities/book/types";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
@@ -56,7 +55,6 @@ export default function BookPage(): JSX.Element {
 
   useScrollToTop([id]);
 
-  const walrusCover = useWalrusCover(book?.coverWalrusBlobId, book?.coverMimeType);
 
   useEffect(
     () => () => {
@@ -474,17 +472,13 @@ export default function BookPage(): JSX.Element {
   }
 
   const coverSrc = useMemo(() => {
-    if (!book) {
-      return walrusCover ?? undefined;
-    }
-
-    if (book.coverImageData) {
+    if (book && book.coverImageData) {
       const mimeType = book.coverMimeType ?? "image/jpeg";
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
-    return walrusCover ?? resolveBookCover(book);
-  }, [book, walrusCover]);
+    return '';
+  }, [book]);
 
   if (isLoading || !book) {
     return <BookPageSkeleton />;

@@ -141,6 +141,7 @@ export const storageRouter = createRouter({
         console.warn('Failed to decrypt Walrus blob, falling back to original payload', {
           blobId: input.blobId,
         });
+          console.warn("error: ", error);
       }
     } else {
       console.warn('Missing or invalid encryption metadata for Walrus blob', { blobId: input.blobId });

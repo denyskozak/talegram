@@ -6,7 +6,6 @@ import { Card, Chip, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
-import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
 import { BookRating } from "./BookRating";
 
 interface BookCardProps {
@@ -16,7 +15,6 @@ interface BookCardProps {
 
 export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
   const { t } = useTranslation();
-  const walrusCover = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
 
   const coverSrc = useMemo(() => {
     if (book.coverImageData) {
@@ -25,7 +23,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
     }
 
     return '';
-  }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id, walrusCover]);
+  }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id]);
 
   return (
     <Tappable
