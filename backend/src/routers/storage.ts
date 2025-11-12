@@ -19,6 +19,26 @@ type CachedDecryptedBlob = {
 
 const decryptedBlobCache = new Map<string, CachedDecryptedBlob>();
 
+const AES_GCM_IV_LENGTH = 12;
+const AES_GCM_TAG_LENGTH = 16;
+
+const decodeBase64Buffer = (value: string | null | undefined): Buffer | null => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  try {
+    return Buffer.from(trimmed, 'base64');
+  } catch (error) {
+    return null;
+  }
+};
+
 const getCachedDecryptedBlob = (blobId: string): CachedDecryptedBlob | null => {
   const cached = decryptedBlobCache.get(blobId);
   if (!cached) {
@@ -109,30 +129,33 @@ export const storageRouter = createRouter({
       return result;
     }
 
-    if (!source.fileEncryptionIv || !source.fileEncryptionTag) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing encryption metadata' });
+    const iv = decodeBase64Buffer(source.fileEncryptionIv);
+    const tag = decodeBase64Buffer(source.fileEncryptionTag);
+
+    let payload = blobBytes;
+
+    if (iv && iv.byteLength === AES_GCM_IV_LENGTH && tag && tag.byteLength === AES_GCM_TAG_LENGTH) {
+      try {
+        payload = decryptBookFile(blobBytes, iv, tag);
+      } catch (error) {
+        console.warn('Failed to decrypt Walrus blob, falling back to original payload', {
+          blobId: input.blobId,
+        });
+      }
+    } else {
+      console.warn('Missing or invalid encryption metadata for Walrus blob', { blobId: input.blobId });
     }
 
-    try {
-      const decrypted = decryptBookFile(
-        blobBytes,
-        Buffer.from(source.fileEncryptionIv, 'base64'),
-        Buffer.from(source.fileEncryptionTag, 'base64'),
-      );
+    const result: CachedDecryptedBlob = {
+      blobId: input.blobId,
+      fileName: source.fileName ?? null,
+      mimeType: source.mimeType ?? null,
+      data: payload.toString('base64'),
+    };
 
-      const result: CachedDecryptedBlob = {
-        blobId: input.blobId,
-        fileName: source.fileName ?? null,
-        mimeType: source.mimeType ?? null,
-        data: decrypted.toString('base64'),
-      };
+    cacheDecryptedBlob(input.blobId, result);
 
-      cacheDecryptedBlob(input.blobId, result);
-
-      return result;
-    } catch (error) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to decrypt blob' });
-    }
+    return result;
   }),
   getWalrusFiles: procedure.input(getWalrusFilesInput).query(async ({ input }) => {
     try {
