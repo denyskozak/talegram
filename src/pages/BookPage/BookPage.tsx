@@ -67,9 +67,9 @@ export default function BookPage(): JSX.Element {
     },
     [],
   );
-
+    console.log("launchParams?.tgWebAppData?: ", launchParams?.tgWebAppData);
   const telegramUserId = useMemo(() => {
-    const user = (launchParams?.initData as { user?: { id?: number | string } } | undefined)?.user;
+    const user = launchParams?.tgWebAppData?.user;
     const rawId = user?.id;
 
     if (typeof rawId === "number") {

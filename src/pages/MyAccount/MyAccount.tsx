@@ -34,6 +34,7 @@ import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramU
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import type { MyBook } from "./types";
+import {downloadFile} from "@telegram-apps/sdk-react";
 
 export default function MyAccount(): JSX.Element {
   const { t } = useTranslation();
@@ -78,10 +79,10 @@ export default function MyAccount(): JSX.Element {
   );
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
+  const [downloadingProposalId, setDownloadingProposalId] = useState<string | null>(null);
   const [myBooks, setMyBooks] = useState<MyBook[]>([]);
   const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
   const [myBooksError, setMyBooksError] = useState<string | null>(null);
-  const [downloadingBookId, setDownloadingBookId] = useState<string | null>(null);
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
@@ -204,57 +205,6 @@ export default function MyAccount(): JSX.Element {
   const handleRetryMyBooks = useCallback(() => {
     void loadMyBooks();
   }, [loadMyBooks]);
-
-  const handleReadBook = useCallback(
-    (bookId: string) => {
-      navigate(`/book/${bookId}?action=read`);
-    },
-    [navigate],
-  );
-
-  const handleDownloadBook = useCallback(
-    async (bookId: string) => {
-      const entry = myBooks.find((item) => item.book.id === bookId);
-      if (!entry) {
-        return;
-      }
-
-      if (!entry.purchase.walrusBlobId) {
-        showToast(t("account.myBooks.toast.missingFile"));
-        return;
-      }
-
-      setDownloadingBookId(bookId);
-      try {
-        const blob = await fetchDecryptedBlob(entry.purchase.walrusBlobId);
-        const downloadUrl = URL.createObjectURL(
-          new Blob([base64ToUint8Array(blob.data)], {
-            type: blob.mimeType ?? entry.book.mimeType ?? "application/pdf",
-          }),
-        );
-        const anchor = document.createElement("a");
-        anchor.href = downloadUrl;
-        const resolvedFileName =
-          entry.book.fileName?.trim().length
-            ? entry.book.fileName
-            : blob.fileName ?? `${entry.book.title}.pdf`;
-        if (resolvedFileName) {
-          anchor.download = resolvedFileName;
-        }
-        anchor.rel = "noreferrer";
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-        URL.revokeObjectURL(downloadUrl);
-      } catch (error) {
-        console.error("Failed to download purchased book", error);
-        showToast(t("account.myBooks.toast.downloadError"));
-      } finally {
-        setDownloadingBookId(null);
-      }
-    },
-    [myBooks, showToast, t],
-  );
 
   const loadVotingProposals = useCallback(async () => {
     setIsVotingLoading(true);
@@ -416,9 +366,6 @@ export default function MyAccount(): JSX.Element {
           isLoading={isMyBooksLoading}
           error={myBooksError}
           onRetry={handleRetryMyBooks}
-          onRead={handleReadBook}
-          onDownload={handleDownloadBook}
-          downloadingBookId={downloadingBookId}
         />
       )}
 
@@ -453,6 +400,8 @@ export default function MyAccount(): JSX.Element {
           isTelegramUser={Boolean(telegramUsername)}
           allowedVotersCount={displayedAllowedVoters}
           requiredApprovals={REQUIRED_APPROVALS}
+          downloadingProposalId={downloadingProposalId}
+          onDownload={handleDownloadProposal}
           onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}
           onRetry={handleRetryVoting}
         />
