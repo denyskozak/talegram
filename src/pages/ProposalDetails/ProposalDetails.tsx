@@ -7,8 +7,6 @@ import {Button, Card, Chip, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTheme} from "@/app/providers/ThemeProvider";
 import {fetchProposalById} from "@/entities/proposal/api";
 import type {BookProposal} from "@/entities/proposal/types";
-import { fetchDecryptedBlob } from "@/shared/api/storage";
-import { base64ToUint8Array } from "@/shared/lib/base64";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -42,45 +40,8 @@ export default function ProposalDetails(): JSX.Element {
             setError(null);
             try {
                 const data = await fetchProposalById(id);
-                const fileIds = [data.walrusFileId];
-                if (data.coverWalrusFileId) {
-                    fileIds.push(data.coverWalrusFileId);
-                }
-
-                const bookBlob = await fetchDecryptedBlob(data.walrusBlobId);
-                const coverImageBlob = await fetchDecryptedBlob(data.coverWalrusBlobId);
-
-                if (!bookBlob) {
-                    console.error("Failed to load Walrus book file", bookBlob);
-                }
-
-                const bookURL = bookBlob
-                    ? URL.createObjectURL(
-                        new Blob([
-                            base64ToUint8Array(bookBlob.data),
-                        ], { type: data.mimeType ?? "application/octet-stream" }),
-                    )
-                    : null;
-
-
-                if (data.coverWalrusFileId && !coverImageBlob) {
-                    console.warn("Cover Walrus file missing", data.coverWalrusFileId);
-                }
-
-                const coverImageURL = coverImageBlob
-                    ? URL.createObjectURL(
-                        new Blob(
-                            [base64ToUint8Array(coverImageBlob.data)],
-                            { type: data.coverMimeType ?? "image/jpeg" },
-                        ),
-                    )
-                    : null;
                 if (!isCancelled) {
-                    setProposal({
-                        ...data,
-                        bookURL,
-                        coverImageURL
-                    });
+                    setProposal(data);
                 }
             } catch (loadError) {
                 console.error("Failed to load proposal", loadError);
@@ -112,6 +73,19 @@ export default function ProposalDetails(): JSX.Element {
     const statusLabel = proposal
         ? t(`proposalDetails.status.${proposal.status}`)
         : "";
+    const coverImageURL = useMemo(() => {
+        if (!proposal?.coverImageData) {
+            return null;
+        }
+
+        try {
+            const mimeType = proposal.coverMimeType ?? "image/jpeg";
+            return `data:${mimeType};base64,${proposal.coverImageData}`;
+        } catch (error) {
+            console.error("Failed to build cover image URL", error);
+            return null;
+        }
+    }, [proposal]);
 
     console.log("proposal: ", proposal);
     return (
@@ -143,8 +117,9 @@ export default function ProposalDetails(): JSX.Element {
                         <Title level="1" weight="2">
                             {proposal.title}
                         </Title>
-                        {proposal.coverImageURL ? (
-                            <img style={{width: 200, height: 100}} src={proposal.coverImageURL}/>) : null}
+                        {coverImageURL ? (
+                            <img style={{width: 200, height: 100}} src={coverImageURL}/>
+                        ) : null}
                         <Text style={{color: theme.subtitle}}>{proposal.author}</Text>
                     </header>
 
