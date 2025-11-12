@@ -215,10 +215,8 @@ export default function MyAccount(): JSX.Element {
 
   const handleVote = useCallback(
     async (proposalId: string, direction: VoteDirection) => {
-      if (!canVote || !telegramUsername) {
-        showToast(
-          t(telegramUsername ? "account.voting.notAllowed" : "account.voting.notTelegram"),
-        );
+      if (!telegramUsername || !canVote) {
+        showToast(t("account.voting.notAllowed"));
         return;
       }
 

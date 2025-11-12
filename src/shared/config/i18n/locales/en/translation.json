@@ -272,7 +272,6 @@
       "title": "Editorial voting",
       "description": "Review incoming book proposals and decide their future.",
       "threshold": "{{required}} approvals are required. Authorized voters: {{count}}.",
-      "notTelegram": "Open the mini app inside Telegram to participate in voting.",
       "notAllowed": "Voting is limited to @lawyerdsupport and @oxfrrdd.",
       "empty": "No book proposals are waiting for your vote.",
       "loading": "Loading proposals...",
