@@ -87,30 +87,26 @@ export async function createBookProposal(
   const bookFile = WalrusFile.from({
     contents: encryptedData,
     identifier: `book:${params.file.name}`,
+      tags: {
+          'content-type': params.file.mimeType!,
+      },
   });
 
   const coverFile = WalrusFile.from({
     contents: params.cover.data,
     identifier: `cover:${params.cover.name}`,
+      tags: {
+          'content-type': params.cover.mimeType!,
+      },
   });
 
-  const [bookUploadResults, coverUploadResults] = await Promise.all([
-    suiClient.walrus.writeFiles({
-      files: [bookFile],
+  const [uploadResult, coverUploadResult] = await suiClient.walrus.writeFiles({
+      files: [bookFile, coverFile],
       epochs: 3,
       deletable: true,
       signer: keypair,
-    }),
-    suiClient.walrus.writeFiles({
-      files: [coverFile],
-      epochs: 3,
-      deletable: true,
-      signer: keypair,
-    }),
-  ]);
+  });
 
-  const uploadResult = bookUploadResults[0];
-  const coverUploadResult = coverUploadResults[0];
 
   if (!uploadResult || !coverUploadResult) {
     throw new TRPCError({

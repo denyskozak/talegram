@@ -51,34 +51,3 @@ function resolveMimeType(mimeType: string | null | undefined): string {
   return 'application/octet-stream';
 }
 
-export async function fetchWalrusCoverData(
-  blobId: string | null | undefined,
-  mimeType: string | null | undefined,
-): Promise<string> {
-  if (!blobId) {
-    return '';
-  }
-
-    console.log("blobId: ", blobId);
-  const cached = walrusCoverCache.get(blobId);
-    console.log("cached: ", cached);
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  try {
-    const blob = await suiClient.walrus.getBlob({ blobId });
-      console.log("blob: ", blob);
-    const file = blob.asFile();
-    const bytes = await file.bytes();
-    const dataUrl = `data:${resolveMimeType(mimeType)};base64,${Buffer.from(bytes).toString('base64')}`;
-    walrusCoverCache.set(blobId, dataUrl);
-    return dataUrl;
-  } catch (error) {
-    return '';
-  }
-}
-
-export function clearWalrusCoverCache(): void {
-  walrusCoverCache.clear();
-}

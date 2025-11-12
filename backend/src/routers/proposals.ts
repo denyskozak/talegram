@@ -9,11 +9,7 @@ import { createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { normalizeCategoryId } from '../utils/categories.js';
 import { suiClient } from '../services/walrus-storage.js';
-import {
-  MAX_COVER_FILE_SIZE_BYTES,
-  MAX_FILE_SIZE_BYTES,
-  createBookProposal,
-} from '../services/proposals/create.js';
+
 import {
   assertAllowedTelegramVoter,
   getAllowedTelegramVoterUsernames,
@@ -21,32 +17,10 @@ import {
   normalizeTelegramUsername,
 } from '../utils/telegram.js';
 
-const MAX_HASHTAGS = 8;
 const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 2;
 
-const hashtagSchema = z.string().min(1).max(64);
 
-const createProposalInput = z.object({
-  title: z.string().min(1).max(512),
-  author: z.string().min(1).max(512),
-  description: z.string().min(1),
-  category: z.string().min(1).max(256),
-  price: z.number().int().min(0).max(1_000_000),
-  hashtags: z.array(hashtagSchema).max(MAX_HASHTAGS).optional(),
-  file: z.object({
-    name: z.string().min(1).max(512),
-    mimeType: z.string().min(1).max(128).optional(),
-    size: z.number().int().nonnegative().max(MAX_FILE_SIZE_BYTES).optional(),
-    content: z.string().min(1),
-  }),
-  cover: z.object({
-    name: z.string().min(1).max(512),
-    mimeType: z.string().min(1).max(128).optional(),
-    size: z.number().int().nonnegative().max(MAX_COVER_FILE_SIZE_BYTES).optional(),
-    content: z.string().min(1),
-  }),
-});
 
 const listForVotingInput = z.object({
   telegramUsername: z.string().min(1).optional(),
@@ -63,41 +37,6 @@ const getProposalByIdInput = z.object({
 });
 
 export const proposalsRouter = createRouter({
-  create: procedure.input(createProposalInput).mutation(async ({ input }) => {
-    const fileBuffer = Buffer.from(input.file.content, 'base64');
-    const coverBuffer = Buffer.from(input.cover.content, 'base64');
-
-    if (input.file.size && input.file.size > MAX_FILE_SIZE_BYTES) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'File size exceeds the allowed limit' });
-    }
-
-    if (input.cover.size && input.cover.size > MAX_COVER_FILE_SIZE_BYTES) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
-    }
-
-    const proposal = await createBookProposal({
-      title: input.title,
-      author: input.author,
-      description: input.description,
-      category: input.category,
-      price: input.price,
-      hashtags: input.hashtags ?? [],
-      file: {
-        name: input.file.name,
-        mimeType: input.file.mimeType,
-        size: input.file.size,
-        data: fileBuffer,
-      },
-      cover: {
-        name: input.cover.name,
-        mimeType: input.cover.mimeType,
-        size: input.cover.size,
-        data: coverBuffer,
-      },
-    });
-
-    return proposal;
-  }),
   list: procedure.query(async () => {
     await initializeDataSource();
     const bookProposalRepository = appDataSource.getRepository(BookProposal);

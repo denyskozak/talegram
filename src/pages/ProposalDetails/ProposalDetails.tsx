@@ -100,12 +100,12 @@ export default function ProposalDetails(): JSX.Element {
             }}
         >
             <Button type="button" mode="outline" size="s" onClick={() => navigate(-1)}>
-                {t("proposalDetails.back")}
+                {t("account.proposalDetails.back")}
             </Button>
 
             {isLoading ? (
                 <Card style={{padding: 20}}>
-                    <Text style={{color: theme.subtitle}}>{t("proposalDetails.loading")}</Text>
+                    <Text style={{color: theme.subtitle}}>{t("account.proposalDetails.loading")}</Text>
                 </Card>
             ) : error ? (
                 <Card style={{padding: 20}}>
@@ -125,15 +125,15 @@ export default function ProposalDetails(): JSX.Element {
 
                     <Card style={{padding: 20, display: "flex", flexDirection: "column", gap: 16}}>
                         <Title level="3" weight="2">
-                            {t("proposalDetails.sections.overview")}
+                            {t("account.proposalDetails.sections.overview")}
                         </Title>
                         <div style={{display: "flex", flexDirection: "column", gap: 12}}>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                                <Text weight="2">{t("proposalDetails.category")}</Text>
+                                <Text weight="2">{t("account.proposalDetails.category")}</Text>
                                 <Chip mode="outline">{proposal.category}</Chip>
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                                <Text weight="2">{t("proposalDetails.price")}</Text>
+                                <Text weight="2">{t("account.proposalDetails.price")}</Text>
                                 <Text style={{color: theme.text}}>
                                     {proposal.currency === "stars"
                                         ? `${proposal.price} ⭐`
@@ -141,7 +141,7 @@ export default function ProposalDetails(): JSX.Element {
                                 </Text>
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                                <Text weight="2">{t("proposalDetails.hashtags")}</Text>
+                                <Text weight="2">{t("account.proposalDetails.hashtags")}</Text>
                                 {proposal.hashtags.length > 0 ? (
                                     <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
                                         {proposal.hashtags.map((tag) => (
@@ -151,25 +151,25 @@ export default function ProposalDetails(): JSX.Element {
                                         ))}
                                     </div>
                                 ) : (
-                                    <Text style={{color: theme.subtitle}}>{t("proposalDetails.noHashtags")}</Text>
+                                    <Text style={{color: theme.subtitle}}>{t("account.proposalDetails.noHashtags")}</Text>
                                 )}
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                                <Text weight="2">{t("proposalDetails.status.label")}</Text>
+                                <Text weight="2">{t("account.proposalDetails.status.label")}</Text>
                                 <Text style={{color: theme.text}}>{statusLabel}</Text>
                             </div>
                             <Text style={{color: theme.subtitle}}>
-                                {t("proposalDetails.submitted", {value: formattedCreatedAt})}
+                                {t("account.proposalDetails.submitted", {value: formattedCreatedAt})}
                             </Text>
                             <Text style={{color: theme.subtitle}}>
-                                {t("proposalDetails.updated", {value: formattedUpdatedAt})}
+                                {t("account.proposalDetails.updated", {value: formattedUpdatedAt})}
                             </Text>
                         </div>
                     </Card>
 
                     <Card style={{padding: 20, display: "flex", flexDirection: "column", gap: 12}}>
                         <Title level="3" weight="2">
-                            {t("proposalDetails.sections.description")}
+                            {t("account.proposalDetails.sections.description")}
                         </Title>
                         <Text style={{color: theme.text, whiteSpace: "pre-wrap"}}>
                             {proposal.description}
@@ -178,11 +178,11 @@ export default function ProposalDetails(): JSX.Element {
 
                     <Card style={{padding: 20, display: "flex", flexDirection: "column", gap: 12}}>
                         <Title level="3" weight="2">
-                            {t("proposalDetails.sections.files")}
+                            {t("account.proposalDetails.sections.files")}
                         </Title>
                         <div style={{display: "flex", flexDirection: "column", gap: 8}}>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                                <Text weight="2">{t("proposalDetails.manuscript")}</Text>
+                                <Text weight="2">{t("account.proposalDetails.manuscript")}</Text>
                                 <Text style={{color: theme.subtitle}}>{proposal.fileName}</Text>
                                 {proposal.walrusBlobUrl ? (
                                     <a
@@ -194,16 +194,16 @@ export default function ProposalDetails(): JSX.Element {
                                             fontWeight: 500,
                                         }}
                                     >
-                                        {t("proposalDetails.download")}
+                                        {t("account.proposalDetails.download")}
                                     </a>
                                 ) : (
-                                    <Text style={{color: theme.hint}}>{t("proposalDetails.noDownload")}</Text>
+                                    <Text style={{color: theme.hint}}>{t("account.proposalDetails.noDownload")}</Text>
                                 )}
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                                <Text weight="2">{t("proposalDetails.cover")}</Text>
+                                <Text weight="2">{t("account.proposalDetails.cover")}</Text>
                                 <Text style={{color: theme.subtitle}}>
-                                    {proposal.coverFileName ?? t("proposalDetails.noCover")}
+                                    {proposal.coverFileName ?? t("account.proposalDetails.noCover")}
                                 </Text>
                             </div>
                         </div>
