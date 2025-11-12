@@ -8,8 +8,41 @@ import {
   ManyToOne,
   PrimaryColumn,
   UpdateDateColumn,
+  type ValueTransformer,
 } from 'typeorm';
 import { BookProposal } from './BookProposal.js';
+
+const stringArrayTransformer: ValueTransformer = {
+  to(value: string[] | null): string {
+    if (!Array.isArray(value) || value.length === 0) {
+      return '[]';
+    }
+
+    const normalized = value
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter((item) => item.length > 0);
+
+    return JSON.stringify(normalized);
+  },
+  from(value: unknown): string[] {
+    if (typeof value !== 'string' || value.length === 0) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((item) => (typeof item === 'string' ? item.trim() : ''))
+          .filter((item) => item.length > 0);
+      }
+    } catch (error) {
+      // Ignore malformed JSON and fall back to an empty list
+    }
+
+    return [];
+  },
+};
 
 @Entity({ name: 'books' })
 export class Book {
@@ -60,6 +93,37 @@ export class Book {
 
   @Column({ name: 'proposal_id', type: 'text', nullable: true })
   proposalId!: string | null;
+
+  @Column({
+    name: 'categories',
+    type: 'text',
+    transformer: stringArrayTransformer,
+    default: '[]',
+  })
+  categories!: string[];
+
+  @Column({
+    name: 'tags',
+    type: 'text',
+    transformer: stringArrayTransformer,
+    default: '[]',
+  })
+  tags!: string[];
+
+  @Column({ name: 'price_stars', type: 'integer', default: 0 })
+  priceStars!: number;
+
+  @Column({ name: 'rating_average', type: 'real', default: 0 })
+  ratingAverage!: number;
+
+  @Column({ name: 'rating_votes', type: 'integer', default: 0 })
+  ratingVotes!: number;
+
+  @Column({ name: 'reviews_count', type: 'integer', default: 0 })
+  reviewsCount!: number;
+
+  @Column({ name: 'published_at', type: 'datetime', nullable: true })
+  publishedAt!: Date | null;
 
   @ManyToOne(() => BookProposal, (proposal: BookProposal) => proposal.books, {
     onDelete: 'SET NULL',

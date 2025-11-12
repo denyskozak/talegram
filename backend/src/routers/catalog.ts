@@ -52,20 +52,22 @@ export const catalogRouter = createRouter({
   listBooks: procedure
     .input(listBooksInput.optional())
     .query(({ input }) => listBooks(input ?? {})),
-  getBook: procedure.input(getBookInput).query(({ input }) => {
-    const book = getBook(input.id);
+  getBook: procedure.input(getBookInput).query(async ({ input }) => {
+    const book = await getBook(input.id);
     if (!book) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
     return book;
   }),
-  listReviews: procedure.input(listReviewsInput).query(({ input }) => listReviews(input.bookId, input)),
+  listReviews: procedure
+    .input(listReviewsInput)
+    .query(({ input }) => listReviews(input.bookId, input)),
   listCategoryTags: procedure
     .input(listCategoryTagsInput)
     .query(({ input }) => listCategoryTags(input.categoryId, input.limit)),
-  createReview: procedure.input(createReviewInput).mutation(({ input }) => {
-    const book = getBook(input.bookId);
+  createReview: procedure.input(createReviewInput).mutation(async ({ input }) => {
+    const book = await getBook(input.bookId);
     if (!book) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }

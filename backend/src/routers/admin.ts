@@ -1,12 +1,6 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import {
-  createBookMetadata,
-  deleteBookMetadata,
-  getBook,
-  listAllBooks,
-  updateBookMetadata,
-} from '../data/catalog.js';
+import { getBook, listAllBooks } from '../data/catalog.js';
 import { createRouter, procedure } from '../trpc/trpc.js';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin123';
@@ -75,27 +69,31 @@ export const adminRouter = createRouter({
     return { success: true } as const;
   }),
   listBooks: adminProcedure.query(() => listAllBooks()),
-  getBook: adminProcedure.input(getBookInput).query(({ input }) => {
-    const book = getBook(input.id);
+  getBook: adminProcedure.input(getBookInput).query(async ({ input }) => {
+    const book = await getBook(input.id);
     if (!book) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
     return book;
   }),
-  createBook: adminProcedure.input(createBookInput).mutation(({ input }) =>
-    createBookMetadata({
-      ...input,
-      tags: input.tags ?? [],
-      reviewsCount: input.reviewsCount ?? 0,
-    }),
-  ),
-  updateBook: adminProcedure.input(updateBookInput).mutation(({ input }) =>
-    updateBookMetadata(input.id, input.patch),
-  ),
-  deleteBook: adminProcedure.input(deleteBookInput).mutation(({ input }) => {
-    deleteBookMetadata(input.id);
-    return { success: true } as const;
+  createBook: adminProcedure.input(createBookInput).mutation(() => {
+    throw new TRPCError({
+      code: 'NOT_IMPLEMENTED',
+      message: 'Manual book management is disabled for the database-backed catalog.',
+    });
+  }),
+  updateBook: adminProcedure.input(updateBookInput).mutation(() => {
+    throw new TRPCError({
+      code: 'NOT_IMPLEMENTED',
+      message: 'Manual book management is disabled for the database-backed catalog.',
+    });
+  }),
+  deleteBook: adminProcedure.input(deleteBookInput).mutation(() => {
+    throw new TRPCError({
+      code: 'NOT_IMPLEMENTED',
+      message: 'Manual book management is disabled for the database-backed catalog.',
+    });
   }),
 });
 

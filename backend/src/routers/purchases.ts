@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Buffer } from 'node:buffer';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import {
   getPurchaseDetails,
@@ -24,7 +23,7 @@ export const purchasesRouter = createRouter({
     details: getPurchaseDetails(input.bookId) ?? null,
   })),
   confirm: procedure.input(confirmPurchaseInput).mutation(async ({ input }) => {
-    const book = getBook(input.bookId);
+    const book = await getBook(input.bookId);
     if (!book) {
       throw new Error('Book not found');
     }
