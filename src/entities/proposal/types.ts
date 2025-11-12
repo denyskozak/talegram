@@ -8,13 +8,10 @@ export type BookProposal = {
     category: string;
     price: number;
     currency: string;
-    coverImageURL?: string | null;
-    bookURL?: string | null;
     hashtags: string[];
     walrusBlobId: string;
     walrusFileId: string;
     coverWalrusFileId: string | null;
-    walrusBlobUrl: string | null;
     coverWalrusBlobId?: string | null;
     coverMimeType?: string | null;
     coverFileName?: string | null;

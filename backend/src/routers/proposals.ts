@@ -8,7 +8,6 @@ import { ProposalVote } from '../entities/ProposalVote.js';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { normalizeCategoryId } from '../utils/categories.js';
-import { fetchWalrusCoverData } from '../utils/walrus-cover.js';
 import {
   MAX_COVER_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_BYTES,
@@ -62,17 +61,6 @@ const getProposalByIdInput = z.object({
   proposalId: z.string().uuid(),
 });
 
-async function withProposalCover<T extends {
-  coverWalrusBlobId: string | null;
-  coverMimeType: string | null;
-}>(proposal: T): Promise<T & { coverImageURL: string | null }> {
-  const coverImageData = await fetchWalrusCoverData(proposal.coverWalrusBlobId, proposal.coverMimeType);
-  return {
-    ...proposal,
-    coverImageURL: coverImageData.length > 0 ? coverImageData : null,
-  };
-}
-
 export const proposalsRouter = createRouter({
   create: procedure.input(createProposalInput).mutation(async ({ input }) => {
     const fileBuffer = Buffer.from(input.file.content, 'base64');
@@ -107,7 +95,7 @@ export const proposalsRouter = createRouter({
       },
     });
 
-    return withProposalCover(proposal);
+    return proposal;
   }),
   list: procedure.query(async () => {
     await initializeDataSource();
@@ -116,7 +104,7 @@ export const proposalsRouter = createRouter({
       order: { createdAt: 'DESC' },
     });
 
-    return Promise.all(proposals.map((proposal) => withProposalCover(proposal)));
+    return proposals;
   }),
   listForVoting: procedure.input(listForVotingInput).query(async ({ input }) => {
     const normalizedTelegramUsername = normalizeTelegramUsername(input.telegramUsername ?? null);
@@ -156,13 +144,9 @@ export const proposalsRouter = createRouter({
       };
     });
 
-    const proposalsWithCovers = await Promise.all(
-      normalized.map((proposal) => withProposalCover(proposal)),
-    );
-
     return {
       allowedVotersCount: getAllowedTelegramVoterUsernames().length,
-      proposals: proposalsWithCovers,
+      proposals: normalized,
     };
   }),
   getById: procedure.input(getProposalByIdInput).query(async ({ input }) => {
@@ -174,7 +158,7 @@ export const proposalsRouter = createRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
     }
 
-    return withProposalCover(proposal);
+    return proposal;
   }),
   vote: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
     const normalizedTelegramUsername = assertAllowedTelegramVoter(input.telegramUsername);

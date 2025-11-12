@@ -5,7 +5,6 @@ export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
   walrusBlobId: string | null;
-  downloadUrl: string | null;
 };
 
 function mapEntityToDetails(entity: Purchase): PurchaseDetails {
@@ -13,7 +12,6 @@ function mapEntityToDetails(entity: Purchase): PurchaseDetails {
     paymentId: entity.paymentId,
     purchasedAt: entity.purchasedAt.toISOString(),
     walrusBlobId: entity.walrusBlobId ?? null,
-    downloadUrl: entity.downloadUrl ?? null,
   };
 }
 
@@ -29,7 +27,6 @@ export const setPurchased = async (
     existing.paymentId = details.paymentId;
     existing.purchasedAt = new Date(details.purchasedAt);
     existing.walrusBlobId = details.walrusBlobId ?? null;
-    existing.downloadUrl = details.downloadUrl ?? null;
     await repository.save(existing);
     return;
   }
@@ -40,7 +37,6 @@ export const setPurchased = async (
     paymentId: details.paymentId,
     purchasedAt: new Date(details.purchasedAt),
     walrusBlobId: details.walrusBlobId ?? null,
-    downloadUrl: details.downloadUrl ?? null,
   });
 
   await repository.save(purchase);

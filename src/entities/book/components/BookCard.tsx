@@ -4,6 +4,7 @@ import { Card, Chip, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
+import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
 import { BookRating } from "./BookRating";
 
 interface BookCardProps {
@@ -13,6 +14,8 @@ interface BookCardProps {
 
 export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
   const { t } = useTranslation();
+  const walrusCover = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
+  const coverSrc = walrusCover ?? resolveBookCover(book);
 
   return (
     <Tappable
@@ -24,7 +27,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       <Card style={{ width: '100%', borderRadius: 20, overflow: "hidden" }}>
         <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--app-section-color)" }}>
           <img
-            src={resolveBookCover(book)}
+            src={coverSrc}
             alt={t("book.coverAlt", { title: book.title })}
             loading="lazy"
             onError={handleBookCoverError}

@@ -8,11 +8,7 @@ function hasCoverData(coverUrl: string | undefined | null): coverUrl is string {
   return typeof coverUrl === "string" && coverUrl.trim().length > 0;
 }
 
-export function resolveBookCover(book: Pick<Book, "id" | "coverUrl" | "coverImageURL">): string {
-  if (hasCoverData(book.coverImageURL)) {
-    return book.coverImageURL;
-  }
-
+export function resolveBookCover(book: Pick<Book, "id" | "coverUrl">): string {
   if (hasCoverData(book.coverUrl)) {
     return book.coverUrl;
   }

@@ -128,12 +128,12 @@
       "invoiceFailed": "Не удалось создать счёт TON Stars",
       "confirmFailed": "Не удалось подтвердить оплату",
       "paymentCancelled": "Оплата отменена",
-      "paymentFailed": "Оплата не прошла"
+      "paymentFailed": "Оплата не прошла",
+      "downloadFailed": "Не удалось загрузить файл книги. Попробуйте позже."
     },
     "purchase": {
       "statusTitle": "Детали покупки",
-      "downloadDescription": "Сохраните ссылку ниже, чтобы не потерять доступ к книге.",
-      "downloadLabel": "Ссылка на скачивание",
+      "downloadDescription": "Скачайте книгу с помощью кнопки выше и сохраните идентификатор Walrus ниже, чтобы не потерять доступ.",
       "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Покупка оформлена",
       "invoiceDescription": "Откройте счёт TON Stars в Telegram, завершите оплату и вернитесь сюда, чтобы открыть книгу.",
@@ -295,6 +295,7 @@
         "viewDetails": "Подробнее",
         "download": "Скачать книгу"
       },
+      "downloadError": "Не удалось скачать рукопись. Попробуйте позже.",
       "price": "Цена: {{value}} ⭐",
       "priceWithCurrency": "Цена: {{value}} {{currency}}",
       "coverAlt": "Обложка книги «{{title}}»",

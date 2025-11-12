@@ -26,30 +26,49 @@ export const storageRouter = createRouter({
     const bookRepository = appDataSource.getRepository(Book);
     const proposalRepository = appDataSource.getRepository(BookProposal);
 
-    const book = await bookRepository.findOne({ where: { walrusBlobId: input.blobId } });
-    const source =
-      book ?? (await proposalRepository.findOne({ where: { walrusBlobId: input.blobId } }));
+    const book = await bookRepository.findOne({
+      where: [{ walrusBlobId: input.blobId }, { coverWalrusBlobId: input.blobId }],
+    });
+
+    const proposal = book
+      ? null
+      : await proposalRepository.findOne({
+          where: [{ walrusBlobId: input.blobId }, { coverWalrusBlobId: input.blobId }],
+        });
+
+    const source = book ?? proposal;
 
     if (!source) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Blob metadata not found' });
+    }
+
+    const isCoverBlob = source.coverWalrusBlobId === input.blobId;
+
+    let blobBytes: Buffer;
+    try {
+      const blob = await suiClient.walrus.getBlob({ blobId: input.blobId });
+      const file = blob.asFile();
+      blobBytes = Buffer.from(await file.bytes());
+    } catch (error) {
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch blob from Walrus' });
+    }
+
+    if (isCoverBlob) {
+      return {
+        blobId: input.blobId,
+        fileName: source.coverFileName ?? null,
+        mimeType: source.coverMimeType ?? null,
+        data: blobBytes.toString('base64'),
+      };
     }
 
     if (!source.fileEncryptionIv || !source.fileEncryptionTag) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing encryption metadata' });
     }
 
-    let encryptedBytes: Buffer;
-    try {
-      const blob = await suiClient.walrus.getBlob({ blobId: input.blobId });
-      const file = blob.asFile();
-      encryptedBytes = Buffer.from(await file.bytes());
-    } catch (error) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch blob from Walrus' });
-    }
-
     try {
       const decrypted = decryptBookFile(
-        encryptedBytes,
+        blobBytes,
         Buffer.from(source.fileEncryptionIv, 'base64'),
         Buffer.from(source.fileEncryptionTag, 'base64'),
       );

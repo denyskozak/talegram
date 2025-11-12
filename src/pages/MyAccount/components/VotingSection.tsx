@@ -17,6 +17,8 @@ export type VotingSectionProps = {
   pendingVote: PendingVoteState;
   allowedVotersCount: number;
   requiredApprovals?: number;
+  downloadingProposalId?: string | null;
+  onDownload?: (proposalId: string) => void;
   onVote: (proposalId: string, direction: VoteDirection) => void;
   onViewDetails: (proposalId: string) => void;
   onRetry: () => void;
@@ -33,6 +35,8 @@ export function VotingSection({
   pendingVote,
   allowedVotersCount,
   requiredApprovals = REQUIRED_APPROVALS,
+  downloadingProposalId,
+  onDownload,
   onVote,
   onViewDetails,
   onRetry,
@@ -77,14 +81,6 @@ export function VotingSection({
               const coverInitial =
                 normalizedTitle.length > 0 ? normalizedTitle.charAt(0).toUpperCase() : "📘";
 
-              const handleDownload = () => {
-                if (!proposal.walrusBlobUrl) {
-                  return;
-                }
-
-                window.open(proposal.walrusBlobUrl, "_blank", "noopener,noreferrer");
-              };
-
               return (
                 <Card
                   key={proposal.id}
@@ -107,9 +103,9 @@ export function VotingSection({
                         flexShrink: 0,
                       }}
                     >
-                      {proposal.coverImageURL ? (
+                      {proposal.coverPreviewUrl ? (
                         <img
-                          src={proposal.coverImageURL}
+                          src={proposal.coverPreviewUrl}
                           alt={t("account.voting.coverAlt", { title: proposal.title })}
                           style={{
                             width: "100%",
@@ -179,8 +175,14 @@ export function VotingSection({
                     >
                       {t("account.voting.actions.viewDetails")}
                     </Button>
-                    {proposal.walrusBlobUrl && (
-                      <Button type="button" size="s" mode="outline" onClick={handleDownload}>
+                    {onDownload && (
+                      <Button
+                        type="button"
+                        size="s"
+                        mode="outline"
+                        onClick={() => onDownload(proposal.id)}
+                        loading={downloadingProposalId === proposal.id}
+                      >
                         {t("account.voting.actions.download")}
                       </Button>
                     )}

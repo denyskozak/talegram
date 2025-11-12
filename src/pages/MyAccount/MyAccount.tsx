@@ -14,7 +14,7 @@ import {
 } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 import { fetchAuthors } from "@/entities/author/api";
-import { fetchWalrusFiles } from "@/shared/api/storage";
+import { fetchDecryptedBlob } from "@/shared/api/storage";
 import { base64ToUint8Array } from "@/shared/lib/base64";
 
 import {
@@ -118,6 +118,7 @@ export default function MyAccount(): JSX.Element {
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
   const [pendingVote, setPendingVote] = useState<PendingVoteState>(null);
+  const [downloadingProposalId, setDownloadingProposalId] = useState<string | null>(null);
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
@@ -188,56 +189,93 @@ export default function MyAccount(): JSX.Element {
 
       revokeCoverUrls();
 
-      const coverIds = Array.from(
+      const coverBlobIds = Array.from(
         new Set(
           proposals
-            .map((proposal) => proposal.coverWalrusFileId)
+            .map((proposal) => proposal.coverWalrusBlobId)
             .filter((value): value is string => Boolean(value)),
         ),
       );
 
-      let walrusFilesMap = new Map<string, string>();
-      if (coverIds.length > 0) {
+      const coverBlobs = new Map<string, { data: string; mimeType: string | null }>();
+      for (const blobId of coverBlobIds) {
         try {
-          const walrusFiles = await fetchWalrusFiles(coverIds);
-          walrusFilesMap = new Map(walrusFiles.map((file) => [file.fileId, file.data]));
+          const blob = await fetchDecryptedBlob(blobId);
+          coverBlobs.set(blobId, { data: blob.data, mimeType: blob.mimeType });
         } catch (error) {
-          console.error("Failed to load cover images from Walrus", error);
+          console.error("Failed to load cover image from storage", error);
         }
       }
 
       const enhanced = proposals.map((proposal) => {
-        const coverId = proposal.coverWalrusFileId;
-        if (!coverId) {
-          return { ...proposal, coverImageURL: null };
+        const coverBlobId = proposal.coverWalrusBlobId;
+        if (!coverBlobId) {
+          return { ...proposal, coverPreviewUrl: null };
         }
 
-        const coverData = walrusFilesMap.get(coverId);
-        if (!coverData) {
-          return { ...proposal, coverImageURL: null };
+        const blobData = coverBlobs.get(coverBlobId);
+        if (!blobData) {
+          return { ...proposal, coverPreviewUrl: null };
         }
 
         try {
           const blob = new Blob(
-            [base64ToUint8Array(coverData)],
-            { type: proposal.coverMimeType ?? "image/jpeg" },
+            [base64ToUint8Array(blobData.data)],
+            { type: blobData.mimeType ?? proposal.coverMimeType ?? "image/jpeg" },
           );
           const url = URL.createObjectURL(blob);
           coverUrlsRef.current.push(url);
-          return { ...proposal, coverImageURL: url };
+          return { ...proposal, coverPreviewUrl: url };
         } catch (error) {
-          console.error(
-            "Failed to decode cover image for proposal",
-            proposal.id,
-            error,
-          );
-          return { ...proposal, coverImageURL: null };
+          console.error("Failed to decode cover image for proposal", proposal.id, error);
+          return { ...proposal, coverPreviewUrl: null };
         }
       });
 
       return enhanced;
     },
     [revokeCoverUrls],
+  );
+
+  const handleDownloadProposal = useCallback(
+    async (proposalId: string) => {
+      const proposal = votingProposals.find((item) => item.id === proposalId);
+      if (!proposal) {
+        return;
+      }
+
+      if (!proposal.walrusBlobId) {
+        console.warn("Proposal is missing walrus blob id", proposalId);
+        return;
+      }
+
+      setDownloadingProposalId(proposalId);
+      try {
+        const blob = await fetchDecryptedBlob(proposal.walrusBlobId);
+        const downloadUrl = URL.createObjectURL(
+          new Blob([base64ToUint8Array(blob.data)], {
+            type: blob.mimeType ?? proposal.mimeType ?? "application/octet-stream",
+          }),
+        );
+        const anchor = document.createElement("a");
+        anchor.href = downloadUrl;
+        const resolvedFileName = proposal.fileName ?? blob.fileName ?? `${proposal.title}.pdf`;
+        if (resolvedFileName) {
+          anchor.download = resolvedFileName;
+        }
+        anchor.rel = "noreferrer";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(downloadUrl);
+      } catch (error) {
+        console.error("Failed to download proposal manuscript", error);
+        showToast(t("account.voting.downloadError"));
+      } finally {
+        setDownloadingProposalId(null);
+      }
+    },
+    [showToast, t, votingProposals],
   );
 
   const loadVotingProposals = useCallback(async () => {
@@ -473,6 +511,8 @@ export default function MyAccount(): JSX.Element {
           pendingVote={pendingVote}
           allowedVotersCount={displayedAllowedVoters}
           requiredApprovals={REQUIRED_APPROVALS}
+          downloadingProposalId={downloadingProposalId}
+          onDownload={handleDownloadProposal}
           onVote={handleVote}
           onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}
           onRetry={handleRetryVoting}
