@@ -16,8 +16,6 @@ export type VotingSectionProps = {
   isTelegramUser: boolean;
   allowedVotersCount: number;
   requiredApprovals?: number;
-  downloadingProposalId?: string | null;
-  onDownload?: (proposalId: string) => void;
   onViewDetails: (proposalId: string) => void;
   onRetry: () => void;
 };
@@ -32,8 +30,6 @@ export function VotingSection({
   isTelegramUser,
   allowedVotersCount,
   requiredApprovals = REQUIRED_APPROVALS,
-  downloadingProposalId,
-  onDownload,
   onViewDetails,
   onRetry,
 }: VotingSectionProps): JSX.Element {
@@ -171,17 +167,6 @@ export function VotingSection({
                     >
                       {t("account.voting.actions.viewDetails")}
                     </Button>
-                    {onDownload && (
-                      <Button
-                        type="button"
-                        size="s"
-                        mode="outline"
-                        onClick={() => onDownload(proposal.id)}
-                        loading={downloadingProposalId === proposal.id}
-                      >
-                        {t("account.voting.actions.download")}
-                      </Button>
-                    )}
                   </div>
                 </Card>
               );

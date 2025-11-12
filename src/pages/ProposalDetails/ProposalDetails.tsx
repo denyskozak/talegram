@@ -12,6 +12,8 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
+import {fetchDecryptedBlob} from "@/shared/api/storage";
+import {base64ToUint8Array} from "@/shared/lib/base64";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -33,6 +35,7 @@ export default function ProposalDetails(): JSX.Element {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [pendingVote, setPendingVote] = useState<VoteDirection | null>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const allowedVoterUsernames = useMemo(
         () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
@@ -133,6 +136,39 @@ export default function ProposalDetails(): JSX.Element {
             required: REQUIRED_APPROVALS,
         });
     }, [proposal, t]);
+
+    const handleDownload = useCallback(async () => {
+        if (!proposal?.walrusBlobId) {
+            showToast(t("account.voting.downloadError"));
+            return;
+        }
+
+        setIsDownloading(true);
+        try {
+            const blob = await fetchDecryptedBlob(proposal.walrusBlobId);
+            const downloadUrl = URL.createObjectURL(
+                new Blob([base64ToUint8Array(blob.data)], {
+                    type: blob.mimeType ?? proposal.mimeType ?? "application/octet-stream",
+                }),
+            );
+            const anchor = document.createElement("a");
+            anchor.href = downloadUrl;
+            const resolvedFileName = proposal.fileName ?? blob.fileName ?? `${proposal.title}.pdf`;
+            if (resolvedFileName) {
+                anchor.download = resolvedFileName;
+            }
+            anchor.rel = "noreferrer";
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            URL.revokeObjectURL(downloadUrl);
+        } catch (downloadError) {
+            console.error("Failed to download proposal manuscript", downloadError);
+            showToast(t("account.voting.downloadError"));
+        } finally {
+            setIsDownloading(false);
+        }
+    }, [proposal, showToast, t]);
 
     const handleVote = useCallback(
         async (direction: VoteDirection) => {
@@ -350,18 +386,16 @@ export default function ProposalDetails(): JSX.Element {
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.manuscript")}</Text>
                                 <Text style={{color: theme.subtitle}}>{proposal.fileName}</Text>
-                                {proposal.walrusBlobUrl ? (
-                                    <a
-                                        href={proposal.walrusBlobUrl}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        style={{
-                                            color: theme.accent,
-                                            fontWeight: 500,
-                                        }}
+                                {proposal.walrusBlobId ? (
+                                    <Button
+                                        type="button"
+                                        mode="outline"
+                                        size="s"
+                                        onClick={handleDownload}
+                                        loading={isDownloading}
                                     >
                                         {t("account.proposalDetails.download")}
-                                    </a>
+                                    </Button>
                                 ) : (
                                     <Text style={{color: theme.hint}}>{t("account.proposalDetails.noDownload")}</Text>
                                 )}

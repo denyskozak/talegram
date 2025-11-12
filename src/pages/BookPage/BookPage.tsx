@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { Button, Card, Chip, Modal, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
@@ -27,6 +27,7 @@ import { BookPageSkeleton } from "./BookPageSkeleton";
 
 export default function BookPage(): JSX.Element {
   const { id } = useParams<{ id: ID }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { launchParams } = useTMA();
@@ -51,6 +52,7 @@ export default function BookPage(): JSX.Element {
   const currentBookBlobIdRef = useRef<string | null>(null);
   const bookFileUrlRef = useRef<string | null>(null);
   const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
+  const autoReadTriggeredRef = useRef(false);
 
   useScrollToTop([id]);
 
@@ -358,6 +360,7 @@ export default function BookPage(): JSX.Element {
     setIsPreviewMode(false);
     setIsReading(false);
     invoiceStatusRef.current = null;
+    autoReadTriggeredRef.current = false;
   }, [id]);
 
   useEffect(() => {
@@ -423,6 +426,23 @@ export default function BookPage(): JSX.Element {
   useEffect(() => {
     void refreshPurchaseStatus();
   }, [refreshPurchaseStatus]);
+
+  useEffect(() => {
+    if (autoReadTriggeredRef.current) {
+      return;
+    }
+
+    if (searchParams.get("action") !== "read") {
+      return;
+    }
+
+    if (!book) {
+      return;
+    }
+
+    autoReadTriggeredRef.current = true;
+    void handleRead();
+  }, [book, handleRead, searchParams]);
 
   useEffect(() => {
     const blobId = purchaseDetails?.walrusBlobId ?? null;
