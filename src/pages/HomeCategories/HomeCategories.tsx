@@ -48,7 +48,6 @@ export default function HomeCategories(): JSX.Element {
         setIsLoading(true);
         setError(null);
 
-          console.log("33: ", debouncedSearch, 1, refreshToken);
         const items = await catalogApi.listCategories(
           debouncedSearch ? { search: debouncedSearch } : undefined,
         );

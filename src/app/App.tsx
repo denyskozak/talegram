@@ -19,7 +19,6 @@ function SplashScreen({ visible }: { visible: boolean }): JSX.Element | null {
   const [shouldRender, setShouldRender] = useState(visible);
     const theme = useMemo<ReaderTheme>(() => getSystemTheme(), []);
 
-    console.log("theme: ", theme);
   useEffect(() => {
     if (visible) {
       setShouldRender(true);
@@ -114,8 +113,7 @@ function AppContent(): JSX.Element {
   const { isTelegram } = useTMA();
   const { tgWebAppFullscreen, tgWebAppPlatform, ...rest } = useLaunchParams();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
-    console.log("rest: ", rest);
-  
+
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
             setIsSplashVisible(false);

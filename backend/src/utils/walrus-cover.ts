@@ -59,13 +59,16 @@ export async function fetchWalrusCoverData(
     return '';
   }
 
+    console.log("blobId: ", blobId);
   const cached = walrusCoverCache.get(blobId);
+    console.log("cached: ", cached);
   if (cached !== undefined) {
     return cached;
   }
 
   try {
     const blob = await suiClient.walrus.getBlob({ blobId });
+      console.log("blob: ", blob);
     const file = blob.asFile();
     const bytes = await file.bytes();
     const dataUrl = `data:${resolveMimeType(mimeType)};base64,${Buffer.from(bytes).toString('base64')}`;

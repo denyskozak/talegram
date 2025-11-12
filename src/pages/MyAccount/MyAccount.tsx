@@ -98,17 +98,15 @@ export default function MyAccount(): JSX.Element {
 
     return allowed;
   }, []);
-  const fallbackTelegramUsername = import.meta.env.VITE_MOCK_TELEGRAM_USERNAME;
   const telegramUsername = useMemo(() => {
     const rawUsername = (
-      launchParams?.initData as { user?: { username?: string | null } } | undefined
-    )?.user?.username;
+      launchParams?.tgWebAppData?.user?.username
+    );
 
     return (
-      normalizeTelegramUsername(rawUsername) ??
-      normalizeTelegramUsername(fallbackTelegramUsername)
+      normalizeTelegramUsername(rawUsername) ?? ''
     );
-  }, [fallbackTelegramUsername, launchParams]);
+  }, [launchParams]);
   const isAllowedVoter = telegramUsername ? allowedVoterUsernames.has(telegramUsername) : false;
   const canVote = Boolean(telegramUsername && isAllowedVoter);
   const [votingProposals, setVotingProposals] = useState<VotingProposal[]>([]);
@@ -137,7 +135,6 @@ export default function MyAccount(): JSX.Element {
         if (!isMounted) {
           return;
         }
-
         const normalized = new Set<string>();
         authors.forEach((author) => {
           const normalizedUsername = normalizeTelegramUsername(author.telegramUsername);
@@ -145,6 +142,7 @@ export default function MyAccount(): JSX.Element {
             normalized.add(normalizedUsername);
           }
         });
+        
 
         setAuthorUsernames(normalized);
       } catch (error) {
@@ -283,6 +281,7 @@ export default function MyAccount(): JSX.Element {
     setVotingError(null);
     try {
       const response = await fetchProposalsForVoting(telegramUsername ?? undefined);
+        console.log("response: ", response);
       const proposalsWithCovers = await enhanceProposalsWithCovers(response.proposals);
       setVotingProposals(proposalsWithCovers);
       setAllowedVotersCount(
