@@ -473,18 +473,22 @@ export default function BookPage(): JSX.Element {
     return <ErrorBanner message={error} onRetry={loadBook} />;
   }
 
-  if (isLoading || !book) {
-    return <BookPageSkeleton />;
-  }
-
   const coverSrc = useMemo(() => {
+    if (!book) {
+      return walrusCover ?? undefined;
+    }
+
     if (book.coverImageData) {
       const mimeType = book.coverMimeType ?? "image/jpeg";
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
     return walrusCover ?? resolveBookCover(book);
-  }, [book.coverImageData, book.coverMimeType, walrusCover, book.coverUrl, book.id]);
+  }, [book, walrusCover]);
+
+  if (isLoading || !book) {
+    return <BookPageSkeleton />;
+  }
   const actionTitle =
     activeAction === "subscribe" ? t("book.modalTitle.subscribe") : t("book.modalTitle.buy");
 
