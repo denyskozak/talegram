@@ -49,8 +49,6 @@ Configure the integration through environment variables when running the API:
 
 | Variable | Description | Default |
 | --- | --- | --- |
-| `WALRUS_AGGREGATOR_URL` | Walrus aggregator base URL used for uploads | `https://aggregator.walrus-testnet.mystenlabs.com` |
-| `WALRUS_GATEWAY_URL` | Gateway URL used to retrieve stored blobs | `https://gateway.walrus-testnet.mystenlabs.com` |
-| `WALRUS_EPOCHS_TO_STORE_FOR` | Optional number of epochs to request blob retention for | _(unset)_ |
+| `BOOK_ENCRYPTION_KEY` | Base64 encoded 32-byte key used to encrypt book files before upload | _(unset)_ |
 
 Uploaded blob metadata (blob ids, URLs, file size, MIME types, etc.) is persisted in the application's database for future access.

@@ -104,6 +104,12 @@ export class BookProposal {
   @Column({ name: 'file_size', type: 'integer', nullable: true })
   fileSize!: number | null;
 
+  @Column({ name: 'file_encryption_iv', type: 'text', nullable: true })
+  fileEncryptionIv!: string | null;
+
+  @Column({ name: 'file_encryption_tag', type: 'text', nullable: true })
+  fileEncryptionTag!: string | null;
+
   @Column({ type: 'text', default: ProposalStatus.PENDING })
   status!: ProposalStatus;
 
