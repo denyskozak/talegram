@@ -64,12 +64,12 @@ export const catalogRouter = createRouter({
             .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
         ),
       );
-
+        console.log("coverWalrusBlobIds: ", coverWalrusBlobIds);
       const coverDataById =
         coverWalrusBlobIds.length > 0
           ? await fetchWalrusFilesBase64(coverWalrusBlobIds)
           : new Map<string, string | null>();
-
+        console.log("coverDataById: ", coverDataById);
       const items = result.items.map((book) => {
         const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
         const coverImageData =
@@ -80,6 +80,7 @@ export const catalogRouter = createRouter({
         return { ...bookForClient, coverImageData };
       });
 
+        console.log("items: ", items);
       return { ...result, items };
     }),
   getBook: procedure.input(getBookInput).query(async ({ input }) => {

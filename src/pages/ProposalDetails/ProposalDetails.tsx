@@ -14,6 +14,7 @@ import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyA
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 import {fetchDecryptedBlob} from "@/shared/api/storage";
 import {base64ToUint8Array} from "@/shared/lib/base64";
+import {downloadFile} from "@telegram-apps/sdk-react";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -151,17 +152,13 @@ export default function ProposalDetails(): JSX.Element {
                     type: blob.mimeType ?? proposal.mimeType ?? "application/octet-stream",
                 }),
             );
-            const anchor = document.createElement("a");
-            anchor.href = downloadUrl;
             const resolvedFileName = proposal.fileName ?? blob.fileName ?? `${proposal.title}.pdf`;
-            if (resolvedFileName) {
-                anchor.download = resolvedFileName;
+            if (downloadFile.isAvailable()) {
+                await downloadFile(
+                    downloadUrl,
+                    resolvedFileName,
+                );
             }
-            anchor.rel = "noreferrer";
-            document.body.appendChild(anchor);
-            anchor.click();
-            document.body.removeChild(anchor);
-            URL.revokeObjectURL(downloadUrl);
         } catch (downloadError) {
             console.error("Failed to download proposal manuscript", downloadError);
             showToast(t("account.voting.downloadError"));

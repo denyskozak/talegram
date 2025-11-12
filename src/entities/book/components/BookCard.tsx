@@ -24,7 +24,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
-    return walrusCover ?? resolveBookCover(book);
+    return '';
   }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id, walrusCover]);
 
   return (

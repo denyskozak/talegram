@@ -79,7 +79,6 @@ export default function MyAccount(): JSX.Element {
   );
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
-  const [downloadingProposalId, setDownloadingProposalId] = useState<string | null>(null);
   const [myBooks, setMyBooks] = useState<MyBook[]>([]);
   const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
   const [myBooksError, setMyBooksError] = useState<string | null>(null);
@@ -400,8 +399,6 @@ export default function MyAccount(): JSX.Element {
           isTelegramUser={Boolean(telegramUsername)}
           allowedVotersCount={displayedAllowedVoters}
           requiredApprovals={REQUIRED_APPROVALS}
-          downloadingProposalId={downloadingProposalId}
-          onDownload={handleDownloadProposal}
           onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}
           onRetry={handleRetryVoting}
         />
