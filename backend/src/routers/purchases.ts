@@ -2,26 +2,34 @@ import { z } from 'zod';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import {
   getPurchaseDetails,
-  getPurchased,
   listPurchasedBooks,
   setPurchased,
 } from '../stores/purchasesStore.js';
 import { getBook } from '../data/catalog.js';
 import { fetchStarsInvoiceStatus, markInvoiceAsFailed } from '../services/telegram-payments.js';
 
+const telegramUserIdInput = z.object({
+  telegramUserId: z.string().trim().min(1),
+});
+
 const bookIdInput = z.object({
   bookId: z.string().trim().min(1),
 });
 
-const confirmPurchaseInput = bookIdInput.extend({
+const purchaseStatusInput = bookIdInput.merge(telegramUserIdInput);
+
+const confirmPurchaseInput = purchaseStatusInput.extend({
   paymentId: z.string().trim().min(1),
 });
 
 export const purchasesRouter = createRouter({
-  getStatus: procedure.input(bookIdInput).query(({ input }) => ({
-    purchased: getPurchased(input.bookId),
-    details: getPurchaseDetails(input.bookId) ?? null,
-  })),
+  getStatus: procedure.input(purchaseStatusInput).query(async ({ input }) => {
+    const details = await getPurchaseDetails(input.bookId, input.telegramUserId);
+    return {
+      purchased: Boolean(details),
+      details: details ?? null,
+    };
+  }),
   confirm: procedure.input(confirmPurchaseInput).mutation(async ({ input }) => {
     const book = await getBook(input.bookId);
     if (!book) {
@@ -40,13 +48,14 @@ export const purchasesRouter = createRouter({
 
     const purchasedAt = new Date().toISOString();
 
-
     const purchaseDetails = {
       paymentId: invoiceStatus.paymentId,
       purchasedAt,
+      walrusBlobId: book.walrusBlobId ?? null,
+      downloadUrl: book.walrusBlobUrl ?? null,
     };
 
-    setPurchased(book.id, purchaseDetails);
+    await setPurchased(book.id, input.telegramUserId, purchaseDetails);
 
     return {
       ok: true,
@@ -56,5 +65,7 @@ export const purchasesRouter = createRouter({
       },
     };
   }),
-  list: procedure.query(() => ({ items: listPurchasedBooks() })),
+  list: procedure.input(telegramUserIdInput).query(async ({ input }) => ({
+    items: await listPurchasedBooks(input.telegramUserId),
+  })),
 });

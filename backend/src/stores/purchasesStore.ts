@@ -1,37 +1,75 @@
+import { Purchase } from '../entities/Purchase.js';
+import { appDataSource } from '../utils/data-source.js';
+
 export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
+  walrusBlobId: string | null;
+  downloadUrl: string | null;
 };
 
-type PurchaseRecord = PurchaseDetails & { purchased: true };
+function mapEntityToDetails(entity: Purchase): PurchaseDetails {
+  return {
+    paymentId: entity.paymentId,
+    purchasedAt: entity.purchasedAt.toISOString(),
+    walrusBlobId: entity.walrusBlobId ?? null,
+    downloadUrl: entity.downloadUrl ?? null,
+  };
+}
 
-const purchases = new Map<string, PurchaseRecord>();
+export const setPurchased = async (
+  bookId: string,
+  telegramUserId: string,
+  details: PurchaseDetails,
+): Promise<void> => {
+  const repository = appDataSource.getRepository(Purchase);
+  const existing = await repository.findOne({ where: { bookId, telegramUserId } });
 
-export const getPurchased = (bookId: string): boolean => {
-  return purchases.get(bookId)?.purchased ?? false;
+  if (existing) {
+    existing.paymentId = details.paymentId;
+    existing.purchasedAt = new Date(details.purchasedAt);
+    existing.walrusBlobId = details.walrusBlobId ?? null;
+    existing.downloadUrl = details.downloadUrl ?? null;
+    await repository.save(existing);
+    return;
+  }
+
+  const purchase = repository.create({
+    bookId,
+    telegramUserId,
+    paymentId: details.paymentId,
+    purchasedAt: new Date(details.purchasedAt),
+    walrusBlobId: details.walrusBlobId ?? null,
+    downloadUrl: details.downloadUrl ?? null,
+  });
+
+  await repository.save(purchase);
 };
 
-export const setPurchased = (bookId: string, details: PurchaseDetails): void => {
-  purchases.set(bookId, { purchased: true, ...details });
-};
-
-export const getPurchaseDetails = (bookId: string): PurchaseDetails | undefined => {
-  const record = purchases.get(bookId);
-  if (!record?.purchased) {
+export const getPurchaseDetails = async (
+  bookId: string,
+  telegramUserId: string,
+): Promise<PurchaseDetails | undefined> => {
+  const repository = appDataSource.getRepository(Purchase);
+  const entity = await repository.findOne({ where: { bookId, telegramUserId } });
+  if (!entity) {
     return undefined;
   }
 
-  const { paymentId, purchasedAt } = record;
-
-  return { paymentId, purchasedAt };
+  return mapEntityToDetails(entity);
 };
 
-export const listPurchasedBooks = (): Array<{ bookId: string } & PurchaseDetails> => {
-  return Array.from(purchases.entries())
-    .filter(([, value]) => value.purchased)
-    .map(([bookId, value]) => ({
-      bookId,
-      paymentId: value.paymentId,
-      purchasedAt: value.purchasedAt
-    }));
+export const listPurchasedBooks = async (
+  telegramUserId: string,
+): Promise<Array<{ bookId: string } & PurchaseDetails>> => {
+  const repository = appDataSource.getRepository(Purchase);
+  const entities = await repository.find({
+    where: { telegramUserId },
+    order: { purchasedAt: 'DESC' },
+  });
+
+  return entities.map((entity) => ({
+    bookId: entity.bookId,
+    ...mapEntityToDetails(entity),
+  }));
 };

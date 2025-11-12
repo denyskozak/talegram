@@ -6,7 +6,7 @@ A minimal type-safe API built with Node.js, TypeScript, and [tRPC](https://trpc.
 
 - tRPC router with automatic validation powered by Zod
 - Catalog procedures for categories, book listings, book details, and reviews
-- Purchase utilities to confirm and inspect book purchases (stored in-memory)
+- Purchase utilities to confirm and inspect book purchases stored in the SQLite database with Telegram user identifiers
 - Payment invoice generator that mimics Telegram Stars invoices
 - Mandatory `X-Test-Env: true` header middleware for all procedures
 
@@ -35,7 +35,7 @@ curl -H "X-Test-Env: true" \
 # Confirm a purchase
 curl -H "X-Test-Env: true" \
   -H "Content-Type: application/json" \
-  --data '{"id":2,"jsonrpc":"2.0","method":"purchases.confirm","params":{"bookId":"clean-code","paymentId":"demo"}}' \
+  --data '{"id":2,"jsonrpc":"2.0","method":"purchases.confirm","params":{"bookId":"clean-code","paymentId":"demo","telegramUserId":"123456"}}' \
   http://localhost:3000
 ```
 
