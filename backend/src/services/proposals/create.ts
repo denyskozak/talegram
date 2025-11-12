@@ -4,6 +4,7 @@ import { WalrusFile } from '@mysten/walrus';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
 import { keypair, suiClient } from '../walrus-storage.js';
+import { encryptBookFile } from '../encryption.js';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -80,8 +81,10 @@ export async function createBookProposal(
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
   }
 
+  const { encryptedData, iv, authTag } = encryptBookFile(params.file.data);
+
   const bookFile = WalrusFile.from({
-    contents: params.file.data,
+    contents: encryptedData,
     identifier: params.file.name,
   });
 
@@ -129,6 +132,8 @@ export async function createBookProposal(
     fileName: params.file.name,
     fileSize: params.file.size ?? null,
     mimeType: params.file.mimeType ?? null,
+    fileEncryptionIv: iv.toString('base64'),
+    fileEncryptionTag: authTag.toString('base64'),
   });
 
   return bookProposalRepository.save(proposal);

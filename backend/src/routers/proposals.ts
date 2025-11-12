@@ -222,6 +222,13 @@ export const proposalsRouter = createRouter({
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing walrus blob URL for approved proposal' });
         }
 
+        if (!proposal.fileEncryptionIv || !proposal.fileEncryptionTag) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Missing encryption metadata for approved proposal',
+          });
+        }
+
         const book = bookRepository.create({
           title: proposal.title,
           author: proposal.author,
@@ -235,6 +242,8 @@ export const proposalsRouter = createRouter({
           mimeType: proposal.mimeType,
           fileName: proposal.fileName,
           fileSize: proposal.fileSize,
+          fileEncryptionIv: proposal.fileEncryptionIv,
+          fileEncryptionTag: proposal.fileEncryptionTag,
           proposalId: proposal.id,
         });
         const savedBook = await bookRepository.save(book);

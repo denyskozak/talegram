@@ -4,6 +4,7 @@ import { purchasesRouter } from '../routers/purchases.js';
 import { paymentsRouter } from '../routers/payments.js';
 import { proposalsRouter } from '../routers/proposals.js';
 import { adminRouter } from '../routers/admin.js';
+import { storageRouter } from '../routers/storage.js';
 
 export const appRouter = createRouter({
   admin: adminRouter,
@@ -11,4 +12,5 @@ export const appRouter = createRouter({
   purchases: purchasesRouter,
   payments: paymentsRouter,
   proposals: proposalsRouter,
+  storage: storageRouter,
 });
