@@ -7,7 +7,8 @@ import {Button, Card, Chip, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTheme} from "@/app/providers/ThemeProvider";
 import {fetchProposalById} from "@/entities/proposal/api";
 import type {BookProposal} from "@/entities/proposal/types";
-import {suiClient} from "@/shared/lib/walrus.ts";
+import { fetchWalrusFiles } from "@/shared/api/storage";
+import { base64ToUint8Array } from "@/shared/lib/base64";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -41,9 +42,42 @@ export default function ProposalDetails(): JSX.Element {
             setError(null);
             try {
                 const data = await fetchProposalById(id);
-                const [book, coverImage] = await suiClient.walrus.getFiles({ids: [data?.walrusFileId!, data.coverWalrusFileId!]});
-                const bookURL = URL.createObjectURL(new Blob([new Uint8Array(await book.bytes())]));
-                const coverImageURL = URL.createObjectURL(new Blob([new Uint8Array(await coverImage.bytes())]));
+                const fileIds = [data.walrusFileId];
+                if (data.coverWalrusFileId) {
+                    fileIds.push(data.coverWalrusFileId);
+                }
+
+                const walrusFiles = await fetchWalrusFiles(fileIds);
+                const walrusFilesMap = new Map(walrusFiles.map((file) => [file.fileId, file.data]));
+
+                const bookData = walrusFilesMap.get(data.walrusFileId);
+                if (!bookData) {
+                    console.error("Failed to load Walrus book file", data.walrusFileId);
+                }
+
+                const bookURL = bookData
+                    ? URL.createObjectURL(
+                        new Blob([
+                            base64ToUint8Array(bookData),
+                        ], { type: data.mimeType ?? "application/octet-stream" }),
+                    )
+                    : null;
+
+                const coverData = data.coverWalrusFileId
+                    ? walrusFilesMap.get(data.coverWalrusFileId)
+                    : undefined;
+                if (data.coverWalrusFileId && !coverData) {
+                    console.warn("Cover Walrus file missing", data.coverWalrusFileId);
+                }
+
+                const coverImageURL = coverData
+                    ? URL.createObjectURL(
+                        new Blob(
+                            [base64ToUint8Array(coverData)],
+                            { type: data.coverMimeType ?? "image/jpeg" },
+                        ),
+                    )
+                    : null;
                 if (!isCancelled) {
                     setProposal({
                         ...data,

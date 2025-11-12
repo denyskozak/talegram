@@ -12,6 +12,13 @@ const getDecryptedBlobInput = z.object({
   blobId: z.string().trim().min(1),
 });
 
+const getWalrusFilesInput = z.object({
+  fileIds: z
+    .array(z.string().trim().min(1))
+    .min(1)
+    .max(10, 'Too many Walrus files requested at once'),
+});
+
 export const storageRouter = createRouter({
   getDecryptedBlob: procedure.input(getDecryptedBlobInput).query(async ({ input }) => {
     await initializeDataSource();
@@ -55,6 +62,33 @@ export const storageRouter = createRouter({
       };
     } catch (error) {
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to decrypt blob' });
+    }
+  }),
+  getWalrusFiles: procedure.input(getWalrusFilesInput).query(async ({ input }) => {
+    try {
+      const files = await suiClient.walrus.getFiles({ ids: input.fileIds });
+
+      if (files.length !== input.fileIds.length) {
+        throw new Error('Mismatch between requested and received Walrus files');
+      }
+
+      const results = await Promise.all(
+        files.map(async (file, index) => {
+          const bytes = await file.bytes();
+
+          return {
+            fileId: input.fileIds[index],
+            data: Buffer.from(bytes).toString('base64'),
+          };
+        }),
+      );
+
+      return { files: results };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch files from Walrus',
+      });
     }
   }),
 });
