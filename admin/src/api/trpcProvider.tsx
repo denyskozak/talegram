@@ -4,12 +4,12 @@ import type { AppRouter } from '../../backend/src/index.js';
 
 type TrpcContextValue = {
   client: TRPCClient<AppRouter>;
-  secret: string | null;
-  setSecret: (secret: string | null) => void;
+  token: string | null;
+  setToken: (token: string | null) => void;
 };
 
 const DEFAULT_BACKEND_URL = 'http://localhost:3000';
-const STORAGE_KEY = 'talegram-admin-secret';
+const STORAGE_KEY = 'talegram-admin-token';
 
 function resolveBackendUrl(): string {
   const rawUrl = import.meta.env.VITE_BACKEND_URL ?? DEFAULT_BACKEND_URL;
@@ -23,7 +23,7 @@ function resolveBackendUrl(): string {
 
 const backendUrl = resolveBackendUrl();
 
-function createClient(secret: string | null): TRPCClient<AppRouter> {
+function createClient(token: string | null): TRPCClient<AppRouter> {
   return createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
@@ -34,8 +34,8 @@ function createClient(secret: string | null): TRPCClient<AppRouter> {
             'ngrok-skip-browser-warning': 'true',
           };
 
-          if (secret) {
-            headers['X-Admin-Secret'] = secret;
+          if (token) {
+            headers.Authorization = `Bearer ${token}`;
           }
 
           return headers;
@@ -48,13 +48,13 @@ function createClient(secret: string | null): TRPCClient<AppRouter> {
 const TrpcContext = createContext<TrpcContextValue | undefined>(undefined);
 
 export function TrpcProvider({ children }: { children: React.ReactNode }): JSX.Element {
-  const [secret, setSecretState] = useState<string | null>(() => {
+  const [token, setTokenState] = useState<string | null>(() => {
     const stored = window.sessionStorage.getItem(STORAGE_KEY);
     return stored && stored.length > 0 ? stored : null;
   });
 
-  const setSecret = useCallback((value: string | null) => {
-    setSecretState(value);
+  const setToken = useCallback((value: string | null) => {
+    setTokenState(value);
     if (value) {
       window.sessionStorage.setItem(STORAGE_KEY, value);
     } else {
@@ -62,11 +62,11 @@ export function TrpcProvider({ children }: { children: React.ReactNode }): JSX.E
     }
   }, []);
 
-  const client = useMemo(() => createClient(secret), [secret]);
+  const client = useMemo(() => createClient(token), [token]);
 
   const value = useMemo<TrpcContextValue>(
-    () => ({ client, secret, setSecret }),
-    [client, secret, setSecret],
+    () => ({ client, token, setToken }),
+    [client, token, setToken],
   );
 
   return <TrpcContext.Provider value={value}>{children}</TrpcContext.Provider>;
