@@ -3,7 +3,8 @@ import { TRPCError } from '@trpc/server';
 import { WalrusFile } from '@mysten/walrus';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
-import { keypair, suiClient } from '../walrus-storage.js';
+import {  suiClient } from '../walrus-storage.js';
+import { keypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;

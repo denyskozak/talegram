@@ -207,7 +207,7 @@
     "publish": {
       "title": "Publish a new book",
       "description": "Prepare your manuscript and submit it for the TON marketplace.",
-      "restrictedAlert": "Only approved authors can submit book proposals.",
+      "restrictedAlert": "Only approved authors can submit book proposals \uD83D\uDEAB",
       "form": {
         "name": {
           "label": "Book title",

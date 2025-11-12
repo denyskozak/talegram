@@ -121,6 +121,8 @@ export default function MyAccount(): JSX.Element {
     () => new Set<string>(),
   );
   const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
+    console.log("authorUsernames: ", authorUsernames);
+    console.log("telegramUsername: ", telegramUsername);
   const isAllowedAuthor = telegramUsername ? authorUsernames.has(telegramUsername) : false;
   const canPublish = Boolean(telegramUsername && isAllowedAuthor);
 
@@ -308,7 +310,7 @@ export default function MyAccount(): JSX.Element {
   );
 
   useEffect(() => {
-    if (activeSection === VOTE_SECTION) {
+      if (activeSection === VOTE_SECTION) {
       void loadVotingProposals();
     }
   }, [activeSection, loadVotingProposals]);
