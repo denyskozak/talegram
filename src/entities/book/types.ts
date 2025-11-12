@@ -8,6 +8,7 @@ export type Book = {
   authors: string[];
   categories: ID[];
   coverUrl: string;
+  coverImageData?: string | null;
   description: string;
   priceStars: number;
   rating: {

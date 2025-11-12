@@ -457,7 +457,14 @@ export default function BookPage(): JSX.Element {
     return <BookPageSkeleton />;
   }
 
-  const coverSrc = walrusCover ?? resolveBookCover(book);
+  const coverSrc = useMemo(() => {
+    if (book.coverImageData) {
+      const mimeType = book.coverMimeType ?? "image/jpeg";
+      return `data:${mimeType};base64,${book.coverImageData}`;
+    }
+
+    return walrusCover ?? resolveBookCover(book);
+  }, [book.coverImageData, book.coverMimeType, walrusCover, book.coverUrl, book.id]);
   const actionTitle =
     activeAction === "subscribe" ? t("book.modalTitle.subscribe") : t("book.modalTitle.buy");
 

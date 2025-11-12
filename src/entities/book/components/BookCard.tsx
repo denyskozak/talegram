@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import type { Book } from "@/entities/book/types";
 
 import { Card, Chip, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
@@ -14,7 +16,16 @@ interface BookCardProps {
 
 export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
   const { t } = useTranslation();
+  const walrusCover = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
 
+  const coverSrc = useMemo(() => {
+    if (book.coverImageData) {
+      const mimeType = book.coverMimeType ?? "image/jpeg";
+      return `data:${mimeType};base64,${book.coverImageData}`;
+    }
+
+    return walrusCover ?? resolveBookCover(book);
+  }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id, walrusCover]);
 
   return (
     <Tappable
@@ -26,7 +37,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       <Card style={{ width: '100%', borderRadius: 20, overflow: "hidden" }}>
         <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--app-section-color)" }}>
           <img
-            src={`data:${book.coverMimeType};base64,${book.coverImageData}`}
+            src={coverSrc}
             alt={t("book.coverAlt", { title: book.title })}
             loading="lazy"
             onError={handleBookCoverError}

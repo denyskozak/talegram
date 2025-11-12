@@ -10,6 +10,7 @@ import {
   listReviews,
 } from '../data/catalog.js';
 import { getPurchaseDetails } from '../stores/purchasesStore.js';
+import { fetchWalrusFilesBase64 } from '../utils/walrus-files.js';
 
 const listCategoriesInput = z.object({
   search: z.string().trim().optional(),
@@ -53,7 +54,34 @@ export const catalogRouter = createRouter({
     .query(({ input }) => listCategories(input?.search)),
   listBooks: procedure
     .input(listBooksInput.optional())
-    .query(async ({ input }) => listBooks(input ?? {})),
+    .query(async ({ input }) => {
+      const result = await listBooks(input ?? {});
+
+      const coverWalrusBlobIds = Array.from(
+        new Set(
+          result.items
+            .map((book) => book.coverWalrusBlobId)
+            .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+        ),
+      );
+
+      const coverDataById =
+        coverWalrusBlobIds.length > 0
+          ? await fetchWalrusFilesBase64(coverWalrusBlobIds)
+          : new Map<string, string | null>();
+
+      const items = result.items.map((book) => {
+        const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
+        const coverImageData =
+          book.coverWalrusBlobId && coverDataById.has(book.coverWalrusBlobId)
+            ? coverDataById.get(book.coverWalrusBlobId) ?? null
+            : null;
+
+        return { ...bookForClient, coverImageData };
+      });
+
+      return { ...result, items };
+    }),
   getBook: procedure.input(getBookInput).query(async ({ input }) => {
     const book = await getBook(input.id);
     if (!book) {
@@ -69,7 +97,11 @@ export const catalogRouter = createRouter({
 
     const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
 
-    return bookForClient;
+    const coverImageData = book.coverWalrusBlobId
+      ? (await fetchWalrusFilesBase64([book.coverWalrusBlobId])).get(book.coverWalrusBlobId) ?? null
+      : null;
+
+    return { ...bookForClient, coverImageData };
   }),
   listReviews: procedure
     .input(listReviewsInput)
