@@ -40,7 +40,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
             src={coverSrc}
             alt={t("book.coverAlt", { title: book.title })}
             loading="lazy"
-            onError={handleBookCoverError}
+            // onError={handleBookCoverError}
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         </div>

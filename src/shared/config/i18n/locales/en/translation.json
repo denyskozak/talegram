@@ -268,7 +268,7 @@
           "placeholder": "No file selected"
         },
         "submit": "Submit for review",
-        "notice": "Your manuscript will be uploaded to decentralized storage Walrus via our server."
+        "notice": "Upload to secure decentralized storage can take 10s+."
       },
       "toastSuccess": "Book \"{{title}}\" submitted for review.",
       "toastFallbackTitle": "your book",
