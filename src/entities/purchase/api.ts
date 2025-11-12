@@ -4,19 +4,19 @@ import type {
   ConfirmPurchasePayload,
   ConfirmPurchaseResponse,
   PurchaseStatus,
+  PurchaseStatusPayload,
+  PurchasesListPayload,
   PurchasesListResponse,
 } from "./types";
-import type { ID } from "@/entities/book/types";
-
 export const purchasesApi = {
-  getStatus(bookId: ID): Promise<PurchaseStatus> {
-    return trpc.purchases.getStatus.query({ bookId });
+  getStatus(payload: PurchaseStatusPayload): Promise<PurchaseStatus> {
+    return trpc.purchases.getStatus.query(payload);
   },
   confirm(payload: ConfirmPurchasePayload): Promise<ConfirmPurchaseResponse> {
     return trpc.purchases.confirm.mutation(payload);
   },
-  list(): Promise<PurchasesListResponse> {
-    return trpc.purchases.list.query();
+  list(payload: PurchasesListPayload): Promise<PurchasesListResponse> {
+    return trpc.purchases.list.query(payload);
   },
 };
 

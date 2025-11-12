@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Button, Card, Chip, Modal, Title } from "@telegram-apps/telegram-ui";
@@ -12,6 +12,7 @@ import type { Invoice } from "@/entities/payment/types";
 import { purchasesApi } from "@/entities/purchase/api";
 import type { PurchaseDetails } from "@/entities/purchase/types";
 import { BookRating } from "@/entities/book/components/BookRating";
+import { useTMA } from "@/app/providers/TMAProvider";
 import { SimilarCarousel } from "@/widgets/SimilarCarousel/SimilarCarousel";
 import { ReviewsList } from "@/widgets/ReviewsList/ReviewsList";
 import { useScrollToTop } from "@/shared/hooks/useScrollToTop";
@@ -25,6 +26,7 @@ export default function BookPage(): JSX.Element {
   const { id } = useParams<{ id: ID }>();
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { launchParams } = useTMA();
   const { t } = useTranslation();
   const reviewsRef = useRef<HTMLDivElement | null>(null);
   const loaderTimeoutRef = useRef<number | null>(null);
@@ -45,6 +47,21 @@ export default function BookPage(): JSX.Element {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
   useScrollToTop([id]);
+
+  const telegramUserId = useMemo(() => {
+    const user = (launchParams?.initData as { user?: { id?: number | string } } | undefined)?.user;
+    const rawId = user?.id;
+
+    if (typeof rawId === "number") {
+      return rawId.toString(10);
+    }
+
+    if (typeof rawId === "string" && rawId.trim().length > 0) {
+      return rawId.trim();
+    }
+
+    return undefined;
+  }, [launchParams]);
 
   const loadBook = useCallback(async () => {
     if (!id) {
@@ -70,18 +87,20 @@ export default function BookPage(): JSX.Element {
   }, [id, t]);
 
   const refreshPurchaseStatus = useCallback(async () => {
-    if (!id) {
+    if (!id || !telegramUserId) {
+      setIsPurchased(false);
+      setPurchaseDetails(null);
       return;
     }
 
     try {
-      const status = await purchasesApi.getStatus(id);
+      const status = await purchasesApi.getStatus({ bookId: id, telegramUserId });
       setIsPurchased(status.purchased);
       setPurchaseDetails(status.details);
     } catch (err) {
       console.error(err);
     }
-  }, [id]);
+  }, [id, telegramUserId]);
 
   const handleShare = useCallback(async () => {
     try {
@@ -165,9 +184,14 @@ export default function BookPage(): JSX.Element {
     setIsConfirmingPurchase(true);
 
     try {
+      if (!telegramUserId) {
+        throw new Error("Missing telegram user id");
+      }
+
       const { purchase } = await purchasesApi.confirm({
         bookId: book.id,
         paymentId: invoice.paymentId,
+        telegramUserId,
       });
 
       const { bookId: _bookId, ...details } = purchase;
@@ -187,7 +211,7 @@ export default function BookPage(): JSX.Element {
       setIsConfirmingPurchase(false);
       setIsActionLoading(false);
     }
-  }, [book, invoice, isConfirmingPurchase, showToast, t]);
+  }, [book, invoice, isConfirmingPurchase, showToast, t, telegramUserId]);
 
   const handleModalOpenChange = useCallback(
     (open: boolean) => {

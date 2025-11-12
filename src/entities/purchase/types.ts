@@ -3,8 +3,8 @@ import type { ID } from "@/entities/book/types";
 export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
-  walrusBlobId: string;
-  downloadUrl: string;
+  walrusBlobId: string | null;
+  downloadUrl: string | null;
 };
 
 export type PurchaseStatus = {
@@ -15,6 +15,16 @@ export type PurchaseStatus = {
 export type ConfirmPurchasePayload = {
   bookId: ID;
   paymentId: string;
+  telegramUserId: string;
+};
+
+export type PurchaseStatusPayload = {
+  bookId: ID;
+  telegramUserId: string;
+};
+
+export type PurchasesListPayload = {
+  telegramUserId: string;
 };
 
 export type ConfirmPurchaseResponse = {
