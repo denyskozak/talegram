@@ -3,6 +3,8 @@ import type { Book } from "@/entities/book/types";
 import { Card, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
+import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
+
 interface SimilarCarouselProps {
   books: Book[];
   onSelect: (bookId: string) => void;
@@ -33,9 +35,10 @@ export function SimilarCarousel({ books, onSelect }: SimilarCarouselProps): JSX.
             <Card style={{ borderRadius: 18, overflow: "hidden" }}>
               <div style={{ aspectRatio: "16 / 9", background: "var(--app-section-color)" }}>
                 <img
-                  src={book.coverUrl}
+                  src={resolveBookCover(book)}
                   alt={t("images.bookCover", { title: book.title })}
                   loading="lazy"
+                  onError={handleBookCoverError}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               </div>
