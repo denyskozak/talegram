@@ -22,7 +22,7 @@ import {
 } from '../utils/telegram.js';
 
 const MAX_HASHTAGS = 8;
-const REQUIRED_APPROVALS = 2;
+const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 2;
 
 const hashtagSchema = z.string().min(1).max(64);

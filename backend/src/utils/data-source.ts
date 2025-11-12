@@ -1,4 +1,5 @@
 import { DataSource } from 'typeorm';
+import { Author } from '../entities/Author.js';
 import { Book } from '../entities/Book.js';
 import { BookProposal } from '../entities/BookProposal.js';
 import { ProposalVote } from '../entities/ProposalVote.js';
@@ -9,7 +10,7 @@ const databasePath = process.env.DATABASE_URL ?? 'database.sqlite';
 export const appDataSource = new DataSource({
   type: 'sqlite',
   database: databasePath,
-  entities: [BookProposal, Book, ProposalVote, Purchase],
+  entities: [Author, BookProposal, Book, ProposalVote, Purchase],
   synchronize: true,
   logging: process.env.NODE_ENV === 'development',
 });

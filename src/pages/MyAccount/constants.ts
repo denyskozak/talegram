@@ -10,5 +10,5 @@ export const HARDCODED_ALLOWED_VOTER_USERNAMES = [
 export const MAX_HASHTAGS = 8;
 export const HASHTAG_MAX_LENGTH = 32;
 
-export const REQUIRED_APPROVALS = 2;
+export const REQUIRED_APPROVALS = 1;
 export const REQUIRED_REJECTIONS = 2;
