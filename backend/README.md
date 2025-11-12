@@ -47,8 +47,8 @@ Proposal uploads are sent to [Walrus Storage](https://sdk.mystenlabs.com/walrus)
 through the Walrus TypeScript SDK client that lives in `src/services/walrus-storage.ts`.
 Configure the integration through environment variables when running the API:
 
-| Variable | Description | Default |
-| --- | --- | --- |
-| `BOOK_ENCRYPTION_KEY` | Base64 encoded 32-byte key used to encrypt book files before upload | _(unset)_ |
+| Variable | Description                                                         | Default |
+| --- |---------------------------------------------------------------------| --- |
+| `SECRET_KEY` | Private key for Warlus Upload                                       | _(unset)_ |
 
 Uploaded blob metadata (blob ids, URLs, file size, MIME types, etc.) is persisted in the application's database for future access.
