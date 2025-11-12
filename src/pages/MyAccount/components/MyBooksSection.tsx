@@ -14,12 +14,18 @@ export type MyBooksSectionProps = {
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
+  onRead: (bookId: string) => void;
+  onDownload: (bookId: string) => void;
+  downloadingBookId: string | null;
 };
 
 type MyBookCardProps = {
   item: MyBook;
   theme: ThemeColors;
   t: TFunction<"translation">;
+  onRead: (bookId: string) => void;
+  onDownload: (bookId: string) => void;
+  downloadingBookId: string | null;
 };
 
 function formatPurchaseDate(value: string): string {
@@ -31,12 +37,13 @@ function formatPurchaseDate(value: string): string {
   return date.toLocaleString();
 }
 
-function MyBookCard({ item, theme, t }: MyBookCardProps): JSX.Element {
+function MyBookCard({ item, theme, t, onRead, onDownload, downloadingBookId }: MyBookCardProps): JSX.Element {
   const { book, purchase } = item;
   const coverUrl = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
   const author = book.authors.join(", ");
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);
+  const isDownloading = downloadingBookId === book.id;
 
   return (
     <Card style={{ padding: 16 }}>
@@ -87,6 +94,26 @@ function MyBookCard({ item, theme, t }: MyBookCardProps): JSX.Element {
           <Text style={{ color: theme.hint }}>
             {t("account.myBooks.paymentId", { id: purchase.paymentId })}
           </Text>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+            <Button
+              type="button"
+              size="s"
+              mode="outline"
+              onClick={() => onRead(book.id)}
+            >
+              {t("account.myBooks.actions.read")}
+            </Button>
+            <Button
+              type="button"
+              size="s"
+              mode="outline"
+              disabled={!purchase.walrusBlobId || isDownloading}
+              loading={isDownloading}
+              onClick={() => onDownload(book.id)}
+            >
+              {t("account.myBooks.actions.download")}
+            </Button>
+          </div>
         </div>
       </div>
     </Card>
@@ -100,6 +127,9 @@ export function MyBooksSection({
   isLoading,
   error,
   onRetry,
+  onRead,
+  onDownload,
+  downloadingBookId,
 }: MyBooksSectionProps): JSX.Element {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -125,7 +155,17 @@ export function MyBooksSection({
           <Text style={{ color: theme.subtitle }}>{t("account.myBooks.empty")}</Text>
         </Card>
       ) : (
-        books.map((item) => <MyBookCard key={item.book.id} item={item} theme={theme} t={t} />)
+        books.map((item) => (
+          <MyBookCard
+            key={item.book.id}
+            item={item}
+            theme={theme}
+            t={t}
+            onRead={onRead}
+            onDownload={onDownload}
+            downloadingBookId={downloadingBookId}
+          />
+        ))
       )}
     </section>
   );

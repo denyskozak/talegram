@@ -23,7 +23,13 @@
     }
   },
   "footer": {
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "contact": "Contact",
+    "themeToggleLabel": "Switch to {{mode}}",
+    "theme": {
+      "light": "light mode",
+      "dark": "dark mode"
+    }
   },
   "errors": {
     "genericTitle": "Something went wrong",
@@ -207,7 +213,15 @@
       "loading": "Loading your books...",
       "empty": "You haven't purchased any books yet.",
       "loadError": "We couldn't load your bookshelf.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "actions": {
+        "read": "Read",
+        "download": "Download"
+      },
+      "toast": {
+        "missingFile": "The download link isn't ready yet. Please try again soon.",
+        "downloadError": "We couldn't download your book. Try again later."
+      }
     },
     "publish": {
       "title": "Publish a new book",
@@ -332,5 +346,11 @@
       "noDownload": "File stored on Walrus decentralized storage",
       "noCover": "Cover file unavailable"
     }
+  },
+  "contact": {
+    "title": "Contact support",
+    "subtitle": "Need help? We're just a message away.",
+    "description": "Reach our support team on Telegram and we'll get back to you shortly.",
+    "telegramCta": "Open @lawyerdsupport"
   }
 }

@@ -9,6 +9,7 @@ const BookPage = lazy(() => import("@/pages/BookPage/BookPage"));
 const TopBooksPage = lazy(() => import("@/pages/TopBooks/TopBooks"));
 const MyAccountPage = lazy(() => import("@/pages/MyAccount/MyAccount"));
 const ProposalDetailsPage = lazy(() => import("@/pages/ProposalDetails/ProposalDetails"));
+const ContactPage = lazy(() => import("@/pages/Contact/ContactPage"));
 
 export function AppRouter(): JSX.Element {
   const element = useRoutes([
@@ -18,6 +19,7 @@ export function AppRouter(): JSX.Element {
     { path: "/account", element: <MyAccountPage /> },
     { path: "/proposals/:id", element: <ProposalDetailsPage /> },
     { path: "/book/:id", element: <BookPage /> },
+    { path: "/contact", element: <ContactPage /> },
     { path: "*", element: <Navigate to="/" replace /> },
   ]);
 
