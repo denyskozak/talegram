@@ -1,3 +1,4 @@
+import type { Book } from "@/entities/book/types";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 
 import { BOOK_SECTION, PUBLISH_SECTION, VOTE_SECTION } from "./constants";
@@ -27,19 +28,13 @@ export type PublishResultState =
   | { status: "success"; title: string }
   | { status: "error" };
 
-export type PendingVoteState = {
-  proposalId: string;
-  direction: VoteDirection;
-} | null;
-
 export type MyBook = {
-  id: string;
-  title: string;
-  author: string;
-  cover: string;
-  collection: string;
-  tokenId: string;
-  status: "owned" | "listed";
+  book: Book;
+  purchase: {
+    paymentId: string;
+    purchasedAt: string;
+    walrusBlobId: string | null;
+  };
 };
 
 export type VotingProposal = ProposalForVoting & {

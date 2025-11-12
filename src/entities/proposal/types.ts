@@ -24,6 +24,7 @@ export type BookProposal = {
     reviewerNotes?: string | null;
     createdAt: string;
     updatedAt: string;
+    votes?: ProposalVotingStats;
 };
 
 export type ProposalVoteChoice = 'positive' | 'negative';

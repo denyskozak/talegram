@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { EntityManager } from 'typeorm';
@@ -8,7 +7,7 @@ import { ProposalVote } from '../entities/ProposalVote.js';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { normalizeCategoryId } from '../utils/categories.js';
-import { suiClient } from '../services/walrus-storage.js';
+import { fetchWalrusFilesBase64 } from '../utils/walrus-files.js';
 
 import {
   assertAllowedTelegramVoter,
@@ -34,6 +33,7 @@ const voteOnProposalInput = z.object({
 
 const getProposalByIdInput = z.object({
   proposalId: z.string().uuid(),
+  telegramUsername: z.string().min(1).optional(),
 });
 
 export const proposalsRouter = createRouter({
@@ -69,20 +69,10 @@ export const proposalsRouter = createRouter({
       ),
     );
 
-    const coverDataByFileId = new Map<string, string>();
-    if (coverFileIds.length > 0) {
-      try {
-        const files = await suiClient.walrus.getFiles({ ids: coverFileIds });
-        await Promise.all(
-          files.map(async (file, index) => {
-            const bytes = await file.bytes();
-            coverDataByFileId.set(coverFileIds[index]!, Buffer.from(bytes).toString('base64'));
-          }),
-        );
-      } catch (error) {
-        // If fetching cover images fails, fall back to returning proposals without cover data.
-      }
-    }
+    const coverDataByFileId =
+      coverFileIds.length > 0
+        ? await fetchWalrusFilesBase64(coverFileIds)
+        : new Map<string, string | null>();
 
     const normalized = proposals.map((proposal: BookProposal & { votes: ProposalVote[] }) => {
       const votes = proposal.votes ?? [];
@@ -119,31 +109,46 @@ export const proposalsRouter = createRouter({
     };
   }),
   getById: procedure.input(getProposalByIdInput).query(async ({ input }) => {
+    const normalizedTelegramUsername = normalizeTelegramUsername(input.telegramUsername ?? null);
+    const isAllowedToViewVotes =
+      typeof normalizedTelegramUsername === 'string' &&
+      isAllowedTelegramVoter(normalizedTelegramUsername);
+
     await initializeDataSource();
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
-    const proposal = await bookProposalRepository.findOne({ where: { id: input.proposalId } });
+    const proposal = await bookProposalRepository.findOne({
+      where: { id: input.proposalId },
+      relations: { votes: true },
+    });
     if (!proposal) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
     }
 
-    let coverImageData: string | null = null;
-    if (proposal.coverWalrusFileId) {
-      try {
-        const files = await suiClient.walrus.getFiles({ ids: [proposal.coverWalrusFileId] });
-        const [coverFile] = files;
-        if (coverFile) {
-          const bytes = await coverFile.bytes();
-          coverImageData = Buffer.from(bytes).toString('base64');
-        }
-      } catch (error) {
-        coverImageData = null;
-      }
-    }
+    const coverImageData = proposal.coverWalrusFileId
+      ? (await fetchWalrusFilesBase64([proposal.coverWalrusFileId])).get(
+          proposal.coverWalrusFileId,
+        ) ?? null
+      : null;
+
+    const votes = proposal.votes ?? [];
+    const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
+    const negativeVotes = votes.length - positiveVotes;
+    const userVote =
+      isAllowedToViewVotes && normalizedTelegramUsername
+        ? votes.find((vote: ProposalVote) => vote.telegramUsername === normalizedTelegramUsername)
+        : undefined;
+
+    const { votes: _votes, ...rest } = proposal;
 
     return {
-      ...proposal,
+      ...rest,
       coverImageData,
+      votes: {
+        positiveVotes,
+        negativeVotes,
+        userVote: userVote ? (userVote.isPositive ? 'positive' : 'negative') : null,
+      },
     };
   }),
   voteForProposal: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {

@@ -7,11 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { useTMA } from "@/app/providers/TMAProvider";
 import { useToast } from "@/shared/ui/ToastProvider";
-import {
-  fetchProposalsForVoting,
-  submitBookProposal,
-  submitProposalVote,
-} from "@/entities/proposal/api";
+import { fetchProposalsForVoting, submitBookProposal } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 import { fetchAuthors } from "@/entities/author/api";
 import { fetchDecryptedBlob } from "@/shared/api/storage";
@@ -29,28 +25,15 @@ import { PublishResultModal } from "./components/PublishResultModal";
 import { PublishSection } from "./components/PublishSection";
 import { VotingSection } from "./components/VotingSection";
 import { usePublishForm } from "./hooks/usePublishForm";
-import { mockBooks } from "./mocks";
 import type {
   AccountSection,
-  PendingVoteState,
   PublishResultState,
-  VoteDirection,
   VotingProposal,
 } from "./types";
-
-function normalizeTelegramUsername(value: string | null | undefined): string | undefined {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return undefined;
-  }
-
-  const prefixed = trimmed.startsWith("@") ? trimmed : `@${trimmed}`;
-  return prefixed.toLowerCase();
-}
+import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramUsername } from "@/shared/lib/telegram";
+import { purchasesApi } from "@/entities/purchase/api";
+import { catalogApi } from "@/entities/book/api";
+import type { MyBook } from "./types";
 
 export default function MyAccount(): JSX.Element {
   const { t } = useTranslation();
@@ -74,38 +57,18 @@ export default function MyAccount(): JSX.Element {
     collectSubmissionHashtags,
     resetForm,
   } = usePublishForm({ showToast, t });
-  const allowedVoterUsernames = useMemo(() => {
-    const allowed = new Set<string>();
-
-    HARDCODED_ALLOWED_VOTER_USERNAMES.forEach((username) => {
-      const normalized = normalizeTelegramUsername(username);
-      if (normalized) {
-        allowed.add(normalized);
-      }
-    });
-
-    const raw = import.meta.env.VITE_ALLOWED_TELEGRAM_USERNAMES;
-    if (typeof raw === "string" && raw.length > 0) {
-      raw
-        .split(",")
-        .map((username) => normalizeTelegramUsername(username))
-        .forEach((username) => {
-          if (username) {
-            allowed.add(username);
-          }
-        });
-    }
-
-    return allowed;
-  }, []);
+  const allowedVoterUsernames = useMemo(
+    () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
+    [],
+  );
   const telegramUsername = useMemo(() => {
-    const rawUsername = (
-      launchParams?.tgWebAppData?.user?.username
-    );
+    const rawUsername = launchParams?.tgWebAppData?.user?.username ?? null;
 
-    return (
-      normalizeTelegramUsername(rawUsername) ?? ''
-    );
+    return normalizeTelegramUsername(rawUsername);
+  }, [launchParams]);
+  const telegramUserId = useMemo(() => {
+    const rawId = launchParams?.tgWebAppData?.user?.id;
+    return getTelegramUserId(rawId);
   }, [launchParams]);
   const isAllowedVoter = telegramUsername ? allowedVoterUsernames.has(telegramUsername) : false;
   const canVote = Boolean(telegramUsername && isAllowedVoter);
@@ -115,14 +78,14 @@ export default function MyAccount(): JSX.Element {
   );
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
-  const [pendingVote, setPendingVote] = useState<PendingVoteState>(null);
   const [downloadingProposalId, setDownloadingProposalId] = useState<string | null>(null);
+  const [myBooks, setMyBooks] = useState<MyBook[]>([]);
+  const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
+  const [myBooksError, setMyBooksError] = useState<string | null>(null);
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
   const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
-    console.log("authorUsernames: ", authorUsernames);
-    console.log("telegramUsername: ", telegramUsername);
   const isAllowedAuthor = telegramUsername ? authorUsernames.has(telegramUsername) : false;
   const canPublish = Boolean(telegramUsername && isAllowedAuthor);
 
@@ -234,6 +197,55 @@ export default function MyAccount(): JSX.Element {
     [showToast, t, votingProposals],
   );
 
+  const loadMyBooks = useCallback(async () => {
+    setIsMyBooksLoading(true);
+    setMyBooksError(null);
+
+    if (!telegramUserId) {
+      setMyBooks([]);
+      setIsMyBooksLoading(false);
+      return;
+    }
+
+    try {
+      const response = await purchasesApi.list({ telegramUserId });
+      const items = await Promise.all(
+        response.items.map(async (item) => {
+          try {
+            const book = await catalogApi.getBook(item.bookId, { telegramUserId });
+            if (!book) {
+              return null;
+            }
+
+            return {
+              book,
+              purchase: {
+                paymentId: item.paymentId,
+                purchasedAt: item.purchasedAt,
+                walrusBlobId: item.walrusBlobId,
+              },
+            } satisfies MyBook;
+          } catch (error) {
+            console.error("Failed to load book details", error);
+            return null;
+          }
+        }),
+      );
+
+      const normalized = items.filter((item): item is MyBook => item !== null);
+      setMyBooks(normalized);
+    } catch (error) {
+      console.error("Failed to load purchased books", error);
+      setMyBooksError(t("account.myBooks.loadError"));
+    } finally {
+      setIsMyBooksLoading(false);
+    }
+  }, [telegramUserId, t]);
+
+  const handleRetryMyBooks = useCallback(() => {
+    void loadMyBooks();
+  }, [loadMyBooks]);
+
   const loadVotingProposals = useCallback(async () => {
     setIsVotingLoading(true);
     setVotingError(null);
@@ -254,66 +266,21 @@ export default function MyAccount(): JSX.Element {
     }
   }, [allowedVoterUsernames, enhanceProposalsWithCovers, t, telegramUsername]);
 
-  const handleVote = useCallback(
-    async (proposalId: string, direction: VoteDirection) => {
-      if (!telegramUsername || !canVote) {
-        showToast(t("account.voting.notAllowed"));
-        return;
-      }
-
-      setPendingVote({ proposalId, direction });
-      try {
-        const result = await submitProposalVote({
-          proposalId,
-          telegramUsername,
-          isPositive: direction === "positive",
-        });
-
-        setAllowedVotersCount(
-          typeof result.allowedVotersCount === "number"
-            ? result.allowedVotersCount
-            : allowedVoterUsernames.size,
-        );
-
-        if (result.status === "PENDING") {
-          setVotingProposals((prev) =>
-            prev.map((proposal) =>
-              proposal.id === proposalId
-                ? {
-                    ...proposal,
-                    votes: {
-                      positiveVotes: result.positiveVotes,
-                      negativeVotes: result.negativeVotes,
-                      userVote: result.userVote,
-                    },
-                  }
-                : proposal,
-            ),
-          );
-          showToast(t("account.voting.toast.submitted"));
-        } else {
-          setVotingProposals((prev) => prev.filter((proposal) => proposal.id !== proposalId));
-          showToast(
-            result.status === "APPROVED"
-              ? t("account.voting.toast.approved")
-              : t("account.voting.toast.rejected"),
-          );
-        }
-      } catch (error) {
-        console.error("Failed to submit vote", error);
-        showToast(t("account.voting.toast.error"));
-      } finally {
-        setPendingVote(null);
-      }
-    },
-    [allowedVoterUsernames, canVote, showToast, t, telegramUsername],
-  );
+  useEffect(() => {
+    setAllowedVotersCount(allowedVoterUsernames.size);
+  }, [allowedVoterUsernames]);
 
   useEffect(() => {
-      if (activeSection === VOTE_SECTION) {
+    if (activeSection === VOTE_SECTION) {
       void loadVotingProposals();
     }
   }, [activeSection, loadVotingProposals]);
+
+  useEffect(() => {
+    if (activeSection === BOOK_SECTION) {
+      void loadMyBooks();
+    }
+  }, [activeSection, loadMyBooks]);
 
   const menuItems = useMemo(
     () => [
@@ -432,7 +399,14 @@ export default function MyAccount(): JSX.Element {
       </SegmentedControl>
 
       {activeSection === BOOK_SECTION && (
-        <MyBooksSection books={mockBooks} theme={theme} t={t} />
+        <MyBooksSection
+          books={myBooks}
+          theme={theme}
+          t={t}
+          isLoading={isMyBooksLoading}
+          error={myBooksError}
+          onRetry={handleRetryMyBooks}
+        />
       )}
 
       {activeSection === PUBLISH_SECTION && (
@@ -464,12 +438,10 @@ export default function MyAccount(): JSX.Element {
           error={votingError}
           canVote={canVote}
           isTelegramUser={Boolean(telegramUsername)}
-          pendingVote={pendingVote}
           allowedVotersCount={displayedAllowedVoters}
           requiredApprovals={REQUIRED_APPROVALS}
           downloadingProposalId={downloadingProposalId}
           onDownload={handleDownloadProposal}
-          onVote={handleVote}
           onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}
           onRetry={handleRetryVoting}
         />

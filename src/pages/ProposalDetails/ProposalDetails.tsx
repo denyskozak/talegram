@@ -1,12 +1,17 @@
-import {useEffect, useMemo, useState} from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate, useParams} from "react-router-dom";
 
 import {Button, Card, Chip, Text, Title} from "@telegram-apps/telegram-ui";
 
 import {useTheme} from "@/app/providers/ThemeProvider";
-import {fetchProposalById} from "@/entities/proposal/api";
+import {useTMA} from "@/app/providers/TMAProvider";
+import {useToast} from "@/shared/ui/ToastProvider";
+import {fetchProposalById, submitProposalVote} from "@/entities/proposal/api";
 import type {BookProposal} from "@/entities/proposal/types";
+import type {VoteDirection} from "@/pages/MyAccount/types";
+import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
+import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -22,9 +27,30 @@ export default function ProposalDetails(): JSX.Element {
     const theme = useTheme();
     const navigate = useNavigate();
     const {id} = useParams<{ id: string }>();
+    const {launchParams} = useTMA();
+    const {showToast} = useToast();
     const [proposal, setProposal] = useState<BookProposal | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [pendingVote, setPendingVote] = useState<VoteDirection | null>(null);
+
+    const allowedVoterUsernames = useMemo(
+        () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
+        [],
+    );
+    const telegramUsername = useMemo(() => {
+        const rawUsername = launchParams?.tgWebAppData?.user?.username ?? null;
+        return normalizeTelegramUsername(rawUsername);
+    }, [launchParams]);
+    const canVote = useMemo(
+        () => Boolean(telegramUsername && allowedVoterUsernames.has(telegramUsername)),
+        [allowedVoterUsernames, telegramUsername],
+    );
+    const [allowedVotersCount, setAllowedVotersCount] = useState<number>(() => allowedVoterUsernames.size);
+
+    useEffect(() => {
+        setAllowedVotersCount(allowedVoterUsernames.size);
+    }, [allowedVoterUsernames]);
 
     useEffect(() => {
         if (!id) {
@@ -39,7 +65,7 @@ export default function ProposalDetails(): JSX.Element {
             setIsLoading(true);
             setError(null);
             try {
-                const data = await fetchProposalById(id);
+                const data = await fetchProposalById(id, telegramUsername ?? undefined);
                 if (!isCancelled) {
                     setProposal(data);
                 }
@@ -60,7 +86,7 @@ export default function ProposalDetails(): JSX.Element {
         return () => {
             isCancelled = true;
         };
-    }, [id, t]);
+    }, [id, t, telegramUsername]);
 
     const formattedCreatedAt = useMemo(
         () => (proposal ? formatDate(proposal.createdAt) : ""),
@@ -87,7 +113,87 @@ export default function ProposalDetails(): JSX.Element {
         }
     }, [proposal]);
 
-    console.log("proposal: ", proposal);
+    const thresholdLabel = useMemo(
+        () =>
+            t("account.voting.threshold", {
+                count: allowedVotersCount,
+                required: REQUIRED_APPROVALS,
+            }),
+        [allowedVotersCount, t],
+    );
+
+    const votingProgressLabel = useMemo(() => {
+        if (!proposal?.votes) {
+            return null;
+        }
+
+        return t("account.voting.progress", {
+            positive: proposal.votes.positiveVotes,
+            negative: proposal.votes.negativeVotes,
+            required: REQUIRED_APPROVALS,
+        });
+    }, [proposal, t]);
+
+    const handleVote = useCallback(
+        async (direction: VoteDirection) => {
+            if (!proposal) {
+                return;
+            }
+
+            if (!telegramUsername || !canVote) {
+                showToast(t("account.voting.notAllowed"));
+                return;
+            }
+
+            setPendingVote(direction);
+            try {
+                const result = await submitProposalVote({
+                    proposalId: proposal.id,
+                    telegramUsername,
+                    isPositive: direction === "positive",
+                });
+
+                setAllowedVotersCount(
+                    typeof result.allowedVotersCount === "number"
+                        ? result.allowedVotersCount
+                        : allowedVoterUsernames.size,
+                );
+
+                setProposal((prev) => {
+                    if (!prev) {
+                        return prev;
+                    }
+
+                    return {
+                        ...prev,
+                        status: result.status,
+                        votes: {
+                            positiveVotes: result.positiveVotes,
+                            negativeVotes: result.negativeVotes,
+                            userVote: result.userVote,
+                        },
+                    };
+                });
+
+                if (result.status === "PENDING") {
+                    showToast(t("account.voting.toast.submitted"));
+                } else {
+                    showToast(
+                        result.status === "APPROVED"
+                            ? t("account.voting.toast.approved")
+                            : t("account.voting.toast.rejected"),
+                    );
+                }
+            } catch (voteError) {
+                console.error("Failed to submit vote", voteError);
+                showToast(t("account.voting.toast.error"));
+            } finally {
+                setPendingVote(null);
+            }
+        },
+        [allowedVoterUsernames, canVote, proposal, showToast, t, telegramUsername],
+    );
+
     return (
         <div
             style={{
@@ -118,10 +224,70 @@ export default function ProposalDetails(): JSX.Element {
                             {proposal.title}
                         </Title>
                         {coverImageURL ? (
-                            <img style={{width: 200, height: 100}} src={coverImageURL}/>
+                            <img
+                                style={{
+                                    width: "100%",
+                                    maxWidth: 480,
+                                    aspectRatio: "3 / 2",
+                                    objectFit: "cover",
+                                    borderRadius: 16,
+                                    boxShadow: "0 16px 32px rgba(0, 0, 0, 0.15)",
+                                    alignSelf: "center",
+                                }}
+                                src={coverImageURL}
+                                alt={t("account.voting.coverAlt", {title: proposal.title})}
+                            />
                         ) : null}
                         <Text style={{color: theme.subtitle}}>{proposal.author}</Text>
                     </header>
+
+                    <Card style={{padding: 20, display: "flex", flexDirection: "column", gap: 12}}>
+                        <Title level="3" weight="2">
+                            {t("account.voting.title")}
+                        </Title>
+                        <Text style={{color: theme.subtitle}}>{thresholdLabel}</Text>
+                        {votingProgressLabel ? (
+                            <Text style={{color: theme.subtitle}}>{votingProgressLabel}</Text>
+                        ) : null}
+                        {proposal.votes?.userVote && canVote ? (
+                            <Text style={{color: theme.hint}}>
+                                {proposal.votes.userVote === "positive"
+                                    ? t("account.voting.youVoted.approve")
+                                    : t("account.voting.youVoted.reject")}
+                            </Text>
+                        ) : null}
+                        <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
+                            <Button
+                                size="s"
+                                mode={
+                                    proposal.votes?.userVote === "positive" && canVote
+                                        ? "filled"
+                                        : "outline"
+                                }
+                                disabled={!canVote || pendingVote !== null}
+                                loading={pendingVote === "positive"}
+                                onClick={() => handleVote("positive")}
+                            >
+                                {t("account.voting.actions.approve")}
+                            </Button>
+                            <Button
+                                size="s"
+                                mode={
+                                    proposal.votes?.userVote === "negative" && canVote
+                                        ? "filled"
+                                        : "outline"
+                                }
+                                disabled={!canVote || pendingVote !== null}
+                                loading={pendingVote === "negative"}
+                                onClick={() => handleVote("negative")}
+                            >
+                                {t("account.voting.actions.reject")}
+                            </Button>
+                        </div>
+                        {!canVote && (
+                            <Text style={{color: theme.hint}}>{t("account.voting.notAllowed")}</Text>
+                        )}
+                    </Card>
 
                     <Card style={{padding: 20, display: "flex", flexDirection: "column", gap: 16}}>
                         <Title level="3" weight="2">
