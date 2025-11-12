@@ -57,8 +57,11 @@ export async function fetchProposalsForVoting(
   });
 }
 
-export async function fetchProposalById(proposalId: string): Promise<BookProposal> {
-  return trpc.proposals.getById.query({ proposalId });
+export async function fetchProposalById(
+  proposalId: string,
+  telegramUsername?: string,
+): Promise<BookProposal> {
+  return trpc.proposals.getById.query({ proposalId, telegramUsername });
 }
 
 export type SubmitProposalVotePayload = {

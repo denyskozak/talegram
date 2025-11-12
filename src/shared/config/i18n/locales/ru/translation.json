@@ -201,14 +201,19 @@
     },
     "myBooks": {
       "title": "Моя TON-полка",
-      "description": "NFT-издания на блокчейне TON (демо-данные).",
+      "description": "Книги, которые вы приобрели в маркетплейсе TON.",
       "coverAlt": "Обложка «{{title}}»",
       "tonBadge": "TON NFT",
       "status": {
         "owned": "Владею",
         "listed": "Выставлена на продажу"
       },
-      "token": "ID токена {{token}}"
+      "purchased": "Покупка от {{value}}",
+      "paymentId": "ID платежа {{id}}",
+      "loading": "Загружаем ваши книги...",
+      "empty": "Вы ещё не приобретали книги.",
+      "loadError": "Не удалось загрузить вашу полку.",
+      "retry": "Повторить"
     },
     "publish": {
       "title": "Опубликовать новую книгу",

@@ -195,14 +195,19 @@
     },
     "myBooks": {
       "title": "My TON bookshelf",
-      "description": "NFT editions stored on the TON blockchain (demo data).",
+      "description": "Books you've purchased in the TON marketplace.",
       "coverAlt": "Cover of {{title}}",
       "tonBadge": "TON NFT",
       "status": {
         "owned": "Owned",
         "listed": "Listed for sale"
       },
-      "token": "Token ID {{token}}"
+      "purchased": "Purchased {{value}}",
+      "paymentId": "Payment ID {{id}}",
+      "loading": "Loading your books...",
+      "empty": "You haven't purchased any books yet.",
+      "loadError": "We couldn't load your bookshelf.",
+      "retry": "Try again"
     },
     "publish": {
       "title": "Publish a new book",

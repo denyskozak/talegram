@@ -4,7 +4,7 @@ import type { TFunction } from "i18next";
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
 
 import { REQUIRED_APPROVALS } from "../constants";
-import type { PendingVoteState, VoteDirection, VotingProposal } from "../types";
+import type { VotingProposal } from "../types";
 
 export type VotingSectionProps = {
   proposals: VotingProposal[];
@@ -14,12 +14,10 @@ export type VotingSectionProps = {
   error: string | null;
   canVote: boolean;
   isTelegramUser: boolean;
-  pendingVote: PendingVoteState;
   allowedVotersCount: number;
   requiredApprovals?: number;
   downloadingProposalId?: string | null;
   onDownload?: (proposalId: string) => void;
-  onVote: (proposalId: string, direction: VoteDirection) => void;
   onViewDetails: (proposalId: string) => void;
   onRetry: () => void;
 };
@@ -32,12 +30,10 @@ export function VotingSection({
   error,
   canVote,
   isTelegramUser,
-  pendingVote,
   allowedVotersCount,
   requiredApprovals = REQUIRED_APPROVALS,
   downloadingProposalId,
   onDownload,
-  onVote,
   onViewDetails,
   onRetry,
 }: VotingSectionProps): JSX.Element {
@@ -186,28 +182,6 @@ export function VotingSection({
                         {t("account.voting.actions.download")}
                       </Button>
                     )}
-                    <Button
-                      size="s"
-                      mode={proposal.votes.userVote === "positive" && canVote ? "filled" : "outline"}
-                      onClick={() => onVote(proposal.id, "positive")}
-                      loading={
-                        pendingVote?.proposalId === proposal.id && pendingVote.direction === "positive"
-                      }
-                      disabled={!canVote || pendingVote?.proposalId === proposal.id}
-                    >
-                      {t("account.voting.actions.approve")}
-                    </Button>
-                    <Button
-                      size="s"
-                      mode={proposal.votes.userVote === "negative" && canVote ? "filled" : "outline"}
-                      onClick={() => onVote(proposal.id, "negative")}
-                      loading={
-                        pendingVote?.proposalId === proposal.id && pendingVote.direction === "negative"
-                      }
-                      disabled={!canVote || pendingVote?.proposalId === proposal.id}
-                    >
-                      {t("account.voting.actions.reject")}
-                    </Button>
                   </div>
                 </Card>
               );
