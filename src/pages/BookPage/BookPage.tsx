@@ -71,7 +71,7 @@ export default function BookPage(): JSX.Element {
     try {
       setIsLoading(true);
       setError(null);
-      const item = await catalogApi.getBook(id);
+      const item = await catalogApi.getBook(id, { telegramUserId });
       setBook(item);
       const similarBooksResponse = await catalogApi.listBooks({
         categoryId: item.categories[0],
@@ -84,7 +84,7 @@ export default function BookPage(): JSX.Element {
     } finally {
       setIsLoading(false);
     }
-  }, [id, t]);
+  }, [id, t, telegramUserId]);
 
   const refreshPurchaseStatus = useCallback(async () => {
     if (!id || !telegramUserId) {
@@ -204,6 +204,12 @@ export default function BookPage(): JSX.Element {
       setIsReading(false);
       invoiceStatusRef.current = 'paid';
       showToast(t("book.toast.accessGranted"));
+      try {
+        const updatedBook = await catalogApi.getBook(book.id, { telegramUserId });
+        setBook(updatedBook);
+      } catch (updateError) {
+        console.error(updateError);
+      }
     } catch (err) {
       console.error(err);
       showToast(t("book.toast.confirmFailed"));
@@ -588,7 +594,9 @@ export default function BookPage(): JSX.Element {
           </Button>
         </div>
       </Modal>
-      {book && isReading && <ReadingOverlay book={book} onClose={handleCloseReader} />}
+      {book && isReading && (
+        <ReadingOverlay book={book} onClose={handleCloseReader} preview={isPreviewMode} />
+      )}
     </>
   );
 }

@@ -22,6 +22,9 @@ export type Book = {
   walrusBlobUrl?: string | null;
   coverWalrusBlobId?: string | null;
   coverMimeType?: string | null;
+  mimeType?: string | null;
+  fileName?: string | null;
+  bookFileURL?: string | null;
 };
 
 export type Review = {
@@ -43,7 +46,7 @@ export interface CatalogApi {
     cursor?: string;
     limit?: number;
   }): Promise<{ items: Book[]; nextCursor?: string }>;
-  getBook(id: ID): Promise<Book>;
+  getBook(id: ID, params?: { telegramUserId?: string }): Promise<Book>;
   listReviews(bookId: ID, cursor?: string, limit?: number): Promise<{ items: Review[]; nextCursor?: string }>;
   createReview(payload: { bookId: ID; authorName: string; rating: number; text: string }): Promise<Review>;
 }

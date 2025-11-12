@@ -38,8 +38,8 @@ export const catalogApi: CatalogApi = {
       params satisfies ListBooksPayload,
     );
   },
-  getBook(id) {
-    return trpc.catalog.getBook.query({ id });
+  getBook(id, params) {
+    return trpc.catalog.getBook.query({ id, telegramUserId: params?.telegramUserId });
   },
   listReviews(bookId, cursor, limit) {
     return trpc.catalog.listReviews.query({
