@@ -17,6 +17,8 @@ export type PublishSectionProps = {
   theme: ThemeColors;
   t: TFunction<"translation">;
   isSubmitting: boolean;
+  canSubmit: boolean;
+  isAuthorsLoading: boolean;
   fileInputRef: RefObject<HTMLInputElement>;
   coverInputRef: RefObject<HTMLInputElement>;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -33,6 +35,8 @@ export function PublishSection({
   theme,
   t,
   isSubmitting,
+  canSubmit,
+  isAuthorsLoading,
   fileInputRef,
   coverInputRef,
   onSubmit,
@@ -43,6 +47,8 @@ export function PublishSection({
   onHashtagRemove,
   onHashtagKeyDown,
 }: PublishSectionProps): JSX.Element {
+  const isFormDisabled = isAuthorsLoading || !canSubmit;
+
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -51,6 +57,18 @@ export function PublishSection({
         </Title>
         <Text style={{ color: theme.subtitle }}>{t("account.publish.description")}</Text>
       </div>
+      {!isAuthorsLoading && !canSubmit && (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: 12,
+            border: `1px solid ${theme.separator}`,
+            background: theme.section,
+          }}
+        >
+          <Text>{t("account.publish.restrictedAlert")}</Text>
+        </div>
+      )}
       <Card style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
         <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -61,6 +79,7 @@ export function PublishSection({
               value={formState.title}
               onChange={onInputChange}
               placeholder={t("account.publish.form.name.placeholder")}
+              disabled={isFormDisabled}
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -78,6 +97,7 @@ export function PublishSection({
               value={formState.author}
               onChange={onInputChange}
               placeholder={t("account.publish.form.author.placeholder")}
+              disabled={isFormDisabled}
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -95,6 +115,7 @@ export function PublishSection({
               value={formState.category}
               onChange={onInputChange}
               placeholder={t("account.publish.form.category.placeholder")}
+              disabled={isFormDisabled}
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -116,6 +137,7 @@ export function PublishSection({
               step={1}
               inputMode="numeric"
               placeholder={t("account.publish.form.price.placeholder")}
+              disabled={isFormDisabled}
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -145,6 +167,7 @@ export function PublishSection({
                 placeholder={t("account.publish.form.hashtags.placeholder")}
                 maxLength={HASHTAG_MAX_LENGTH + 1}
                 autoComplete="off"
+                disabled={isFormDisabled}
                 style={{
                   flex: "1 1 220px",
                   padding: "12px 14px",
@@ -159,8 +182,15 @@ export function PublishSection({
                 type="button"
                 mode="outline"
                 size="s"
-                onClick={() => onHashtagAdd(formState.hashtagsInput)}
-                disabled={formState.hashtagsInput.trim().length === 0}
+                onClick={() => {
+                  if (isFormDisabled) {
+                    return;
+                  }
+                  onHashtagAdd(formState.hashtagsInput);
+                }}
+                disabled={
+                  isFormDisabled || formState.hashtagsInput.trim().length === 0
+                }
               >
                 {t("account.publish.form.hashtags.add")}
               </Button>
@@ -191,6 +221,7 @@ export function PublishSection({
                     <button
                       type="button"
                       onClick={() => onHashtagRemove(tag)}
+                      disabled={isFormDisabled}
                       style={{
                         border: "none",
                         background: "transparent",
@@ -218,6 +249,7 @@ export function PublishSection({
               onChange={onInputChange}
               placeholder={t("account.publish.form.description.placeholder")}
               rows={5}
+              disabled={isFormDisabled}
               style={{
                 padding: "12px 14px",
                 borderRadius: 12,
@@ -237,6 +269,7 @@ export function PublishSection({
               type="file"
               accept="image/*"
               onChange={onCoverSelect}
+              disabled={isFormDisabled}
               style={{ display: "none" }}
             />
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -244,7 +277,13 @@ export function PublishSection({
                 type="button"
                 mode="outline"
                 size="s"
-                onClick={() => coverInputRef.current?.click()}
+                onClick={() => {
+                  if (isFormDisabled) {
+                    return;
+                  }
+                  coverInputRef.current?.click();
+                }}
+                disabled={isFormDisabled}
               >
                 {t("account.publish.form.cover.cta")}
               </Button>
@@ -260,10 +299,22 @@ export function PublishSection({
               type="file"
               accept=".pdf"
               onChange={onFileSelect}
+              disabled={isFormDisabled}
               style={{ display: "none" }}
             />
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <Button type="button" mode="outline" size="s" onClick={() => fileInputRef.current?.click()}>
+              <Button
+                type="button"
+                mode="outline"
+                size="s"
+                onClick={() => {
+                  if (isFormDisabled) {
+                    return;
+                  }
+                  fileInputRef.current?.click();
+                }}
+                disabled={isFormDisabled}
+              >
                 {t("account.publish.form.file.cta")}
               </Button>
               <Text style={{ color: theme.subtitle }}>
@@ -276,7 +327,9 @@ export function PublishSection({
             mode="filled"
             size="m"
             loading={isSubmitting}
-            disabled={!formState.file || !formState.coverFile}
+            disabled={
+              isFormDisabled || !formState.file || !formState.coverFile
+            }
           >
             {t("account.publish.form.submit")}
           </Button>

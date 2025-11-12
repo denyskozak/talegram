@@ -207,6 +207,7 @@
     "publish": {
       "title": "Publish a new book",
       "description": "Prepare your manuscript and submit it for the TON marketplace.",
+      "restrictedAlert": "Only approved authors can submit book proposals.",
       "form": {
         "name": {
           "label": "Book title",
@@ -258,6 +259,7 @@
       "toastMissingCategory": "Choose a category for the book.",
       "toastMissingPrice": "Set the price in Stars.",
       "toastInvalidPrice": "Enter a non-negative number of Stars.",
+      "toastRestricted": "Only approved authors can submit book proposals.",
       "toastHashtagInvalid": "Enter a hashtag before adding it.",
       "toastHashtagLimit": "You can add up to {{count}} hashtags.",
       "modal": {

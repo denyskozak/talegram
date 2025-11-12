@@ -13,6 +13,7 @@ import {
   submitProposalVote,
 } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
+import { fetchAuthors } from "@/entities/author/api";
 import { fetchWalrusFiles } from "@/shared/api/storage";
 import { base64ToUint8Array } from "@/shared/lib/base64";
 
@@ -117,7 +118,53 @@ export default function MyAccount(): JSX.Element {
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
   const [pendingVote, setPendingVote] = useState<PendingVoteState>(null);
+  const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+  const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
+  const isAllowedAuthor = telegramUsername ? authorUsernames.has(telegramUsername) : false;
+  const canPublish = Boolean(telegramUsername && isAllowedAuthor);
   const coverUrlsRef = useRef<string[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadAuthors = async () => {
+      setIsAuthorsLoading(true);
+      try {
+        const authors = await fetchAuthors();
+        if (!isMounted) {
+          return;
+        }
+
+        const normalized = new Set<string>();
+        authors.forEach((author) => {
+          const normalizedUsername = normalizeTelegramUsername(author.telegramUsername);
+          if (normalizedUsername) {
+            normalized.add(normalizedUsername);
+          }
+        });
+
+        setAuthorUsernames(normalized);
+      } catch (error) {
+        console.error("Failed to load allowed authors", error);
+        if (!isMounted) {
+          return;
+        }
+        setAuthorUsernames(new Set<string>());
+      } finally {
+        if (isMounted) {
+          setIsAuthorsLoading(false);
+        }
+      }
+    };
+
+    void loadAuthors();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const revokeCoverUrls = useCallback(() => {
     for (const url of coverUrlsRef.current) {
@@ -297,6 +344,11 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
+    if (!canPublish) {
+      showToast(t("account.publish.toastRestricted"));
+      return;
+    }
+
     const trimmedPrice = formState.price.trim();
     if (trimmedPrice.length === 0) {
       showToast(t("account.publish.toastMissingPrice"));
@@ -397,6 +449,8 @@ export default function MyAccount(): JSX.Element {
           isSubmitting={isSubmitting}
           fileInputRef={fileInputRef}
           coverInputRef={coverInputRef}
+          canSubmit={canPublish}
+          isAuthorsLoading={isAuthorsLoading}
           onSubmit={handleSubmit}
           onInputChange={handleInputChange}
           onFileSelect={handleFileSelect}
