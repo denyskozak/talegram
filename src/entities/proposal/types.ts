@@ -11,8 +11,8 @@ export type BookProposal = {
     hashtags: string[];
     walrusBlobId: string;
     walrusFileId: string;
-    coverWalrusFileId: string | null;
-    coverWalrusBlobId?: string | null;
+    coverWalrusFileId: string;
+    coverWalrusBlobId?: string;
     coverMimeType?: string | null;
     coverFileName?: string | null;
     coverFileSize?: number | null;
