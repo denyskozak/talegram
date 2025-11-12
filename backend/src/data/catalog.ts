@@ -98,6 +98,10 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     walrusBlobUrl: entity.walrusBlobUrl,
     coverWalrusBlobId: entity.coverWalrusBlobId,
     coverMimeType: entity.coverMimeType,
+    mimeType: entity.mimeType ?? null,
+    fileName: entity.fileName ?? null,
+    fileEncryptionIv: entity.fileEncryptionIv ?? null,
+    fileEncryptionTag: entity.fileEncryptionTag ?? null,
   } satisfies CatalogBook;
 }
 

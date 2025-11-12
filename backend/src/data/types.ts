@@ -28,6 +28,11 @@ export type Book = {
   walrusBlobUrl?: string | null;
   coverWalrusBlobId?: string | null;
   coverMimeType?: string | null;
+  mimeType?: string | null;
+  fileName?: string | null;
+  fileEncryptionIv?: string | null;
+  fileEncryptionTag?: string | null;
+  bookFileURL?: string | null;
 };
 
 export type Review = {

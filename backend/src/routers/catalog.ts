@@ -11,6 +11,8 @@ import {
 } from '../data/catalog.js';
 import type { Book as CatalogBook } from '../data/types.js';
 import { fetchWalrusCoverData } from '../utils/walrus-cover.js';
+import { getPurchaseDetails } from '../stores/purchasesStore.js';
+import { fetchWalrusBookData } from '../utils/walrus-book.js';
 
 const listCategoriesInput = z.object({
   search: z.string().trim().optional(),
@@ -27,6 +29,7 @@ const listBooksInput = z.object({
 
 const getBookInput = z.object({
   id: z.string().trim().min(1),
+  telegramUserId: z.string().trim().min(1).optional(),
 });
 
 const listReviewsInput = z.object({
@@ -68,7 +71,30 @@ export const catalogRouter = createRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
-    return enrichCatalogBookWithCover(book);
+    let bookFileURL: string | null = null;
+
+    if (input.telegramUserId) {
+      const details = await getPurchaseDetails(book.id, input.telegramUserId);
+      if (details?.walrusBlobId) {
+        const resolved = await fetchWalrusBookData(
+          details.walrusBlobId,
+          book.mimeType ?? null,
+          book.fileEncryptionIv ?? null,
+          book.fileEncryptionTag ?? null,
+        );
+        if (resolved.length > 0) {
+          bookFileURL = resolved;
+        }
+      }
+    }
+
+    const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
+    const enriched = await enrichCatalogBookWithCover(bookForClient);
+
+    return {
+      ...enriched,
+      bookFileURL,
+    };
   }),
   listReviews: procedure
     .input(listReviewsInput)
