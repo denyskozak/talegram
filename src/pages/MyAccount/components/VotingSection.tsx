@@ -52,11 +52,6 @@ export function VotingSection({
         <Text style={{ color: theme.hint }}>{thresholdLabel}</Text>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        {!isTelegramUser && (
-          <Card style={{ padding: 16 }}>
-            <Text style={{ color: theme.subtitle }}>{t("account.voting.notTelegram")}</Text>
-          </Card>
-        )}
         {error ? (
           <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
             <Text style={{ color: theme.subtitle }}>{error}</Text>
