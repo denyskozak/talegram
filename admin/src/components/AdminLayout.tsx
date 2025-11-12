@@ -3,11 +3,11 @@ import { useTrpc } from '../api/trpcProvider.js';
 import './AdminLayout.css';
 
 export function AdminLayout(): JSX.Element {
-  const { setSecret } = useTrpc();
+  const { setToken } = useTrpc();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setSecret(null);
+    setToken(null);
     navigate('/login', { replace: true });
   };
 
@@ -21,6 +21,9 @@ export function AdminLayout(): JSX.Element {
           </NavLink>
           <NavLink to="/books/new" className={({ isActive }) => (isActive ? 'nav-link nav-link--active' : 'nav-link')}>
             New book
+          </NavLink>
+          <NavLink to="/authors" className={({ isActive }) => (isActive ? 'nav-link nav-link--active' : 'nav-link')}>
+            Authors
           </NavLink>
         </nav>
         <button type="button" className="sidebar__logout" onClick={handleLogout}>

@@ -1,0 +1,136 @@
+.author-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.author-list__header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.author-list__header p {
+  margin: 0.25rem 0 0;
+  color: #555;
+}
+
+.author-list__create,
+.author-list__table-section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+}
+
+.author-list__create h2,
+.author-list__table-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.author-list__form {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: end;
+}
+
+.author-list__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+.author-list__field input {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.author-list__field input:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.author-list__form button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  justify-self: start;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.author-list__form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.author-list__form button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+}
+
+.author-list__error {
+  grid-column: 1 / -1;
+  background: rgba(239, 68, 68, 0.08);
+  color: #b91c1c;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.author-list__empty {
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.author-list__table-wrapper {
+  overflow-x: auto;
+}
+
+.author-list__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.author-list__table th,
+.author-list__table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.author-list__table th {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.author-list__name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.author-list__meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.author-list__username {
+  display: inline-block;
+  font-weight: 600;
+  color: #4338ca;
+}

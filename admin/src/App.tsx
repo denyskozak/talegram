@@ -4,13 +4,14 @@ import { LoginPage } from './pages/LoginPage.js';
 import { BookListPage } from './pages/BookListPage.js';
 import { BookCreatePage } from './pages/BookCreatePage.js';
 import { BookEditPage } from './pages/BookEditPage.js';
+import { AuthorListPage } from './pages/AuthorListPage.js';
 import { AdminLayout } from './components/AdminLayout.js';
 
 function RequireAuth({ children }: { children: React.ReactNode }): JSX.Element {
-  const { secret } = useTrpc();
+  const { token } = useTrpc();
   const location = useLocation();
 
-  if (!secret) {
+  if (!token) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
@@ -34,6 +35,9 @@ export default function App(): JSX.Element {
           <Route index element={<BookListPage />} />
           <Route path="new" element={<BookCreatePage />} />
           <Route path=":bookId/edit" element={<BookEditPage />} />
+        </Route>
+        <Route path="authors">
+          <Route index element={<AuthorListPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
