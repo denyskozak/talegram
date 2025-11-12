@@ -120,6 +120,7 @@ async function handleCreateProposalRequest(
         const author = fields['author'];
         const description = fields['description'];
         const category = fields['category'];
+        const priceRaw = fields['price'];
         const hashtagsRaw = fields['hashtags'];
         const file = files['file'];
         const cover = files['cover'];
@@ -142,6 +143,15 @@ async function handleCreateProposalRequest(
             return;
         }
 
+        const priceValue = typeof priceRaw === 'string' ? Number.parseFloat(priceRaw) : Number.NaN;
+        if (!Number.isFinite(priceValue) || priceValue < 0) {
+            res.statusCode = 400;
+            res.end('Price must be a non-negative number');
+            return;
+        }
+
+        const normalizedPrice = Math.round(priceValue);
+
         if (file.data.byteLength > MAX_FILE_SIZE_BYTES) {
             res.statusCode = 400;
             res.end('File size exceeds the allowed limit');
@@ -159,6 +169,7 @@ async function handleCreateProposalRequest(
             author,
             description,
             category,
+            price: normalizedPrice,
             hashtags: parseHashtagsField(hashtagsRaw),
             file: {
                 name: file.filename,

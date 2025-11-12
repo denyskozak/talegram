@@ -220,6 +220,11 @@
           "label": "Category",
           "placeholder": "Select the genre or collection"
         },
+        "price": {
+          "label": "Price in Stars",
+          "placeholder": "Enter the price",
+          "hint": "This is the amount readers will pay in Stars."
+        },
         "hashtags": {
           "label": "Hashtags",
           "placeholder": "Type a hashtag and press Enter",
@@ -251,6 +256,8 @@
       "toastMissingFile": "Attach the PDF file before submitting.",
       "toastMissingCover": "Add a cover image.",
       "toastMissingCategory": "Choose a category for the book.",
+      "toastMissingPrice": "Set the price in Stars.",
+      "toastInvalidPrice": "Enter a non-negative number of Stars.",
       "toastHashtagInvalid": "Enter a hashtag before adding it.",
       "toastHashtagLimit": "You can add up to {{count}} hashtags.",
       "modal": {
@@ -281,6 +288,8 @@
         "viewDetails": "View details",
         "download": "Download book"
       },
+      "price": "Price: {{value}} ⭐",
+      "priceWithCurrency": "Price: {{value}} {{currency}}",
       "coverAlt": "Cover of \"{{title}}\"",
       "toast": {
         "submitted": "Vote saved",
@@ -299,6 +308,7 @@
         "files": "Submitted files"
       },
       "category": "Category",
+      "price": "Price",
       "hashtags": "Hashtags",
       "noHashtags": "No hashtags were provided.",
       "status": {

@@ -20,6 +20,7 @@ export type CreateBookProposalParams = {
   author: string;
   description: string;
   category: string;
+  price: number;
   hashtags: string[];
   file: CreateProposalFileInput;
   cover: CreateProposalFileInput;
@@ -103,11 +104,19 @@ export async function createBookProposal(
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Category is required' });
   }
 
+  const normalizedPrice = Number.isFinite(params.price)
+    ? Math.max(0, Math.round(params.price))
+    : 0;
+
+  const currency = 'stars';
+
   const proposal = bookProposalRepository.create({
     title: params.title,
     author: params.author,
     description: params.description,
     category,
+    price: normalizedPrice,
+    currency,
     hashtags: normalizeHashtags(params.hashtags),
     walrusFileId: uploadResult.id,
     walrusBlobId: uploadResult.blobId,
