@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
@@ -123,7 +123,6 @@ export default function MyAccount(): JSX.Element {
   const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
   const isAllowedAuthor = telegramUsername ? authorUsernames.has(telegramUsername) : false;
   const canPublish = Boolean(telegramUsername && isAllowedAuthor);
-  const coverUrlsRef = useRef<string[]>([]);
 
   useEffect(() => {
     let isMounted = true;
@@ -165,27 +164,11 @@ export default function MyAccount(): JSX.Element {
     };
   }, []);
 
-  const revokeCoverUrls = useCallback(() => {
-    for (const url of coverUrlsRef.current) {
-      URL.revokeObjectURL(url);
-    }
-    coverUrlsRef.current = [];
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      revokeCoverUrls();
-    };
-  }, [revokeCoverUrls]);
-
   const enhanceProposalsWithCovers = useCallback(
     async (proposals: ProposalForVoting[]): Promise<VotingProposal[]> => {
       if (proposals.length === 0) {
-        revokeCoverUrls();
         return proposals;
       }
-
-      revokeCoverUrls();
 
       const coverBlobIds = Array.from(
         new Set(
@@ -217,13 +200,9 @@ export default function MyAccount(): JSX.Element {
         }
 
         try {
-          const blob = new Blob(
-            [base64ToUint8Array(blobData.data)],
-            { type: blobData.mimeType ?? proposal.coverMimeType ?? "image/jpeg" },
-          );
-          const url = URL.createObjectURL(blob);
-          coverUrlsRef.current.push(url);
-          return { ...proposal, coverPreviewUrl: url };
+          const mimeType = blobData.mimeType ?? proposal.coverMimeType ?? "image/jpeg";
+          const dataUrl = `data:${mimeType};base64,${blobData.data}`;
+          return { ...proposal, coverPreviewUrl: dataUrl };
         } catch (error) {
           console.error("Failed to decode cover image for proposal", proposal.id, error);
           return { ...proposal, coverPreviewUrl: null };
@@ -232,7 +211,7 @@ export default function MyAccount(): JSX.Element {
 
       return enhanced;
     },
-    [revokeCoverUrls],
+    [],
   );
 
   const handleDownloadProposal = useCallback(
@@ -281,7 +260,6 @@ export default function MyAccount(): JSX.Element {
     setVotingError(null);
     try {
       const response = await fetchProposalsForVoting(telegramUsername ?? undefined);
-        console.log("response: ", response);
       const proposalsWithCovers = await enhanceProposalsWithCovers(response.proposals);
       setVotingProposals(proposalsWithCovers);
       setAllowedVotersCount(
