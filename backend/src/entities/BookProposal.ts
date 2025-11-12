@@ -77,9 +77,6 @@ export class BookProposal {
   @Column({ name: 'walrus_blob_id', type: 'text' })
   walrusBlobId!: string;
 
-  @Column({ name: 'walrus_blob_url', type: 'text', nullable: true })
-  walrusBlobUrl!: string | null;
-
   @Column({ name: 'cover_walrus_file_id', type: 'text', nullable: true })
   coverWalrusFileId!: string | null;
 

@@ -49,7 +49,7 @@ export const catalogApi: CatalogApi = {
     } satisfies ListReviewsPayload);
   },
   createReview(payload) {
-    return trpc.catalog.createReview.mutation(payload satisfies CreateReviewPayload);
+    return trpc.catalog.createReview.mutate(payload satisfies CreateReviewPayload);
   },
 };
 

@@ -61,9 +61,6 @@ export class Book {
   @Column({ name: 'walrus_blob_id', type: 'text' })
   walrusBlobId!: string;
 
-  @Column({ name: 'walrus_blob_url', type: 'text' })
-  walrusBlobUrl!: string;
-
   @Column({ name: 'cover_walrus_blob_id', type: 'text', nullable: true })
   coverWalrusBlobId!: string | null;
 

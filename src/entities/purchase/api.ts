@@ -13,7 +13,7 @@ export const purchasesApi = {
     return trpc.purchases.getStatus.query(payload);
   },
   confirm(payload: ConfirmPurchasePayload): Promise<ConfirmPurchaseResponse> {
-    return trpc.purchases.confirm.mutation(payload);
+    return trpc.purchases.confirm.mutate(payload);
   },
   list(payload: PurchasesListPayload): Promise<PurchasesListResponse> {
     return trpc.purchases.list.query(payload);

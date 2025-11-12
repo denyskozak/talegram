@@ -14,8 +14,7 @@ interface BookCardProps {
 
 export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
   const { t } = useTranslation();
-  const walrusCover = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
-  const coverSrc = walrusCover ?? resolveBookCover(book);
+
 
   return (
     <Tappable
@@ -27,7 +26,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       <Card style={{ width: '100%', borderRadius: 20, overflow: "hidden" }}>
         <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--app-section-color)" }}>
           <img
-            src={coverSrc}
+            src={`data:${book.coverMimeType};base64,${book.coverImageData}`}
             alt={t("book.coverAlt", { title: book.title })}
             loading="lazy"
             onError={handleBookCoverError}

@@ -209,9 +209,9 @@ export const proposalsRouter = createRouter({
       }
 
       if (positiveVotes >= REQUIRED_APPROVALS) {
-        const walrusBlobUrl = proposal.walrusBlobUrl;
-        if (!walrusBlobUrl) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing walrus blob URL for approved proposal' });
+        const walrusBlobId = proposal.walrusBlobId;
+        if (!walrusBlobId) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing walrus Blob Id for approved proposal' });
         }
 
         if (!proposal.fileEncryptionIv || !proposal.fileEncryptionTag) {
@@ -229,7 +229,6 @@ export const proposalsRouter = createRouter({
           author: proposal.author,
           description: proposal.description,
           walrusBlobId: proposal.walrusBlobId,
-          walrusBlobUrl,
           coverWalrusBlobId: proposal.coverWalrusBlobId,
           coverMimeType: proposal.coverMimeType,
           coverFileName: proposal.coverFileName,
