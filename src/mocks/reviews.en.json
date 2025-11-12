@@ -4,7 +4,7 @@
     "bookId": "b1",
     "authorName": "Lilia",
     "rating": 5,
-    "text": "A vivid world and a heroine you instantly care about. The descriptions of magic were my favorite part.",
+    "text": "A vivid world and a heroine you instantly care about. The descriptions of magic were my favorite part",
     "createdAt": "2024-04-10"
   },
   {
@@ -12,7 +12,7 @@
     "bookId": "b1",
     "authorName": "Igor",
     "rating": 4,
-    "text": "Great pacing and engaging supporting characters. The ending is a bit predictable, but still thrilling.",
+    "text": "Great pacing and engaging supporting characters. The ending is a bit predictable, but still thrilling",
     "createdAt": "2024-05-01"
   },
   {
@@ -28,7 +28,7 @@
     "bookId": "b1",
     "authorName": "Vladislav",
     "rating": 4,
-    "text": "Excellent balance between adventure and emotion. Drags a little in the middle, but the finale delivers.",
+    "text": "Excellent balance between adventure and emotion. Drags a little in the middle, but the finale delivers",
     "createdAt": "2024-07-22"
   },
   {
@@ -36,7 +36,7 @@
     "bookId": "b3",
     "authorName": "Sofya",
     "rating": 5,
-    "text": "The blend of mystery and detective work is fantastic. Loved the hero's partner from the spirit world.",
+    "text": "The blend of mystery and detective work is fantastic. Loved the hero's partner from the spirit world",
     "createdAt": "2024-02-18"
   },
   {
@@ -44,7 +44,7 @@
     "bookId": "b3",
     "authorName": "Pavel",
     "rating": 4,
-    "text": "Sometimes it's tricky to follow two plotlines at once, but the intrigue lasts until the final chapter.",
+    "text": "Sometimes it's tricky to follow two plotlines at once, but the intrigue lasts until the final chapter",
     "createdAt": "2024-03-03"
   },
   {
@@ -52,7 +52,7 @@
     "bookId": "b3",
     "authorName": "Kira",
     "rating": 5,
-    "text": "So cinematic! I would love to see this adapted for the screen.",
+    "text": "So cinematic! I would love to see this adapted for the screen",
     "createdAt": "2024-04-19"
   },
   {
@@ -60,7 +60,7 @@
     "bookId": "b3",
     "authorName": "Arseny",
     "rating": 4,
-    "text": "A little scary in places, but absolutely worth it. The side characters are written brilliantly.",
+    "text": "A little scary in places, but absolutely worth it. The side characters are written brilliantly",
     "createdAt": "2024-05-12"
   },
   {
@@ -68,7 +68,7 @@
     "bookId": "b8",
     "authorName": "Anton",
     "rating": 5,
-    "text": "Mars has never felt so alive. A gripping investigation with a solid scientific foundation.",
+    "text": "Mars has never felt so alive. A gripping investigation with a solid scientific foundation",
     "createdAt": "2024-04-21"
   },
   {
@@ -76,7 +76,7 @@
     "bookId": "b8",
     "authorName": "Vera",
     "rating": 4,
-    "text": "Fascinating ideas about memory management. I just wanted a bit more depth for the antagonist.",
+    "text": "Fascinating ideas about memory management. I just wanted a bit more depth for the antagonist",
     "createdAt": "2024-05-08"
   },
   {
@@ -84,7 +84,7 @@
     "bookId": "b8",
     "authorName": "Stanislav",
     "rating": 5,
-    "text": "The narrative moves at a great clip with short, punchy chapters. Perfect weekend reading.",
+    "text": "The narrative moves at a great clip with short, punchy chapters. Perfect weekend reading",
     "createdAt": "2024-05-30"
   },
   {
@@ -92,7 +92,7 @@
     "bookId": "b10",
     "authorName": "Zhanna",
     "rating": 5,
-    "text": "I adored the concept of parallel versions of the protagonist. The ending made me rethink the whole book.",
+    "text": "I adored the concept of parallel versions of the protagonist. The ending made me rethink the whole book",
     "createdAt": "2023-07-02"
   },
   {
@@ -100,7 +100,7 @@
     "bookId": "b10",
     "authorName": "Maksim",
     "rating": 4,
-    "text": "The cosmic vistas are described so vividly that you want to be there. A tad heavy on scientific terms.",
+    "text": "The cosmic vistas are described so vividly that you want to be there. A tad heavy on scientific terms",
     "createdAt": "2023-07-18"
   },
   {
@@ -108,7 +108,7 @@
     "bookId": "b21",
     "authorName": "Natasha",
     "rating": 5,
-    "text": "A wonderfully warm story. It makes you want to head for the sea immediately. The characters feel real and close.",
+    "text": "A wonderfully warm story. It makes you want to head for the sea immediately. The characters feel real and close",
     "createdAt": "2022-07-15"
   },
   {
@@ -116,7 +116,7 @@
     "bookId": "b21",
     "authorName": "Stepan",
     "rating": 4,
-    "text": "The plot is fairly predictable, but the island atmosphere and the chemistry between the leads are fantastic.",
+    "text": "The plot is fairly predictable, but the island atmosphere and the chemistry between the leads are fantastic",
     "createdAt": "2022-08-01"
   },
   {
@@ -124,7 +124,7 @@
     "bookId": "b31",
     "authorName": "Daria",
     "rating": 5,
-    "text": "Finally a book on habits that offers concrete steps. I've already put several practices into action.",
+    "text": "Finally a book on habits that offers concrete steps. I've already put several practices into action",
     "createdAt": "2020-04-05"
   },
   {
@@ -132,7 +132,7 @@
     "bookId": "b31",
     "authorName": "Alexey",
     "rating": 4,
-    "text": "Helpful, though I wish there were more examples from everyday people and not just entrepreneurs.",
+    "text": "Helpful, though I wish there were more examples from everyday people and not just entrepreneurs",
     "createdAt": "2020-05-10"
   },
   {
@@ -140,7 +140,7 @@
     "bookId": "b31",
     "authorName": "Yulia",
     "rating": 5,
-    "text": "Easy to read, with clear exercises. A great place to start working on yourself.",
+    "text": "Easy to read, with clear exercises. A great place to start working on yourself",
     "createdAt": "2020-05-28"
   },
   {
@@ -148,7 +148,7 @@
     "bookId": "b36",
     "authorName": "Roman",
     "rating": 5,
-    "text": "Timely case studies and practical advice. The chapter on working with data is especially useful.",
+    "text": "Timely case studies and practical advice. The chapter on working with data is especially useful",
     "createdAt": "2023-03-12"
   },
   {
@@ -156,7 +156,7 @@
     "bookId": "b36",
     "authorName": "Lyuba",
     "rating": 4,
-    "text": "A solid overview of tools, though I'd love more focus on small businesses.",
+    "text": "A solid overview of tools, though I'd love more focus on small businesses",
     "createdAt": "2023-04-01"
   },
   {
@@ -164,7 +164,7 @@
     "bookId": "b36",
     "authorName": "Erik",
     "rating": 5,
-    "text": "A well-structured book. I'm using it as a reference guide for my team.",
+    "text": "A well-structured book. I'm using it as a reference guide for my team",
     "createdAt": "2023-04-18"
   },
   {
@@ -172,7 +172,7 @@
     "bookId": "b45",
     "authorName": "Mira",
     "rating": 5,
-    "text": "Fascinating look at how music reshapes the brain. The exercises make you want to experiment.",
+    "text": "Fascinating look at how music reshapes the brain. The exercises make you want to experiment",
     "createdAt": "2021-07-20"
   },
   {
@@ -180,7 +180,7 @@
     "bookId": "b45",
     "authorName": "Oleg",
     "rating": 4,
-    "text": "I enjoyed the chapters on creativity. Some terms are complex, but everything is explained clearly.",
+    "text": "I enjoyed the chapters on creativity. Some terms are complex, but everything is explained clearly",
     "createdAt": "2021-08-05"
   },
   {

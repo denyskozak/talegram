@@ -222,9 +222,9 @@
           "placeholder": "Select the genre or collection"
         },
         "price": {
-          "label": "Price in Stars",
+          "label": "Price in Stars ⭐",
           "placeholder": "Enter the price",
-          "hint": "This is the amount readers will pay in Stars."
+          "hint": "This is the amount readers will pay in Stars ⭐"
         },
         "hashtags": {
           "label": "Hashtags",
@@ -249,7 +249,7 @@
           "placeholder": "No file selected"
         },
         "submit": "Submit for review",
-        "notice": "Your manuscript will be uploaded to TON Storage via our server."
+        "notice": "Your manuscript will be uploaded to decentralized storage Walrus via our server."
       },
       "toastSuccess": "Book \"{{title}}\" submitted for review.",
       "toastFallbackTitle": "your book",

@@ -123,7 +123,6 @@ export async function createBookProposal(
     hashtags: normalizeHashtags(params.hashtags),
     walrusFileId: uploadResult.id,
     walrusBlobId: uploadResult.blobId,
-    walrusBlobUrl: (uploadResult as Record<string, unknown>).blobUrl as string | undefined ?? null,
     coverWalrusFileId: coverUploadResult.id,
     coverWalrusBlobId: coverUploadResult.blobId,
     coverMimeType: params.cover.mimeType ?? null,
