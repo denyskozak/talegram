@@ -207,7 +207,7 @@ export const proposalsRouter = createRouter({
       coverImageData,
     };
   }),
-  vote: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
+  voteForProposal: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
     const normalizedTelegramUsername = assertAllowedTelegramVoter(input.telegramUsername);
 
     const allowedVotersCount = getAllowedTelegramVoterUsernames().length;

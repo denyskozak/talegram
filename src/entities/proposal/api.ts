@@ -70,5 +70,6 @@ export type SubmitProposalVotePayload = {
 export async function submitProposalVote(
   payload: SubmitProposalVotePayload,
 ): Promise<SubmitProposalVoteResult> {
-  return trpc.proposals.vote.mutation(payload);
+    console.log("trpc.proposals: ", trpc.proposals.voteForProposal, payload);
+  return trpc.proposals.voteForProposal.mutation(payload);
 }
