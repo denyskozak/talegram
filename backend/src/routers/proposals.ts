@@ -30,6 +30,7 @@ const createProposalInput = z.object({
   author: z.string().min(1).max(512),
   description: z.string().min(1),
   category: z.string().min(1).max(256),
+  price: z.number().int().min(0).max(1_000_000),
   hashtags: z.array(hashtagSchema).max(MAX_HASHTAGS).optional(),
   file: z.object({
     name: z.string().min(1).max(512),
@@ -77,6 +78,7 @@ export const proposalsRouter = createRouter({
       author: input.author,
       description: input.description,
       category: input.category,
+      price: input.price,
       hashtags: input.hashtags ?? [],
       file: {
         name: input.file.name,

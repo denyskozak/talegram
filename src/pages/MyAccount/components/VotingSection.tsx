@@ -132,6 +132,14 @@ export function VotingSection({
                         {proposal.title}
                       </Title>
                       <Text style={{ color: theme.subtitle }}>{proposal.author}</Text>
+                      <Text style={{ color: theme.text, fontWeight: 500 }}>
+                        {proposal.currency === "stars"
+                          ? t("account.voting.price", { value: proposal.price })
+                          : t("account.voting.priceWithCurrency", {
+                              value: proposal.price,
+                              currency: proposal.currency,
+                            })}
+                      </Text>
                       <Text
                         style={{
                           color: theme.text,

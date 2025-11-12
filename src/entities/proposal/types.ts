@@ -6,6 +6,8 @@ export type BookProposal = {
     author: string;
     description: string;
     category: string;
+    price: number;
+    currency: string;
     coverImageURL?: string | null;
     bookURL?: string | null;
     hashtags: string[];

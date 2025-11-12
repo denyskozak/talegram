@@ -226,6 +226,11 @@
           "label": "Категория",
           "placeholder": "Выберите жанр или подборку"
         },
+        "price": {
+          "label": "Цена в Stars",
+          "placeholder": "Укажите цену",
+          "hint": "Это сумма, которую будут платить читатели в Stars."
+        },
         "hashtags": {
           "label": "Хештеги",
           "placeholder": "Введите хештег и нажмите Enter",
@@ -257,6 +262,8 @@
       "toastMissingFile": "Прикрепите PDF-файл перед отправкой.",
       "toastMissingCover": "Добавьте изображение обложки.",
       "toastMissingCategory": "Выберите категорию для книги.",
+      "toastMissingPrice": "Укажите цену в Stars.",
+      "toastInvalidPrice": "Введите неотрицательное число Stars.",
       "toastHashtagInvalid": "Введите хештег перед добавлением.",
       "toastHashtagLimit": "Можно добавить не более {{count}} хештегов.",
       "modal": {
@@ -287,6 +294,8 @@
         "viewDetails": "Подробнее",
         "download": "Скачать книгу"
       },
+      "price": "Цена: {{value}} ⭐",
+      "priceWithCurrency": "Цена: {{value}} {{currency}}",
       "coverAlt": "Обложка книги «{{title}}»",
       "toast": {
         "submitted": "Голос сохранён",
@@ -305,6 +314,7 @@
         "files": "Переданные файлы"
       },
       "category": "Категория",
+      "price": "Цена",
       "hashtags": "Хештеги",
       "noHashtags": "Хештеги не указаны.",
       "status": {

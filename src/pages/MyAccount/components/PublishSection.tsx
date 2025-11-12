@@ -104,6 +104,30 @@ export function PublishSection({
               }}
             />
           </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Text weight="2">{t("account.publish.form.price.label")}</Text>
+            <input
+              required
+              type="number"
+              name="price"
+              value={formState.price}
+              onChange={onInputChange}
+              min={0}
+              step={1}
+              inputMode="numeric"
+              placeholder={t("account.publish.form.price.placeholder")}
+              style={{
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: `1px solid ${theme.separator}`,
+                background: theme.section,
+                color: theme.text,
+              }}
+            />
+            <Text style={{ color: theme.hint }}>
+              {t("account.publish.form.price.hint")}
+            </Text>
+          </label>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Text weight="2">{t("account.publish.form.hashtags.label")}</Text>
             <div

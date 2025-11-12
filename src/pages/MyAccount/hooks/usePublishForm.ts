@@ -10,6 +10,7 @@ const createInitialFormState = (): PublishFormState => ({
   author: "",
   description: "",
   category: "",
+  price: "",
   hashtags: [],
   hashtagsInput: "",
   fileName: "",

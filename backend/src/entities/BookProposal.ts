@@ -35,6 +35,12 @@ export class BookProposal {
   @Column({ type: 'text' })
   category!: string;
 
+  @Column({ type: 'integer', default: 0 })
+  price!: number;
+
+  @Column({ type: 'text', default: 'stars' })
+  currency!: string;
+
   @Column({
     type: 'text',
     transformer: {

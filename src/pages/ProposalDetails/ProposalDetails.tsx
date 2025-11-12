@@ -127,6 +127,14 @@ export default function ProposalDetails(): JSX.Element {
                                 <Chip mode="outline">{proposal.category}</Chip>
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                                <Text weight="2">{t("proposalDetails.price")}</Text>
+                                <Text style={{color: theme.text}}>
+                                    {proposal.currency === "stars"
+                                        ? `${proposal.price} ⭐`
+                                        : `${proposal.price} ${proposal.currency}`}
+                                </Text>
+                            </div>
+                            <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("proposalDetails.hashtags")}</Text>
                                 {proposal.hashtags.length > 0 ? (
                                     <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>

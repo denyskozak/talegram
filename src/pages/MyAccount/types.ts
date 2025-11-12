@@ -14,6 +14,7 @@ export type PublishFormState = {
   author: string;
   description: string;
   category: string;
+  price: string;
   hashtags: string[];
   hashtagsInput: string;
   fileName: string;
