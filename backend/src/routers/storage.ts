@@ -68,7 +68,6 @@ export const storageRouter = createRouter({
     await initializeDataSource();
 
     const bookRepository = appDataSource.getRepository(Book);
-    const proposalRepository = appDataSource.getRepository(BookProposal);
 
     const book = await bookRepository.findOne({
       where: [{ walrusBlobId: input.blobId }, { coverWalrusBlobId: input.blobId }],
@@ -76,8 +75,8 @@ export const storageRouter = createRouter({
 
     const proposal = book
       ? null
-      : await proposalRepository.findOne({
-          where: [{ walrusBlobId: input.blobId }, { coverWalrusBlobId: input.blobId }],
+      : await appDataSource.getRepository(BookProposal).findOne({
+          where: { walrusBlobId: input.blobId },
         });
 
     const source = book ?? proposal;
@@ -86,7 +85,7 @@ export const storageRouter = createRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Blob metadata not found' });
     }
 
-    const isCoverBlob = source.coverWalrusBlobId === input.blobId;
+    const isCoverBlob = book?.coverWalrusBlobId === input.blobId;
 
     let blobBytes: Buffer;
     try {

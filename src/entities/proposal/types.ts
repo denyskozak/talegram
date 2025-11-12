@@ -16,6 +16,7 @@ export type BookProposal = {
     coverMimeType?: string | null;
     coverFileName?: string | null;
     coverFileSize?: number | null;
+    coverImageData?: string | null;
     mimeType?: string | null;
     fileName: string;
     fileSize?: number | null;

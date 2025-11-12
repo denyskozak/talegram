@@ -170,38 +170,15 @@ export default function MyAccount(): JSX.Element {
         return proposals;
       }
 
-      const coverBlobIds = Array.from(
-        new Set(
-          proposals
-            .map((proposal) => proposal.coverWalrusBlobId)
-            .filter((value): value is string => Boolean(value)),
-        ),
-      );
-
-      const coverBlobs = new Map<string, { data: string; mimeType: string | null }>();
-      for (const blobId of coverBlobIds) {
-        try {
-          const blob = await fetchDecryptedBlob(blobId);
-          coverBlobs.set(blobId, { data: blob.data, mimeType: blob.mimeType });
-        } catch (error) {
-          console.error("Failed to load cover image from storage", error);
-        }
-      }
-
       const enhanced = proposals.map((proposal) => {
-        const coverBlobId = proposal.coverWalrusBlobId;
-        if (!coverBlobId) {
-          return { ...proposal, coverPreviewUrl: null };
-        }
-
-        const blobData = coverBlobs.get(coverBlobId);
-        if (!blobData) {
+        const coverData = proposal.coverImageData;
+        if (!coverData) {
           return { ...proposal, coverPreviewUrl: null };
         }
 
         try {
-          const mimeType = blobData.mimeType ?? proposal.coverMimeType ?? "image/jpeg";
-          const dataUrl = `data:${mimeType};base64,${blobData.data}`;
+          const mimeType = proposal.coverMimeType ?? "image/jpeg";
+          const dataUrl = `data:${mimeType};base64,${coverData}`;
           return { ...proposal, coverPreviewUrl: dataUrl };
         } catch (error) {
           console.error("Failed to decode cover image for proposal", proposal.id, error);

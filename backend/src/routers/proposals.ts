@@ -8,6 +8,7 @@ import { ProposalVote } from '../entities/ProposalVote.js';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { normalizeCategoryId } from '../utils/categories.js';
+import { suiClient } from '../services/walrus-storage.js';
 import {
   MAX_COVER_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_BYTES,
@@ -121,6 +122,29 @@ export const proposalsRouter = createRouter({
       relations: { votes: true },
     });
 
+    const coverFileIds = Array.from(
+      new Set(
+        proposals
+          .map((proposal) => proposal.coverWalrusFileId)
+          .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+      ),
+    );
+
+    const coverDataByFileId = new Map<string, string>();
+    if (coverFileIds.length > 0) {
+      try {
+        const files = await suiClient.walrus.getFiles({ ids: coverFileIds });
+        await Promise.all(
+          files.map(async (file, index) => {
+            const bytes = await file.bytes();
+            coverDataByFileId.set(coverFileIds[index]!, Buffer.from(bytes).toString('base64'));
+          }),
+        );
+      } catch (error) {
+        // If fetching cover images fails, fall back to returning proposals without cover data.
+      }
+    }
+
     const normalized = proposals.map((proposal: BookProposal & { votes: ProposalVote[] }) => {
       const votes = proposal.votes ?? [];
       const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
@@ -134,8 +158,14 @@ export const proposalsRouter = createRouter({
 
       const { votes: _votes, ...rest } = proposal;
 
+      const coverImageData =
+        proposal.coverWalrusFileId && coverDataByFileId.has(proposal.coverWalrusFileId)
+          ? coverDataByFileId.get(proposal.coverWalrusFileId) ?? null
+          : null;
+
       return {
         ...rest,
+        coverImageData,
         votes: {
           positiveVotes,
           negativeVotes,
@@ -158,7 +188,24 @@ export const proposalsRouter = createRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
     }
 
-    return proposal;
+    let coverImageData: string | null = null;
+    if (proposal.coverWalrusFileId) {
+      try {
+        const files = await suiClient.walrus.getFiles({ ids: [proposal.coverWalrusFileId] });
+        const [coverFile] = files;
+        if (coverFile) {
+          const bytes = await coverFile.bytes();
+          coverImageData = Buffer.from(bytes).toString('base64');
+        }
+      } catch (error) {
+        coverImageData = null;
+      }
+    }
+
+    return {
+      ...proposal,
+      coverImageData,
+    };
   }),
   vote: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
     const normalizedTelegramUsername = assertAllowedTelegramVoter(input.telegramUsername);
