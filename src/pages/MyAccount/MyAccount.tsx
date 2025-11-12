@@ -13,7 +13,8 @@ import {
   submitProposalVote,
 } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
-import { suiClient } from "@/shared/lib/walrus";
+import { fetchWalrusFiles } from "@/shared/api/storage";
+import { base64ToUint8Array } from "@/shared/lib/base64";
 
 import {
   BOOK_SECTION,
@@ -140,29 +141,52 @@ export default function MyAccount(): JSX.Element {
 
       revokeCoverUrls();
 
-      const enhanced = await Promise.all(
-        proposals.map(async (proposal) => {
-          if (!proposal.coverWalrusFileId) {
-            return { ...proposal, coverImageURL: null };
-          }
-
-          try {
-            const [coverFile] = await suiClient.walrus.getFiles({ ids: [proposal.coverWalrusFileId] });
-            const bytes = new Uint8Array(await coverFile.bytes());
-            const blob = new Blob([bytes], { type: proposal.coverMimeType ?? "image/jpeg" });
-            const url = URL.createObjectURL(blob);
-            coverUrlsRef.current.push(url);
-            return { ...proposal, coverImageURL: url };
-          } catch (error) {
-            console.error(
-              "Failed to load cover image for proposal",
-              proposal.id,
-              error,
-            );
-            return { ...proposal, coverImageURL: null };
-          }
-        }),
+      const coverIds = Array.from(
+        new Set(
+          proposals
+            .map((proposal) => proposal.coverWalrusFileId)
+            .filter((value): value is string => Boolean(value)),
+        ),
       );
+
+      let walrusFilesMap = new Map<string, string>();
+      if (coverIds.length > 0) {
+        try {
+          const walrusFiles = await fetchWalrusFiles(coverIds);
+          walrusFilesMap = new Map(walrusFiles.map((file) => [file.fileId, file.data]));
+        } catch (error) {
+          console.error("Failed to load cover images from Walrus", error);
+        }
+      }
+
+      const enhanced = proposals.map((proposal) => {
+        const coverId = proposal.coverWalrusFileId;
+        if (!coverId) {
+          return { ...proposal, coverImageURL: null };
+        }
+
+        const coverData = walrusFilesMap.get(coverId);
+        if (!coverData) {
+          return { ...proposal, coverImageURL: null };
+        }
+
+        try {
+          const blob = new Blob(
+            [base64ToUint8Array(coverData)],
+            { type: proposal.coverMimeType ?? "image/jpeg" },
+          );
+          const url = URL.createObjectURL(blob);
+          coverUrlsRef.current.push(url);
+          return { ...proposal, coverImageURL: url };
+        } catch (error) {
+          console.error(
+            "Failed to decode cover image for proposal",
+            proposal.id,
+            error,
+          );
+          return { ...proposal, coverImageURL: null };
+        }
+      });
 
       return enhanced;
     },
