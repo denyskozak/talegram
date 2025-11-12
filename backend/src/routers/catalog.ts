@@ -9,10 +9,7 @@ import {
   listCategoryTags,
   listReviews,
 } from '../data/catalog.js';
-import type { Book as CatalogBook } from '../data/types.js';
-import { fetchWalrusCoverData } from '../utils/walrus-cover.js';
 import { getPurchaseDetails } from '../stores/purchasesStore.js';
-import { fetchWalrusBookData } from '../utils/walrus-book.js';
 
 const listCategoriesInput = z.object({
   search: z.string().trim().optional(),
@@ -56,45 +53,23 @@ export const catalogRouter = createRouter({
     .query(({ input }) => listCategories(input?.search)),
   listBooks: procedure
     .input(listBooksInput.optional())
-    .query(async ({ input }) => {
-      const response = await listBooks(input ?? {});
-      const itemsWithCover = await Promise.all(response.items.map(enrichCatalogBookWithCover));
-
-      return {
-        ...response,
-        items: itemsWithCover,
-      };
-    }),
+    .query(async ({ input }) => listBooks(input ?? {})),
   getBook: procedure.input(getBookInput).query(async ({ input }) => {
     const book = await getBook(input.id);
     if (!book) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
-    let bookFileURL: string | null = null;
-
     if (input.telegramUserId) {
       const details = await getPurchaseDetails(book.id, input.telegramUserId);
       if (details?.walrusBlobId) {
-        const resolved = await fetchWalrusBookData(
-          details.walrusBlobId,
-          book.mimeType ?? null,
-          book.fileEncryptionIv ?? null,
-          book.fileEncryptionTag ?? null,
-        );
-        if (resolved.length > 0) {
-          bookFileURL = resolved;
-        }
+        // Preserve purchase details lookup side effect for validation purposes.
       }
     }
 
     const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
-    const enriched = await enrichCatalogBookWithCover(bookForClient);
 
-    return {
-      ...enriched,
-      bookFileURL,
-    };
+    return bookForClient;
   }),
   listReviews: procedure
     .input(listReviewsInput)
@@ -116,14 +91,3 @@ export const catalogRouter = createRouter({
   }),
 });
 
-async function enrichCatalogBookWithCover<T extends CatalogBook>(
-  book: T,
-): Promise<T & { coverImageURL: string | null }> {
-  const coverData = await fetchWalrusCoverData(book.coverWalrusBlobId, book.coverMimeType);
-  const resolvedCover = coverData.length > 0 ? coverData : book.coverUrl;
-
-  return {
-    ...book,
-    coverImageURL: resolvedCover.length > 0 ? resolvedCover : null,
-  };
-}

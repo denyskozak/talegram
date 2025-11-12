@@ -42,4 +42,6 @@ export type MyBook = {
   status: "owned" | "listed";
 };
 
-export type VotingProposal = ProposalForVoting;
+export type VotingProposal = ProposalForVoting & {
+  coverPreviewUrl?: string | null;
+};

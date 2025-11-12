@@ -17,9 +17,7 @@ export type Book = {
   tags: string[];
   publishedAt?: string;
   reviewsCount: number;
-  coverImageURL?: string | null;
   walrusBlobId?: string;
-  walrusBlobUrl?: string | null;
   coverWalrusBlobId?: string | null;
   coverMimeType?: string | null;
   mimeType?: string | null;

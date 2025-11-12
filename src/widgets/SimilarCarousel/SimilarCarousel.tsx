@@ -1,9 +1,11 @@
+import type { TFunction } from "i18next";
 import type { Book } from "@/entities/book/types";
 
 import { Card, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
+import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
 
 interface SimilarCarouselProps {
   books: Book[];
@@ -25,35 +27,47 @@ export function SimilarCarousel({ books, onSelect }: SimilarCarouselProps): JSX.
     <div style={{ overflowX: "auto", paddingBottom: 8 }}>
       <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
         {books.map((book) => (
-          <Tappable
-            key={book.id}
-            onClick={() => onSelect(book.id)}
-            style={{ width: 160, flexShrink: 0 }}
-            interactiveAnimation="background"
-            aria-label={t("similar.aria", { title: book.title })}
-          >
-            <Card style={{ borderRadius: 18, overflow: "hidden" }}>
-              <div style={{ aspectRatio: "16 / 9", background: "var(--app-section-color)" }}>
-                <img
-                  src={resolveBookCover(book)}
-                  alt={t("images.bookCover", { title: book.title })}
-                  loading="lazy"
-                  onError={handleBookCoverError}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
-              <div style={{ padding: 12 }}>
-                <Title level="3" weight="2" style={{ fontSize: 16 }}>
-                  {book.title}
-                </Title>
-                <Text style={{ color: "var(--app-subtitle-color)" }}>
-                  {book.authors.join(", ")}
-                </Text>
-              </div>
-            </Card>
-          </Tappable>
+          <SimilarCarouselItem key={book.id} book={book} onSelect={onSelect} t={t} />
         ))}
       </div>
     </div>
+  );
+}
+
+type SimilarCarouselItemProps = {
+  book: Book;
+  onSelect: (bookId: string) => void;
+  t: TFunction<"translation">;
+};
+
+function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): JSX.Element {
+  const walrusCover = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
+  const coverSrc = walrusCover ?? resolveBookCover(book);
+
+  return (
+    <Tappable
+      onClick={() => onSelect(book.id)}
+      style={{ width: 160, flexShrink: 0 }}
+      interactiveAnimation="background"
+      aria-label={t("similar.aria", { title: book.title })}
+    >
+      <Card style={{ borderRadius: 18, overflow: "hidden" }}>
+        <div style={{ aspectRatio: "16 / 9", background: "var(--app-section-color)" }}>
+          <img
+            src={coverSrc}
+            alt={t("images.bookCover", { title: book.title })}
+            loading="lazy"
+            onError={handleBookCoverError}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+        <div style={{ padding: 12 }}>
+          <Title level="3" weight="2" style={{ fontSize: 16 }}>
+            {book.title}
+          </Title>
+          <Text style={{ color: "var(--app-subtitle-color)" }}>{book.authors.join(", ")}</Text>
+        </div>
+      </Card>
+    </Tappable>
   );
 }

@@ -1,15 +1,13 @@
 import { trpc } from "./trpc";
 
-export type WalrusFileData = {
-  fileId: string;
+export type DecryptedBlob = {
+  blobId: string;
+  fileName: string | null;
+  mimeType: string | null;
   data: string;
 };
 
-export async function fetchWalrusFiles(fileIds: string[]): Promise<WalrusFileData[]> {
-  if (fileIds.length === 0) {
-    return [];
-  }
-
-  const response = await trpc.storage.getWalrusFiles.query({ fileIds });
-  return response.files;
+export async function fetchDecryptedBlob(blobId: string): Promise<DecryptedBlob> {
+  const response = await trpc.storage.getDecryptedBlob.query({ blobId });
+  return response;
 }

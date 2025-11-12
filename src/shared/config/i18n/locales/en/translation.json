@@ -128,12 +128,12 @@
       "invoiceFailed": "Could not create a TON Stars invoice",
       "confirmFailed": "Could not confirm the payment",
       "paymentCancelled": "Payment was cancelled",
-      "paymentFailed": "Payment failed"
+      "paymentFailed": "Payment failed",
+      "downloadFailed": "Could not load the book file. Try again later."
     },
     "purchase": {
       "statusTitle": "Purchase details",
-      "downloadDescription": "Save the link below to keep access to the purchased book.",
-      "downloadLabel": "Download link",
+      "downloadDescription": "Use the download button above and keep the Walrus blob ID below to retain access to the purchased book.",
       "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Purchased",
       "invoiceDescription": "Open the TON Stars invoice in Telegram, complete the payment and return here to unlock the book.",
@@ -289,6 +289,7 @@
         "viewDetails": "View details",
         "download": "Download book"
       },
+      "downloadError": "Could not download the manuscript. Try again later.",
       "price": "Price: {{value}} ⭐",
       "priceWithCurrency": "Price: {{value}} {{currency}}",
       "coverAlt": "Cover of \"{{title}}\"",

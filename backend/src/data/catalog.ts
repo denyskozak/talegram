@@ -5,7 +5,6 @@ import { sortBooks, type BookSort } from '../utils/sortBooks.js';
 import { appDataSource, initializeDataSource } from '../utils/data-source.js';
 import { Book as BookEntity } from '../entities/Book.js';
 import { formatCategoryTitle } from '../utils/categories.js';
-import { fetchWalrusCoverData } from '../utils/walrus-cover.js';
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
@@ -50,10 +49,6 @@ async function getBookRepository(): Promise<Repository<BookEntity>> {
   return appDataSource.getRepository(BookEntity);
 }
 
-async function fetchCoverUrl(entity: BookEntity): Promise<string> {
-  return fetchWalrusCoverData(entity.coverWalrusBlobId, entity.coverMimeType);
-}
-
 function matchesSearch(entity: BookEntity, search?: string): boolean {
   if (!search) {
     return true;
@@ -77,14 +72,12 @@ function matchesTags(entity: BookEntity, tags?: string[]): boolean {
 }
 
 async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
-  const coverUrl = await fetchCoverUrl(entity);
-
   return {
     id: entity.id,
     title: entity.title,
     authors: entity.author ? [entity.author] : [],
     categories: ensureArray(entity.categories),
-    coverUrl,
+    coverUrl: '',
     description: entity.description,
     priceStars: entity.priceStars ?? 0,
     rating: {
@@ -95,7 +88,6 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     publishedAt: getPublishedAt(entity),
     reviewsCount: entity.reviewsCount ?? 0,
     walrusBlobId: entity.walrusBlobId,
-    walrusBlobUrl: entity.walrusBlobUrl,
     coverWalrusBlobId: entity.coverWalrusBlobId,
     coverMimeType: entity.coverMimeType,
     mimeType: entity.mimeType ?? null,

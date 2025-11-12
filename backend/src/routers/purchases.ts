@@ -52,7 +52,6 @@ export const purchasesRouter = createRouter({
       paymentId: invoiceStatus.paymentId,
       purchasedAt,
       walrusBlobId: book.walrusBlobId ?? null,
-      downloadUrl: book.walrusBlobUrl ?? null,
     };
 
     await setPurchased(book.id, input.telegramUserId, purchaseDetails);

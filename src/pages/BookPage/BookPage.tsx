@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
+import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
 import type { Book, ID } from "@/entities/book/types";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
@@ -19,6 +20,8 @@ import { useScrollToTop } from "@/shared/hooks/useScrollToTop";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
+import { fetchDecryptedBlob } from "@/shared/api/storage";
+import { base64ToUint8Array } from "@/shared/lib/base64";
 import { ReadingOverlay } from "./ReadingOverlay";
 import { BookPageSkeleton } from "./BookPageSkeleton";
 
@@ -45,8 +48,23 @@ export default function BookPage(): JSX.Element {
   const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
   const [isReading, setIsReading] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const currentBookBlobIdRef = useRef<string | null>(null);
+  const bookFileUrlRef = useRef<string | null>(null);
+  const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
 
   useScrollToTop([id]);
+
+  const walrusCover = useWalrusCover(book?.coverWalrusBlobId, book?.coverMimeType);
+
+  useEffect(
+    () => () => {
+      if (bookFileUrlRef.current) {
+        URL.revokeObjectURL(bookFileUrlRef.current);
+        bookFileUrlRef.current = null;
+      }
+    },
+    [],
+  );
 
   const telegramUserId = useMemo(() => {
     const user = (launchParams?.initData as { user?: { id?: number | string } } | undefined)?.user;
@@ -125,14 +143,67 @@ export default function BookPage(): JSX.Element {
     setIsReading(true);
   }, [book]);
 
-  const handleRead = useCallback(() => {
+  const ensureBookFileUrl = useCallback(
+    async (blobId: string): Promise<string | null> => {
+      if (!blobId) {
+        return null;
+      }
+
+      if (currentBookBlobIdRef.current === blobId && bookFileUrlRef.current) {
+        setBookFileUrl(bookFileUrlRef.current);
+        return bookFileUrlRef.current;
+      }
+
+      try {
+        const blob = await fetchDecryptedBlob(blobId);
+        if (bookFileUrlRef.current) {
+          URL.revokeObjectURL(bookFileUrlRef.current);
+        }
+
+        const objectUrl = URL.createObjectURL(
+          new Blob([base64ToUint8Array(blob.data)], {
+            type: blob.mimeType ?? book?.mimeType ?? "application/octet-stream",
+          }),
+        );
+
+        currentBookBlobIdRef.current = blobId;
+        bookFileUrlRef.current = objectUrl;
+        setBookFileUrl(objectUrl);
+        return objectUrl;
+      } catch (error) {
+        console.error("Failed to load book file", error);
+        currentBookBlobIdRef.current = null;
+        if (bookFileUrlRef.current) {
+          URL.revokeObjectURL(bookFileUrlRef.current);
+          bookFileUrlRef.current = null;
+        }
+        setBookFileUrl(null);
+        return null;
+      }
+    },
+    [book?.mimeType],
+  );
+
+  const handleRead = useCallback(async () => {
     if (!book) {
+      return;
+    }
+
+    if (!isPurchased || !purchaseDetails?.walrusBlobId) {
+      setIsPreviewMode(true);
+      setIsReading(true);
+      return;
+    }
+
+    const url = await ensureBookFileUrl(purchaseDetails.walrusBlobId);
+    if (!url) {
+      showToast(t("book.toast.downloadFailed"));
       return;
     }
 
     setIsPreviewMode(false);
     setIsReading(true);
-  }, [book]);
+  }, [book, ensureBookFileUrl, isPurchased, purchaseDetails, showToast, t]);
 
   const handleCloseReader = useCallback(() => {
     setIsPreviewMode(false);
@@ -143,13 +214,25 @@ export default function BookPage(): JSX.Element {
     setBook((prev) => (prev ? { ...prev, reviewsCount: prev.reviewsCount + 1 } : prev));
   }, []);
 
-  const handleDownload = useCallback(() => {
-    if (!purchaseDetails?.downloadUrl) {
+  const handleDownload = useCallback(async () => {
+    if (!purchaseDetails?.walrusBlobId) {
       return;
     }
 
-    window.open(purchaseDetails.downloadUrl, "_blank", "noopener,noreferrer");
-  }, [purchaseDetails]);
+    const url = await ensureBookFileUrl(purchaseDetails.walrusBlobId);
+    if (!url) {
+      showToast(t("book.toast.downloadFailed"));
+      return;
+    }
+
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.rel = "noreferrer";
+    anchor.download = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+  }, [book, ensureBookFileUrl, purchaseDetails, showToast, t]);
 
   const handleStartPurchase = useCallback(
     async (action: "buy" | "subscribe") => {
@@ -341,6 +424,21 @@ export default function BookPage(): JSX.Element {
     void refreshPurchaseStatus();
   }, [refreshPurchaseStatus]);
 
+  useEffect(() => {
+    const blobId = purchaseDetails?.walrusBlobId ?? null;
+    if (!blobId) {
+      currentBookBlobIdRef.current = null;
+      if (bookFileUrlRef.current) {
+        URL.revokeObjectURL(bookFileUrlRef.current);
+        bookFileUrlRef.current = null;
+      }
+      setBookFileUrl(null);
+      return;
+    }
+
+    void ensureBookFileUrl(blobId);
+  }, [ensureBookFileUrl, purchaseDetails?.walrusBlobId]);
+
   if (!id) {
     return (
       <ErrorBanner
@@ -359,6 +457,7 @@ export default function BookPage(): JSX.Element {
     return <BookPageSkeleton />;
   }
 
+  const coverSrc = walrusCover ?? resolveBookCover(book);
   const actionTitle =
     activeAction === "subscribe" ? t("book.modalTitle.subscribe") : t("book.modalTitle.buy");
 
@@ -384,7 +483,7 @@ export default function BookPage(): JSX.Element {
               <Card style={{ borderRadius: 24, margin: '0 auto', overflow: "hidden",  width: '80vw' }}>
               <div style={{ position: "relative", aspectRatio: "10 / 12" }}>
                 <img
-                      src={resolveBookCover(book)}
+                      src={coverSrc}
                       alt={t("book.coverAlt", { title: book.title })}
                       onError={handleBookCoverError}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -433,10 +532,10 @@ export default function BookPage(): JSX.Element {
               {isPurchased ? (
                 <>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <Button size="l" onClick={handleRead}>
+                    <Button size="l" onClick={() => void handleRead()}>
                       {t("book.actions.read")}
                     </Button>
-                    <Button size="l" mode="outline" onClick={handleDownload}>
+                    <Button size="l" mode="outline" onClick={() => void handleDownload()}>
                       {t("book.actions.download")}
                     </Button>
                   </div>
@@ -449,22 +548,6 @@ export default function BookPage(): JSX.Element {
                         {t("book.purchase.downloadDescription")}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.downloadLabel")}</div>
-                          <a
-                            href={purchaseDetails.downloadUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              wordBreak: "break-all",
-                              color: "var(--tg-theme-link-color, #3390ec)",
-                              textDecoration: "none",
-                              fontWeight: 600,
-                            }}
-                          >
-                            {purchaseDetails.downloadUrl}
-                          </a>
-                        </div>
                         <div>
                           <div style={{ fontWeight: 600 }}>{t("book.purchase.blobLabel")}</div>
                           <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusBlobId}</code>
@@ -595,7 +678,11 @@ export default function BookPage(): JSX.Element {
         </div>
       </Modal>
       {book && isReading && (
-        <ReadingOverlay book={book} onClose={handleCloseReader} preview={isPreviewMode} />
+        <ReadingOverlay
+          book={{ ...book, bookFileURL: bookFileUrl ?? undefined }}
+          onClose={handleCloseReader}
+          preview={isPreviewMode}
+        />
       )}
     </>
   );
