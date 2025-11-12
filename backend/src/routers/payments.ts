@@ -9,7 +9,7 @@ const createInvoiceInput = z.object({
 
 export const paymentsRouter = createRouter({
   createInvoice: procedure.input(createInvoiceInput).mutation(async ({ input }) => {
-    const book = getBook(input.bookId);
+    const book = await getBook(input.bookId);
     if (!book) {
       throw new Error('Book not found');
     }

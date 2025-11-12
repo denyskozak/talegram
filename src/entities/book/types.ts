@@ -17,6 +17,10 @@ export type Book = {
   tags: string[];
   publishedAt?: string;
   reviewsCount: number;
+  walrusBlobId?: string;
+  walrusBlobUrl?: string | null;
+  coverWalrusBlobId?: string | null;
+  coverMimeType?: string | null;
 };
 
 export type Review = {
