@@ -5,6 +5,7 @@ import { Button, Card, Chip, Modal, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { catalogApi } from "@/entities/book/api";
+import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
 import type { Book, ID } from "@/entities/book/types";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
@@ -353,9 +354,9 @@ export default function BookPage(): JSX.Element {
               <Card style={{ borderRadius: 24, margin: '0 auto', overflow: "hidden",  width: '80vw' }}>
               <div style={{ position: "relative", aspectRatio: "10 / 12" }}>
                 <img
-                      src={`/images/books/${book.id}.jpg`}
+                      src={resolveBookCover(book)}
                       alt={t("book.coverAlt", { title: book.title })}
-                      onError={event => event.currentTarget.src='/images/books/b33.jpg' }
+                      onError={handleBookCoverError}
                       style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   </div>

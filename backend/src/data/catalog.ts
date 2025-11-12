@@ -1,12 +1,11 @@
-import { Buffer } from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import type { Repository } from 'typeorm';
 import type { Book as CatalogBook, Category, ID, Review } from './types.js';
 import { sortBooks, type BookSort } from '../utils/sortBooks.js';
 import { appDataSource, initializeDataSource } from '../utils/data-source.js';
 import { Book as BookEntity } from '../entities/Book.js';
-import { suiClient } from '../services/walrus-storage.js';
 import { formatCategoryTitle } from '../utils/categories.js';
+import { fetchWalrusCoverData } from '../utils/walrus-cover.js';
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
@@ -18,7 +17,6 @@ const CATEGORY_EMOJIS: Record<string, string | undefined> = {
   wellness: '🧘',
 };
 
-const coverCache = new Map<string, string>();
 const reviews: Review[] = [];
 
 function normalize(value: string): string {
@@ -53,26 +51,7 @@ async function getBookRepository(): Promise<Repository<BookEntity>> {
 }
 
 async function fetchCoverUrl(entity: BookEntity): Promise<string> {
-  if (entity.coverWalrusBlobId) {
-    const cached = coverCache.get(entity.coverWalrusBlobId);
-    if (cached) {
-      return cached;
-    }
-
-    try {
-      const blob = await suiClient.walrus.getBlob({ blobId: entity.coverWalrusBlobId });
-      const file = blob.asFile();
-      const bytes = await file.bytes();
-      const mimeType = entity.coverMimeType ?? 'application/octet-stream';
-      const dataUrl = `data:${mimeType};base64,${Buffer.from(bytes).toString('base64')}`;
-      coverCache.set(entity.coverWalrusBlobId, dataUrl);
-      return dataUrl;
-    } catch (error) {
-      // Swallow Walrus failures and fall back to an empty cover URL.
-    }
-  }
-
-  return '';
+  return fetchWalrusCoverData(entity.coverWalrusBlobId, entity.coverMimeType);
 }
 
 function matchesSearch(entity: BookEntity, search?: string): boolean {

@@ -3,6 +3,7 @@ import type { Book } from "@/entities/book/types";
 import { Card, Chip, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
+import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
 import { BookRating } from "./BookRating";
 
 interface BookCardProps {
@@ -23,10 +24,10 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       <Card style={{ width: '100%', borderRadius: 20, overflow: "hidden" }}>
         <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--app-section-color)" }}>
           <img
-            src={`/images/books/${book.id}.jpg`}
+            src={resolveBookCover(book)}
             alt={t("book.coverAlt", { title: book.title })}
             loading="lazy"
-            onError={event => event.currentTarget.src='/images/books/b33.jpg' }
+            onError={handleBookCoverError}
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         </div>
