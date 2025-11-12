@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { WalrusFile } from '@mysten/walrus';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
-import {  suiClient } from '../walrus-storage.js';
+import { suiClient } from '../walrus-storage.js';
 import { keypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
 
@@ -86,20 +86,38 @@ export async function createBookProposal(
 
   const bookFile = WalrusFile.from({
     contents: encryptedData,
-    identifier: params.file.name,
+    identifier: `book:${params.file.name}`,
   });
 
   const coverFile = WalrusFile.from({
     contents: params.cover.data,
-    identifier: params.cover.name,
+    identifier: `cover:${params.cover.name}`,
   });
 
-  const [uploadResult, coverUploadResult] = await suiClient.walrus.writeFiles({
-    files: [bookFile, coverFile],
-    epochs: 3,
-    deletable: true,
-    signer: keypair,
-  });
+  const [bookUploadResults, coverUploadResults] = await Promise.all([
+    suiClient.walrus.writeFiles({
+      files: [bookFile],
+      epochs: 3,
+      deletable: true,
+      signer: keypair,
+    }),
+    suiClient.walrus.writeFiles({
+      files: [coverFile],
+      epochs: 3,
+      deletable: true,
+      signer: keypair,
+    }),
+  ]);
+
+  const uploadResult = bookUploadResults[0];
+  const coverUploadResult = coverUploadResults[0];
+
+  if (!uploadResult || !coverUploadResult) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to upload proposal files to Walrus storage',
+    });
+  }
 
   await initializeDataSource();
   const bookProposalRepository = appDataSource.getRepository(BookProposal);
