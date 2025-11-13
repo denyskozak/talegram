@@ -10,7 +10,7 @@ import { useToast } from "@/shared/ui/ToastProvider";
 import { fetchProposalsForVoting, submitBookProposal } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 import { fetchAuthors } from "@/entities/author/api";
-import { fetchDecryptedBlob } from "@/shared/api/storage";
+import { fetchDecryptedFile } from "@/shared/api/storage";
 import { base64ToUint8Array } from "@/shared/lib/base64";
 
 import {
@@ -34,7 +34,7 @@ import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramU
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import type { MyBook } from "./types";
-import {downloadFile} from "@telegram-apps/sdk-react";
+import { downloadFile } from "@telegram-apps/sdk-react";
 
 export default function MyAccount(): JSX.Element {
   const { t } = useTranslation();
@@ -182,6 +182,7 @@ export default function MyAccount(): JSX.Element {
                 paymentId: item.paymentId,
                 purchasedAt: item.purchasedAt,
                 walrusBlobId: item.walrusBlobId,
+                walrusFileId: item.walrusFileId,
               },
             } satisfies MyBook;
           } catch (error) {

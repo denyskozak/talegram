@@ -30,6 +30,9 @@ export class Purchase {
   @Column({ name: 'walrus_blob_id', type: 'text', nullable: true })
   walrusBlobId!: string | null;
 
+  @Column({ name: 'walrus_file_id', type: 'text', nullable: true })
+  walrusFileId!: string | null;
+
   @Column({ name: 'download_url', type: 'text', nullable: true })
   downloadUrl!: string | null;
 

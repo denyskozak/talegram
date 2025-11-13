@@ -19,7 +19,7 @@ import { useScrollToTop } from "@/shared/hooks/useScrollToTop";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
-import { fetchDecryptedBlob } from "@/shared/api/storage";
+import { fetchDecryptedFile } from "@/shared/api/storage";
 import { base64ToUint8Array } from "@/shared/lib/base64";
 import { ReadingOverlay } from "./ReadingOverlay";
 import { BookPageSkeleton } from "./BookPageSkeleton";
@@ -48,7 +48,7 @@ export default function BookPage(): JSX.Element {
   const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
   const [isReading, setIsReading] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const currentBookBlobIdRef = useRef<string | null>(null);
+  const currentBookFileIdRef = useRef<string | null>(null);
   const bookFileUrlRef = useRef<string | null>(null);
   const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
   const autoReadTriggeredRef = useRef(false);
@@ -144,18 +144,18 @@ export default function BookPage(): JSX.Element {
   }, [book]);
 
   const ensureBookFileUrl = useCallback(
-    async (blobId: string): Promise<string | null> => {
-      if (!blobId) {
+    async (fileId: string): Promise<string | null> => {
+      if (!fileId) {
         return null;
       }
 
-      if (currentBookBlobIdRef.current === blobId && bookFileUrlRef.current) {
+      if (currentBookFileIdRef.current === fileId && bookFileUrlRef.current) {
         setBookFileUrl(bookFileUrlRef.current);
         return bookFileUrlRef.current;
       }
 
       try {
-        const blob = await fetchDecryptedBlob(blobId);
+        const blob = await fetchDecryptedFile(fileId);
         if (bookFileUrlRef.current) {
           URL.revokeObjectURL(bookFileUrlRef.current);
         }
@@ -166,13 +166,13 @@ export default function BookPage(): JSX.Element {
           }),
         );
 
-        currentBookBlobIdRef.current = blobId;
+        currentBookFileIdRef.current = fileId;
         bookFileUrlRef.current = objectUrl;
         setBookFileUrl(objectUrl);
         return objectUrl;
       } catch (error) {
         console.error("Failed to load book file", error);
-        currentBookBlobIdRef.current = null;
+        currentBookFileIdRef.current = null;
         if (bookFileUrlRef.current) {
           URL.revokeObjectURL(bookFileUrlRef.current);
           bookFileUrlRef.current = null;
@@ -189,13 +189,13 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    if (!isPurchased || !purchaseDetails?.walrusBlobId) {
+    if (!isPurchased || !purchaseDetails?.walrusFileId) {
       setIsPreviewMode(true);
       setIsReading(true);
       return;
     }
 
-    const url = await ensureBookFileUrl(purchaseDetails.walrusBlobId);
+    const url = await ensureBookFileUrl(purchaseDetails.walrusFileId);
     if (!url) {
       showToast(t("book.toast.downloadFailed"));
       return;
@@ -215,11 +215,11 @@ export default function BookPage(): JSX.Element {
   }, []);
 
   const handleDownload = useCallback(async () => {
-    if (!purchaseDetails?.walrusBlobId) {
+    if (!purchaseDetails?.walrusFileId) {
       return;
     }
 
-    const url = await ensureBookFileUrl(purchaseDetails.walrusBlobId);
+    const url = await ensureBookFileUrl(purchaseDetails.walrusFileId);
     if (!url) {
       showToast(t("book.toast.downloadFailed"));
       return;
@@ -443,9 +443,9 @@ export default function BookPage(): JSX.Element {
   }, [book, handleRead, searchParams]);
 
   useEffect(() => {
-    const blobId = purchaseDetails?.walrusBlobId ?? null;
-    if (!blobId) {
-      currentBookBlobIdRef.current = null;
+    const fileId = purchaseDetails?.walrusFileId ?? null;
+    if (!fileId) {
+      currentBookFileIdRef.current = null;
       if (bookFileUrlRef.current) {
         URL.revokeObjectURL(bookFileUrlRef.current);
         bookFileUrlRef.current = null;
@@ -454,8 +454,8 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    void ensureBookFileUrl(blobId);
-  }, [ensureBookFileUrl, purchaseDetails?.walrusBlobId]);
+    void ensureBookFileUrl(fileId);
+  }, [ensureBookFileUrl, purchaseDetails?.walrusFileId]);
 
   if (!id) {
     return (
@@ -573,10 +573,18 @@ export default function BookPage(): JSX.Element {
                         {t("book.purchase.downloadDescription")}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.blobLabel")}</div>
-                          <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusBlobId}</code>
-                        </div>
+                        {purchaseDetails.walrusFileId && (
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{t("book.purchase.fileLabel")}</div>
+                            <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusFileId}</code>
+                          </div>
+                        )}
+                        {purchaseDetails.walrusBlobId && (
+                          <div>
+                            <div style={{ fontWeight: 600 }}>{t("book.purchase.blobLabel")}</div>
+                            <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusBlobId}</code>
+                          </div>
+                        )}
                         <div>
                           <div style={{ fontWeight: 600 }}>{t("book.purchase.invoiceIdLabel")}</div>
                           <code style={{ wordBreak: "break-all" }}>{purchaseDetails.paymentId}</code>

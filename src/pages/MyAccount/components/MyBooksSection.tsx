@@ -39,7 +39,7 @@ function formatPurchaseDate(value: string): string {
 
 function MyBookCard({ item, theme, t, onRead, onDownload, downloadingBookId }: MyBookCardProps): JSX.Element {
   const { book, purchase } = item;
-  const coverUrl = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
+  const coverUrl = useWalrusCover(book.coverWalrusFileId, book.coverMimeType);
   const author = book.authors.join(", ");
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);
@@ -107,7 +107,7 @@ function MyBookCard({ item, theme, t, onRead, onDownload, downloadingBookId }: M
               type="button"
               size="s"
               mode="outline"
-              disabled={!purchase.walrusBlobId || isDownloading}
+              disabled={!purchase.walrusFileId || isDownloading}
               loading={isDownloading}
               onClick={() => onDownload(book.id)}
             >

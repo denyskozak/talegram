@@ -1,13 +1,13 @@
 import { trpc } from "./trpc";
 
-export type DecryptedBlob = {
-  blobId: string;
+export type DecryptedFile = {
+  fileId: string;
   fileName: string | null;
   mimeType: string | null;
   data: string;
 };
 
-export async function fetchDecryptedBlob(blobId: string): Promise<DecryptedBlob> {
-  const response = await trpc.storage.getDecryptedBlob.query({ blobId });
+export async function fetchDecryptedFile(fileId: string): Promise<DecryptedFile> {
+  const response = await trpc.storage.getDecryptedFile.query({ fileId });
   return response;
 }

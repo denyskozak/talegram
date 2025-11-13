@@ -4,6 +4,7 @@ export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
   walrusBlobId: string | null;
+  walrusFileId: string | null;
 };
 
 export type PurchaseStatus = {

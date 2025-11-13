@@ -12,7 +12,7 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import {fetchDecryptedBlob} from "@/shared/api/storage";
+import { fetchDecryptedFile } from "@/shared/api/storage";
 import {base64ToUint8Array} from "@/shared/lib/base64";
 import {downloadFile} from "@telegram-apps/sdk-react";
 
@@ -139,14 +139,14 @@ export default function ProposalDetails(): JSX.Element {
     }, [proposal, t]);
 
     const handleDownload = useCallback(async () => {
-        if (!proposal?.walrusBlobId) {
+        if (!proposal?.walrusFileId) {
             showToast(t("account.voting.downloadError"));
             return;
         }
 
         setIsDownloading(true);
         try {
-            const blob = await fetchDecryptedBlob(proposal.walrusBlobId);
+            const blob = await fetchDecryptedFile(proposal.walrusFileId);
             const downloadUrl = URL.createObjectURL(
                 new Blob([base64ToUint8Array(blob.data)], {
                     type: blob.mimeType ?? proposal.mimeType ?? "application/octet-stream",
@@ -383,7 +383,7 @@ export default function ProposalDetails(): JSX.Element {
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.manuscript")}</Text>
                                 <Text style={{color: theme.subtitle}}>{proposal.fileName}</Text>
-                                {proposal.walrusBlobId ? (
+                                {proposal.walrusFileId ? (
                                     <Button
                                         type="button"
                                         mode="outline"

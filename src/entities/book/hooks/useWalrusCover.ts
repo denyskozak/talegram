@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
-import { fetchDecryptedBlob } from "@/shared/api/storage";
+import { fetchDecryptedFile } from "@/shared/api/storage";
 import { base64ToUint8Array } from "@/shared/lib/base64";
 
 export function useWalrusCover(
-  blobId?: string | null,
+  fileId?: string | null,
   mimeType?: string | null,
 ): string | null {
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function useWalrusCover(
     let isCancelled = false;
 
     const load = async () => {
-      if (!blobId) {
+      if (!fileId) {
         if (urlRef.current) {
           URL.revokeObjectURL(urlRef.current);
           urlRef.current = null;
@@ -24,7 +24,7 @@ export function useWalrusCover(
       }
 
       try {
-        const blob = await fetchDecryptedBlob(blobId);
+        const blob = await fetchDecryptedFile(fileId);
         if (isCancelled) {
           return;
         }
@@ -54,7 +54,7 @@ export function useWalrusCover(
     return () => {
       isCancelled = true;
     };
-  }, [blobId, mimeType]);
+  }, [fileId, mimeType]);
 
   useEffect(
     () => () => {

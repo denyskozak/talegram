@@ -24,7 +24,9 @@ export type Book = {
   publishedAt?: string;
   reviewsCount: number;
   walrusBlobId?: string;
+  walrusFileId?: string | null;
   coverWalrusBlobId?: string | null;
+  coverWalrusFileId?: string | null;
   coverMimeType?: string | null;
   mimeType?: string | null;
   fileName?: string | null;
