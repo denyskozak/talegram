@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
 import type { Book, ID } from "@/entities/book/types";
+import { downloadFile } from "@telegram-apps/sdk-react";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
 import { purchasesApi } from "@/entities/purchase/api";
@@ -52,6 +53,7 @@ export default function BookPage(): JSX.Element {
   const bookFileUrlRef = useRef<string | null>(null);
   const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
   const autoReadTriggeredRef = useRef(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useScrollToTop([id]);
 
@@ -216,22 +218,36 @@ export default function BookPage(): JSX.Element {
 
   const handleDownload = useCallback(async () => {
     if (!purchaseDetails?.walrusFileId) {
-      return;
-    }
-
-    const url = await ensureBookFileUrl(purchaseDetails.walrusFileId);
-    if (!url) {
       showToast(t("book.toast.downloadFailed"));
       return;
     }
 
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.rel = "noreferrer";
-    anchor.download = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
+    setIsDownloading(true);
+    try {
+      const url = await ensureBookFileUrl(purchaseDetails.walrusFileId);
+      if (!url) {
+        showToast(t("book.toast.downloadFailed"));
+        return;
+      }
+
+      const fileName = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
+      if (downloadFile.isAvailable()) {
+        await downloadFile(url, fileName);
+      } else {
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.rel = "noreferrer";
+        anchor.download = fileName;
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+      }
+    } catch (error) {
+      console.error("Failed to download book", error);
+      showToast(t("book.toast.downloadFailed"));
+    } finally {
+      setIsDownloading(false);
+    }
   }, [book, ensureBookFileUrl, purchaseDetails, showToast, t]);
 
   const handleStartPurchase = useCallback(
@@ -560,7 +576,13 @@ export default function BookPage(): JSX.Element {
                     <Button size="l" onClick={() => void handleRead()}>
                       {t("book.actions.read")}
                     </Button>
-                    <Button size="l" mode="outline" onClick={() => void handleDownload()}>
+                    <Button
+                      size="l"
+                      mode="outline"
+                      onClick={() => void handleDownload()}
+                      loading={isDownloading}
+                      disabled={isDownloading}
+                    >
                       {t("book.actions.download")}
                     </Button>
                   </div>

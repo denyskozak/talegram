@@ -119,6 +119,8 @@
         "sepia": "Sepia",
         "dark": "Dark"
       },
+      "loading": "Loading book…",
+      "loadError": "We couldn't display the book. Try downloading it instead.",
       "demoNotice": "Demo excerpt to preview the book.",
       "unknownAuthor": "an unknown author",
       "sampleIntro": "An excerpt from \"{{title}}\" written by {{author}}.",
