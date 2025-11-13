@@ -1,0 +1,51 @@
+.reading-overlay__viewer {
+  --reader-page-background: #ffffff;
+  --reader-page-border: rgba(15, 23, 42, 0.08);
+  --reader-page-shadow: rgba(15, 23, 42, 0.12);
+}
+
+.reading-overlay__viewer[data-reader-theme="sepia"] {
+  --reader-page-background: #f6ecda;
+  --reader-page-border: rgba(63, 49, 32, 0.24);
+  --reader-page-shadow: rgba(63, 49, 32, 0.2);
+}
+
+.reading-overlay__viewer[data-reader-theme="dark"] {
+  --reader-page-background: #1b2029;
+  --reader-page-border: rgba(148, 163, 184, 0.22);
+  --reader-page-shadow: rgba(15, 23, 42, 0.55);
+}
+
+.reading-overlay__document {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+  width: 100%;
+}
+
+.reading-overlay__page {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.reading-overlay__page canvas {
+  width: 100% !important;
+  height: auto !important;
+  max-width: min(100%, 900px);
+  border-radius: 20px;
+  background: var(--reader-page-background);
+  border: 1px solid var(--reader-page-border);
+  box-shadow: 0 24px 64px var(--reader-page-shadow);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.reading-overlay__page canvas:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 32px 72px var(--reader-page-shadow);
+}
+
+.reading-overlay__page .react-pdf__Page__textContent {
+  color: inherit;
+}
