@@ -10,6 +10,7 @@ import { Document, Page, pdfjs } from "react-pdf";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
+import "./ReadingOverlay.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
@@ -227,6 +228,8 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
       ) : (
         <div
           ref={viewerContainerRef}
+          className="reading-overlay__viewer"
+          data-reader-theme={theme}
           style={{
             flex: 1,
             padding: "20px",
@@ -240,6 +243,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
         >
           <Document
             key={book.bookFileURL}
+            className="reading-overlay__document"
             file={book.bookFileURL ?? undefined}
             onLoadSuccess={handleDocumentLoadSuccess}
             onLoadError={handleDocumentLoadError}
@@ -260,6 +264,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
             {Array.from({ length: numPages }, (_, index) => (
               <Page
                 key={`page_${index + 1}`}
+                className="reading-overlay__page"
                 pageNumber={index + 1}
                 width={viewerWidth ? Math.min(viewerWidth - 40, 900) : undefined}
                 renderAnnotationLayer={false}
