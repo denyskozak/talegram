@@ -107,7 +107,7 @@ export default function HomeCategories(): JSX.Element {
         subheader={t("homeCategories.alphaBanner.description")}
         style={{ marginBottom: 16 }}
       />
-      <Title level="1" weight="2" style={{ marginBottom: 16 }}>
+      <Title level="1" weight="2">
         {t("homeCategories.title")}
       </Title>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>

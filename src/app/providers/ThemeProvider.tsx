@@ -73,7 +73,7 @@ export function ThemeProvider({ children }: PropsWithChildren): JSX.Element {
   const { theme } = useTMA();
   const systemColors = useMemo(() => mapTheme(theme), [theme]);
   const [mode, setMode] = useState<ThemeMode>(() => (getSystemTheme() === "dark" ? "dark" : "light"));
-  const colors = useMemo(() => (mode === "dark" ? darkColors : systemColors), [mode, systemColors]);
+  const colors = useMemo(() => (mode === "dark" ? systemColors : systemColors), [mode, systemColors]);
   const toggle = useCallback(() => {
     setMode((prev) => (prev === "dark" ? "light" : "dark"));
   }, []);
