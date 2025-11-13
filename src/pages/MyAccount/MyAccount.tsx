@@ -10,8 +10,8 @@ import { useToast } from "@/shared/ui/ToastProvider";
 import { fetchProposalsForVoting, submitBookProposal } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 import { fetchAuthors } from "@/entities/author/api";
-import { fetchDecryptedFile } from "@/shared/api/storage";
-import { base64ToUint8Array } from "@/shared/lib/base64";
+import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
+import { useBookFileManager } from "@/entities/book/hooks/useBookFileManager";
 
 import {
   BOOK_SECTION,
@@ -34,7 +34,6 @@ import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramU
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import type { MyBook } from "./types";
-import { downloadFile } from "@telegram-apps/sdk-react";
 
 export default function MyAccount(): JSX.Element {
   const { t } = useTranslation();
@@ -82,6 +81,10 @@ export default function MyAccount(): JSX.Element {
   const [myBooks, setMyBooks] = useState<MyBook[]>([]);
   const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
   const [myBooksError, setMyBooksError] = useState<string | null>(null);
+  const [downloadingBookId, setDownloadingBookId] = useState<string | null>(null);
+  const [readingBook, setReadingBook] = useState<MyBook | null>(null);
+  const [isReading, setIsReading] = useState(false);
+  const { ensureBookFileUrl, downloadBookFile, bookFileUrl, reset } = useBookFileManager();
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
@@ -205,6 +208,73 @@ export default function MyAccount(): JSX.Element {
   const handleRetryMyBooks = useCallback(() => {
     void loadMyBooks();
   }, [loadMyBooks]);
+
+  const handleReadMyBook = useCallback(
+    async (bookId: string) => {
+      const target = myBooks.find((item) => item.book.id === bookId);
+      if (!target) {
+        return;
+      }
+
+      if (!target.purchase.walrusFileId) {
+        showToast(t("account.myBooks.toast.missingFile"));
+        return;
+      }
+
+      setReadingBook(target);
+      const url = await ensureBookFileUrl({
+        fileId: target.purchase.walrusFileId,
+        mimeType: target.book.mimeType ?? undefined,
+      });
+
+      if (!url) {
+        showToast(t("account.myBooks.toast.downloadError"));
+        setReadingBook(null);
+        setIsReading(false);
+        return;
+      }
+
+      setIsReading(true);
+    },
+    [ensureBookFileUrl, myBooks, showToast, t],
+  );
+
+  const handleDownloadMyBook = useCallback(
+    async (bookId: string) => {
+      const target = myBooks.find((item) => item.book.id === bookId);
+      if (!target) {
+        return;
+      }
+
+      if (!target.purchase.walrusFileId) {
+        showToast(t("account.myBooks.toast.missingFile"));
+        return;
+      }
+
+      setDownloadingBookId(bookId);
+      try {
+        const success = await downloadBookFile({
+          fileId: target.purchase.walrusFileId,
+          fileName: target.book.fileName ?? undefined,
+          title: target.book.title,
+          mimeType: target.book.mimeType ?? undefined,
+        });
+
+        if (!success) {
+          showToast(t("account.myBooks.toast.downloadError"));
+        }
+      } finally {
+        setDownloadingBookId(null);
+      }
+    },
+    [downloadBookFile, myBooks, showToast, t],
+  );
+
+  const handleCloseReader = useCallback(() => {
+    setIsReading(false);
+    setReadingBook(null);
+    reset();
+  }, [reset]);
 
   const loadVotingProposals = useCallback(async () => {
     setIsVotingLoading(true);
@@ -366,6 +436,9 @@ export default function MyAccount(): JSX.Element {
           isLoading={isMyBooksLoading}
           error={myBooksError}
           onRetry={handleRetryMyBooks}
+          onRead={handleReadMyBook}
+          onDownload={handleDownloadMyBook}
+          downloadingBookId={downloadingBookId}
         />
       )}
 
@@ -411,6 +484,13 @@ export default function MyAccount(): JSX.Element {
         t={t}
         theme={theme}
       />
+
+      {readingBook && isReading && (
+        <ReadingOverlay
+          book={{ ...readingBook.book, bookFileURL: bookFileUrl ?? undefined }}
+          onClose={handleCloseReader}
+        />
+      )}
     </div>
   );
 }

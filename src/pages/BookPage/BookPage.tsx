@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
 import type { Book, ID } from "@/entities/book/types";
-import { downloadFile } from "@telegram-apps/sdk-react";
+import { useBookFileManager } from "@/entities/book/hooks/useBookFileManager";
+import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
 import { purchasesApi } from "@/entities/purchase/api";
@@ -20,9 +21,6 @@ import { useScrollToTop } from "@/shared/hooks/useScrollToTop";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
-import { fetchDecryptedFile } from "@/shared/api/storage";
-import { base64ToUint8Array } from "@/shared/lib/base64";
-import { ReadingOverlay } from "./ReadingOverlay";
 import { BookPageSkeleton } from "./BookPageSkeleton";
 
 export default function BookPage(): JSX.Element {
@@ -49,24 +47,11 @@ export default function BookPage(): JSX.Element {
   const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
   const [isReading, setIsReading] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const currentBookFileIdRef = useRef<string | null>(null);
-  const bookFileUrlRef = useRef<string | null>(null);
-  const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
+  const { ensureBookFileUrl, downloadBookFile, bookFileUrl, isDownloading, reset } =
+    useBookFileManager({ defaultMimeType: book?.mimeType });
   const autoReadTriggeredRef = useRef(false);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useScrollToTop([id]);
-
-
-  useEffect(
-    () => () => {
-      if (bookFileUrlRef.current) {
-        URL.revokeObjectURL(bookFileUrlRef.current);
-        bookFileUrlRef.current = null;
-      }
-    },
-    [],
-  );
     console.log("launchParams?.tgWebAppData?: ", launchParams?.tgWebAppData);
   const telegramUserId = useMemo(() => {
     const user = launchParams?.tgWebAppData?.user;
@@ -145,47 +130,6 @@ export default function BookPage(): JSX.Element {
     setIsReading(true);
   }, [book]);
 
-  const ensureBookFileUrl = useCallback(
-    async (fileId: string): Promise<string | null> => {
-      if (!fileId) {
-        return null;
-      }
-
-      if (currentBookFileIdRef.current === fileId && bookFileUrlRef.current) {
-        setBookFileUrl(bookFileUrlRef.current);
-        return bookFileUrlRef.current;
-      }
-
-      try {
-        const blob = await fetchDecryptedFile(fileId);
-        if (bookFileUrlRef.current) {
-          URL.revokeObjectURL(bookFileUrlRef.current);
-        }
-
-        const objectUrl = URL.createObjectURL(
-          new Blob([base64ToUint8Array(blob.data)], {
-            type: blob.mimeType ?? book?.mimeType ?? "application/octet-stream",
-          }),
-        );
-
-        currentBookFileIdRef.current = fileId;
-        bookFileUrlRef.current = objectUrl;
-        setBookFileUrl(objectUrl);
-        return objectUrl;
-      } catch (error) {
-        console.error("Failed to load book file", error);
-        currentBookFileIdRef.current = null;
-        if (bookFileUrlRef.current) {
-          URL.revokeObjectURL(bookFileUrlRef.current);
-          bookFileUrlRef.current = null;
-        }
-        setBookFileUrl(null);
-        return null;
-      }
-    },
-    [book?.mimeType],
-  );
-
   const handleRead = useCallback(async () => {
     if (!book) {
       return;
@@ -197,7 +141,10 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    const url = await ensureBookFileUrl(purchaseDetails.walrusFileId);
+    const url = await ensureBookFileUrl({
+      fileId: purchaseDetails.walrusFileId,
+      mimeType: book.mimeType ?? undefined,
+    });
     if (!url) {
       showToast(t("book.toast.downloadFailed"));
       return;
@@ -217,38 +164,22 @@ export default function BookPage(): JSX.Element {
   }, []);
 
   const handleDownload = useCallback(async () => {
-    if (!purchaseDetails?.walrusFileId) {
+    if (!book || !purchaseDetails?.walrusFileId) {
       showToast(t("book.toast.downloadFailed"));
       return;
     }
 
-    setIsDownloading(true);
-    try {
-      const url = await ensureBookFileUrl(purchaseDetails.walrusFileId);
-      if (!url) {
-        showToast(t("book.toast.downloadFailed"));
-        return;
-      }
+    const success = await downloadBookFile({
+      fileId: purchaseDetails.walrusFileId,
+      fileName: book.fileName ?? undefined,
+      title: book.title,
+      mimeType: book.mimeType ?? undefined,
+    });
 
-      const fileName = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
-      if (downloadFile.isAvailable()) {
-        await downloadFile(url, fileName);
-      } else {
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.rel = "noreferrer";
-        anchor.download = fileName;
-        document.body.appendChild(anchor);
-        anchor.click();
-        document.body.removeChild(anchor);
-      }
-    } catch (error) {
-      console.error("Failed to download book", error);
+    if (!success) {
       showToast(t("book.toast.downloadFailed"));
-    } finally {
-      setIsDownloading(false);
     }
-  }, [book, ensureBookFileUrl, purchaseDetails, showToast, t]);
+  }, [book, downloadBookFile, purchaseDetails, showToast, t]);
 
   const handleStartPurchase = useCallback(
     async (action: "buy" | "subscribe") => {
@@ -461,17 +392,12 @@ export default function BookPage(): JSX.Element {
   useEffect(() => {
     const fileId = purchaseDetails?.walrusFileId ?? null;
     if (!fileId) {
-      currentBookFileIdRef.current = null;
-      if (bookFileUrlRef.current) {
-        URL.revokeObjectURL(bookFileUrlRef.current);
-        bookFileUrlRef.current = null;
-      }
-      setBookFileUrl(null);
+      reset();
       return;
     }
 
-    void ensureBookFileUrl(fileId);
-  }, [ensureBookFileUrl, purchaseDetails?.walrusFileId]);
+    void ensureBookFileUrl({ fileId, mimeType: book?.mimeType ?? undefined });
+  }, [book?.mimeType, ensureBookFileUrl, purchaseDetails?.walrusFileId, reset]);
 
   if (!id) {
     return (
