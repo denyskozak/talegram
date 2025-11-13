@@ -1,5 +1,5 @@
 import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
-import {useEffect, useState, type TransitionEvent, useMemo} from "react";
+import { useEffect, useState, type TransitionEvent } from "react";
 import { useLaunchParams } from '@telegram-apps/sdk-react';
 
 import { AppRoot } from "@telegram-apps/telegram-ui";
@@ -12,12 +12,10 @@ import { ToastProvider } from "@/shared/ui/ToastProvider";
 import { DemoBanner } from "@/shared/ui/DemoBanner";
 import { FooterBar } from "@/widgets/FooterBar/FooterBar";
 import { HeaderBar } from "@/widgets/HeaderBar/HeaderBar";
-import {themePalette} from "@/shared/config";
-import {getSystemTheme, ReaderTheme} from "@/shared/lib";
-
 function SplashScreen({ visible }: { visible: boolean }): JSX.Element | null {
   const [shouldRender, setShouldRender] = useState(visible);
-    const theme = useMemo<ReaderTheme>(() => getSystemTheme(), []);
+  const { theme } = useTMA();
+  const backgroundColor = theme?.bg_color ?? "#fdfdfd";
 
   useEffect(() => {
     if (visible) {
@@ -44,10 +42,10 @@ function SplashScreen({ visible }: { visible: boolean }): JSX.Element | null {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: themePalette[theme].background,
+        backgroundColor,
         zIndex: 9999,
-          width: '100%',
-          height: '100%',
+        width: "100%",
+        height: "100%",
         opacity: visible ? 1 : 0,
         transition: "opacity 400ms ease",
         pointerEvents: visible ? "auto" : "none",
@@ -111,7 +109,7 @@ function NavigationControls(): null {
 
 function AppContent(): JSX.Element {
   const { isTelegram } = useTMA();
-  const { tgWebAppFullscreen, tgWebAppPlatform, ...rest } = useLaunchParams();
+  const { tgWebAppFullscreen, tgWebAppPlatform } = useLaunchParams();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
     useEffect(() => {

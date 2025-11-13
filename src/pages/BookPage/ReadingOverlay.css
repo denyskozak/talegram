@@ -2,18 +2,7 @@
   --reader-page-background: #ffffff;
   --reader-page-border: rgba(15, 23, 42, 0.08);
   --reader-page-shadow: rgba(15, 23, 42, 0.12);
-}
-
-.reading-overlay__viewer[data-reader-theme="sepia"] {
-  --reader-page-background: #f6ecda;
-  --reader-page-border: rgba(63, 49, 32, 0.24);
-  --reader-page-shadow: rgba(63, 49, 32, 0.2);
-}
-
-.reading-overlay__viewer[data-reader-theme="dark"] {
-  --reader-page-background: #1b2029;
-  --reader-page-border: rgba(148, 163, 184, 0.22);
-  --reader-page-shadow: rgba(15, 23, 42, 0.55);
+  --reader-page-filter: none;
 }
 
 .reading-overlay__document {
@@ -38,6 +27,7 @@
   background: var(--reader-page-background);
   border: 1px solid var(--reader-page-border);
   box-shadow: 0 24px 64px var(--reader-page-shadow);
+  filter: var(--reader-page-filter);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
