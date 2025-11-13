@@ -57,24 +57,24 @@ export const catalogRouter = createRouter({
     .query(async ({ input }) => {
       const result = await listBooks(input ?? {});
 
-      const coverWalrusBlobIds = Array.from(
+      const coverWalrusFileIds = Array.from(
         new Set(
           result.items
-            .map((book) => book.coverWalrusBlobId)
+            .map((book) => book.coverWalrusFileId)
             .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
         ),
       );
-        console.log("coverWalrusBlobIds: ", coverWalrusBlobIds);
+        console.log("coverWalrusFileIds: ", coverWalrusFileIds);
       const coverDataById =
-        coverWalrusBlobIds.length > 0
-          ? await fetchWalrusFilesBase64(coverWalrusBlobIds)
+        coverWalrusFileIds.length > 0
+          ? await fetchWalrusFilesBase64(coverWalrusFileIds)
           : new Map<string, string | null>();
         console.log("coverDataById: ", coverDataById);
       const items = result.items.map((book) => {
         const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
         const coverImageData =
-          book.coverWalrusBlobId && coverDataById.has(book.coverWalrusBlobId)
-            ? coverDataById.get(book.coverWalrusBlobId) ?? null
+          book.coverWalrusFileId && coverDataById.has(book.coverWalrusFileId)
+            ? coverDataById.get(book.coverWalrusFileId) ?? null
             : null;
 
         return { ...bookForClient, coverImageData };
@@ -98,8 +98,8 @@ export const catalogRouter = createRouter({
 
     const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
 
-    const coverImageData = book.coverWalrusBlobId
-      ? (await fetchWalrusFilesBase64([book.coverWalrusBlobId])).get(book.coverWalrusBlobId) ?? null
+    const coverImageData = book.coverWalrusFileId
+      ? (await fetchWalrusFilesBase64([book.coverWalrusFileId])).get(book.coverWalrusFileId) ?? null
       : null;
 
     return { ...bookForClient, coverImageData };

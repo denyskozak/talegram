@@ -41,7 +41,7 @@ type SimilarCarouselItemProps = {
 };
 
 function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): JSX.Element {
-  const walrusCover = useWalrusCover(book.coverWalrusBlobId, book.coverMimeType);
+  const walrusCover = useWalrusCover(book.coverWalrusFileId, book.coverMimeType);
   const coverSrc = walrusCover ?? resolveBookCover(book);
 
   return (

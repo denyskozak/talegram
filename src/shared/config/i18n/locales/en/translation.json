@@ -139,7 +139,8 @@
     },
     "purchase": {
       "statusTitle": "Purchase details",
-      "downloadDescription": "Use the download button above and keep the Walrus blob ID below to retain access to the purchased book.",
+      "downloadDescription": "Use the download button above and keep the Walrus IDs below to retain access to the purchased book.",
+      "fileLabel": "Walrus file ID",
       "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Purchased",
       "invoiceDescription": "Open the TON Stars invoice in Telegram, complete the payment and return here to unlock the book.",

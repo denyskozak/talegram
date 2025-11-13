@@ -34,6 +34,7 @@ export type MyBook = {
     paymentId: string;
     purchasedAt: string;
     walrusBlobId: string | null;
+    walrusFileId: string | null;
   };
 };
 

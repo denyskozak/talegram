@@ -10,14 +10,14 @@ import { decryptBookFile } from '../services/encryption.js';
 
 const MAX_CACHE_SIZE = 100;
 
-type CachedDecryptedBlob = {
-  blobId: string;
+type CachedDecryptedFile = {
+  fileId: string;
   fileName: string | null;
   mimeType: string | null;
   data: string;
 };
 
-const decryptedBlobCache = new Map<string, CachedDecryptedBlob>();
+const decryptedFileCache = new Map<string, CachedDecryptedFile>();
 
 const AES_GCM_IV_LENGTH = 12;
 const AES_GCM_TAG_LENGTH = 16;
@@ -39,36 +39,36 @@ const decodeBase64Buffer = (value: string | null | undefined): Buffer | null => 
   }
 };
 
-const getCachedDecryptedBlob = (blobId: string): CachedDecryptedBlob | null => {
-  const cached = decryptedBlobCache.get(blobId);
+const getCachedDecryptedFile = (fileId: string): CachedDecryptedFile | null => {
+  const cached = decryptedFileCache.get(fileId);
   if (!cached) {
     return null;
   }
 
   // Refresh entry usage for LRU behaviour
-  decryptedBlobCache.delete(blobId);
-  decryptedBlobCache.set(blobId, cached);
+  decryptedFileCache.delete(fileId);
+  decryptedFileCache.set(fileId, cached);
 
   return cached;
 };
 
-const cacheDecryptedBlob = (blobId: string, value: CachedDecryptedBlob) => {
-  if (decryptedBlobCache.has(blobId)) {
-    decryptedBlobCache.delete(blobId);
+const cacheDecryptedFile = (fileId: string, value: CachedDecryptedFile) => {
+  if (decryptedFileCache.has(fileId)) {
+    decryptedFileCache.delete(fileId);
   }
 
-  decryptedBlobCache.set(blobId, value);
+  decryptedFileCache.set(fileId, value);
 
-  if (decryptedBlobCache.size > MAX_CACHE_SIZE) {
-    const oldestKey = decryptedBlobCache.keys().next().value;
+  if (decryptedFileCache.size > MAX_CACHE_SIZE) {
+    const oldestKey = decryptedFileCache.keys().next().value;
     if (oldestKey) {
-      decryptedBlobCache.delete(oldestKey);
+      decryptedFileCache.delete(oldestKey);
     }
   }
 };
 
-const getDecryptedBlobInput = z.object({
-  blobId: z.string().trim().min(1),
+const getDecryptedFileInput = z.object({
+  fileId: z.string().trim().min(1),
 });
 
 const getWalrusFilesInput = z.object({
@@ -78,9 +78,17 @@ const getWalrusFilesInput = z.object({
     .max(10, 'Too many Walrus files requested at once'),
 });
 
+const matchesCoverFile = (source: { coverWalrusFileId?: string | null; coverWalrusBlobId?: string | null }, id: string) => {
+  const normalizedId = id.trim();
+  return (
+    (typeof source.coverWalrusFileId === 'string' && source.coverWalrusFileId.trim() === normalizedId) ||
+    (typeof source.coverWalrusBlobId === 'string' && source.coverWalrusBlobId.trim() === normalizedId)
+  );
+};
+
 export const storageRouter = createRouter({
-  getDecryptedBlob: procedure.input(getDecryptedBlobInput).query(async ({ input }) => {
-    const cached = getCachedDecryptedBlob(input.blobId);
+  getDecryptedFile: procedure.input(getDecryptedFileInput).query(async ({ input }) => {
+    const cached = getCachedDecryptedFile(input.fileId);
     if (cached) {
       return cached;
     }
@@ -90,41 +98,54 @@ export const storageRouter = createRouter({
     const bookRepository = appDataSource.getRepository(Book);
 
     const book = await bookRepository.findOne({
-      where: [{ walrusBlobId: input.blobId }, { coverWalrusBlobId: input.blobId }],
+      where: [
+        { walrusFileId: input.fileId },
+        { coverWalrusFileId: input.fileId },
+        { walrusBlobId: input.fileId },
+        { coverWalrusBlobId: input.fileId },
+      ],
     });
 
     const proposal = book
       ? null
       : await appDataSource.getRepository(BookProposal).findOne({
-          where: { walrusBlobId: input.blobId },
+          where: [
+            { walrusFileId: input.fileId },
+            { coverWalrusFileId: input.fileId },
+            { walrusBlobId: input.fileId },
+            { coverWalrusBlobId: input.fileId },
+          ],
         });
 
     const source = book ?? proposal;
 
     if (!source) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Blob metadata not found' });
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'File metadata not found' });
     }
 
-    const isCoverBlob = book?.coverWalrusBlobId === input.blobId;
+    const isCoverFile = matchesCoverFile(source, input.fileId);
 
     let blobBytes: Buffer;
     try {
-      const blob = await suiClient.walrus.getBlob({ blobId: input.blobId });
-      const file = blob.asFile();
+      const files = await suiClient.walrus.getFiles({ ids: [input.fileId] });
+      const file = files[0];
+      if (!file) {
+        throw new Error('Walrus file not found');
+      }
       blobBytes = Buffer.from(await file.bytes());
     } catch (error) {
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch blob from Walrus' });
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to fetch file from Walrus' });
     }
 
-    if (isCoverBlob) {
-      const result: CachedDecryptedBlob = {
-        blobId: input.blobId,
+    if (isCoverFile) {
+      const result: CachedDecryptedFile = {
+        fileId: input.fileId,
         fileName: source.coverFileName ?? null,
         mimeType: source.coverMimeType ?? null,
         data: blobBytes.toString('base64'),
       };
 
-      cacheDecryptedBlob(input.blobId, result);
+      cacheDecryptedFile(input.fileId, result);
 
       return result;
     }
@@ -138,23 +159,23 @@ export const storageRouter = createRouter({
       try {
         payload = decryptBookFile(blobBytes, iv, tag);
       } catch (error) {
-        console.warn('Failed to decrypt Walrus blob, falling back to original payload', {
-          blobId: input.blobId,
+        console.warn('Failed to decrypt Walrus file, falling back to original payload', {
+          fileId: input.fileId,
         });
           console.warn("error: ", error);
       }
     } else {
-      console.warn('Missing or invalid encryption metadata for Walrus blob', { blobId: input.blobId });
+      console.warn('Missing or invalid encryption metadata for Walrus file', { fileId: input.fileId });
     }
 
-    const result: CachedDecryptedBlob = {
-      blobId: input.blobId,
+    const result: CachedDecryptedFile = {
+      fileId: input.fileId,
       fileName: source.fileName ?? null,
       mimeType: source.mimeType ?? null,
       data: payload.toString('base64'),
     };
 
-    cacheDecryptedBlob(input.blobId, result);
+    cacheDecryptedFile(input.fileId, result);
 
     return result;
   }),

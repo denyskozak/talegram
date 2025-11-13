@@ -133,7 +133,8 @@
     },
     "purchase": {
       "statusTitle": "Детали покупки",
-      "downloadDescription": "Скачайте книгу с помощью кнопки выше и сохраните идентификатор Walrus ниже, чтобы не потерять доступ.",
+      "downloadDescription": "Скачайте книгу с помощью кнопки выше и сохраните идентификаторы Walrus ниже, чтобы не потерять доступ.",
+      "fileLabel": "Walrus file ID",
       "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Покупка оформлена",
       "invoiceDescription": "Откройте счёт TON Stars в Telegram, завершите оплату и вернитесь сюда, чтобы открыть книгу.",

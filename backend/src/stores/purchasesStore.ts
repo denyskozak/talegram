@@ -5,6 +5,7 @@ export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
   walrusBlobId: string | null;
+  walrusFileId: string | null;
 };
 
 function mapEntityToDetails(entity: Purchase): PurchaseDetails {
@@ -12,6 +13,7 @@ function mapEntityToDetails(entity: Purchase): PurchaseDetails {
     paymentId: entity.paymentId,
     purchasedAt: entity.purchasedAt.toISOString(),
     walrusBlobId: entity.walrusBlobId ?? null,
+    walrusFileId: entity.walrusFileId ?? null,
   };
 }
 
@@ -27,6 +29,7 @@ export const setPurchased = async (
     existing.paymentId = details.paymentId;
     existing.purchasedAt = new Date(details.purchasedAt);
     existing.walrusBlobId = details.walrusBlobId ?? null;
+    existing.walrusFileId = details.walrusFileId ?? null;
     await repository.save(existing);
     return;
   }
@@ -37,6 +40,7 @@ export const setPurchased = async (
     paymentId: details.paymentId,
     purchasedAt: new Date(details.purchasedAt),
     walrusBlobId: details.walrusBlobId ?? null,
+    walrusFileId: details.walrusFileId ?? null,
   });
 
   await repository.save(purchase);
