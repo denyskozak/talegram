@@ -13,7 +13,6 @@ import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 import { fetchDecryptedFile } from "@/shared/api/storage";
-import {base64ToUint8Array} from "@/shared/lib/base64";
 import {downloadFile} from "@telegram-apps/sdk-react";
 
 function formatDate(value: string): string {
@@ -146,13 +145,13 @@ export default function ProposalDetails(): JSX.Element {
 
         setIsDownloading(true);
         try {
-            const blob = await fetchDecryptedFile(proposal.walrusFileId);
+            const file = await fetchDecryptedFile(proposal.walrusFileId);
             const downloadUrl = URL.createObjectURL(
-                new Blob([base64ToUint8Array(blob.data)], {
-                    type: blob.mimeType ?? proposal.mimeType ?? "application/octet-stream",
+                new Blob([file.data], {
+                    type: file.mimeType ?? proposal.mimeType ?? "application/octet-stream",
                 }),
             );
-            const resolvedFileName = proposal.fileName ?? blob.fileName ?? `${proposal.title}.pdf`;
+            const resolvedFileName = proposal.fileName ?? file.fileName ?? `${proposal.title}.pdf`;
             if (downloadFile.isAvailable()) {
                 await downloadFile(
                     downloadUrl,

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchDecryptedFile } from "@/shared/api/storage";
-import { base64ToUint8Array } from "@/shared/lib/base64";
 
 type EnsureBookFileUrlOptions = {
   mimeType?: string | null;
@@ -17,9 +16,11 @@ type OpenReaderOptions =
 
 type UseBookReaderOptions = {
   mimeType?: string | null;
+  telegramUserId?: string | null;
 };
 
 export function useBookReader(options: UseBookReaderOptions = {}) {
+  const { mimeType: defaultMimeType, telegramUserId } = options;
   const currentFileIdRef = useRef<string | null>(null);
   const fileUrlRef = useRef<string | null>(null);
   const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
@@ -54,16 +55,15 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
       }
 
       try {
-        const blob = await fetchDecryptedFile(fileId);
+        const file = await fetchDecryptedFile(fileId, { telegramUserId });
         if (fileUrlRef.current) {
           URL.revokeObjectURL(fileUrlRef.current);
         }
 
-        const objectUrl = URL.createObjectURL(
-          new Blob([base64ToUint8Array(blob.data)], {
-            type: blob.mimeType ?? override.mimeType ?? options.mimeType ?? "application/octet-stream",
-          }),
-        );
+        const resolvedMimeType =
+          file.mimeType ?? override.mimeType ?? defaultMimeType ?? "application/octet-stream";
+
+        const objectUrl = URL.createObjectURL(new Blob([file.data], { type: resolvedMimeType }));
 
         currentFileIdRef.current = fileId;
         fileUrlRef.current = objectUrl;
@@ -75,7 +75,7 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
         return null;
       }
     },
-    [options.mimeType, resetFile],
+    [defaultMimeType, resetFile, telegramUserId],
   );
 
   const openReader = useCallback(

@@ -56,7 +56,7 @@ export default function BookPage(): JSX.Element {
     isReading,
     isPreviewMode,
     resetFile,
-  } = useBookReader({ mimeType: book?.mimeType });
+  } = useBookReader({ mimeType: book?.mimeType, telegramUserId });
   const autoReadTriggeredRef = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
