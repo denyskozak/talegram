@@ -61,6 +61,9 @@ export default function BookPage(): JSX.Element {
 
   useScrollToTop([id]);
 
+  const isFreeBook = Boolean(book && book.priceStars === 0);
+  const hasFullAccess = isPurchased || isFreeBook;
+
   const telegramUserId = useMemo(() => {
     const user = launchParams?.tgWebAppData?.user;
     const rawId = user?.id;
@@ -142,22 +145,31 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    if (!isPurchased || !purchaseDetails?.walrusFileId) {
+    if (!hasFullAccess) {
       void openReader({ preview: true });
       return;
     }
 
+    const fileId =
+      purchaseDetails?.walrusFileId ??
+      (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0
+        ? book.walrusFileId
+        : null);
+
+    if (!fileId) {
+      showToast(t("book.toast.downloadFailed"));
+      return;
+    }
+
     const success = await openReader({
-      fileId: purchaseDetails.walrusFileId,
+      fileId,
       mimeType: book.mimeType,
     });
     if (!success) {
       showToast(t("book.toast.downloadFailed"));
       resetFile();
-      return;
     }
-
-  }, [book, isPurchased, openReader, purchaseDetails, resetFile, showToast, t]);
+  }, [book, hasFullAccess, openReader, purchaseDetails, resetFile, showToast, t]);
 
   const handleCloseReader = useCallback(() => {
     closeReader();
@@ -168,14 +180,25 @@ export default function BookPage(): JSX.Element {
   }, []);
 
   const handleDownload = useCallback(async () => {
-    if (!purchaseDetails?.walrusFileId) {
+    if (!hasFullAccess) {
       showToast(t("book.toast.downloadFailed"));
       return;
     }
 
     setIsDownloading(true);
     try {
-      const url = await ensureBookFileUrl(purchaseDetails.walrusFileId, {
+      const fileId =
+        purchaseDetails?.walrusFileId ??
+        (typeof book?.walrusFileId === "string" && book.walrusFileId.length > 0
+          ? book.walrusFileId
+          : null);
+
+      if (!fileId) {
+        showToast(t("book.toast.downloadFailed"));
+        return;
+      }
+
+      const url = await ensureBookFileUrl(fileId, {
         mimeType: book?.mimeType,
       });
       if (!url) {
@@ -201,11 +224,11 @@ export default function BookPage(): JSX.Element {
     } finally {
       setIsDownloading(false);
     }
-  }, [book, ensureBookFileUrl, purchaseDetails, showToast, t]);
+  }, [book, ensureBookFileUrl, hasFullAccess, purchaseDetails, showToast, t]);
 
   const handleStartPurchase = useCallback(
     async (action: "buy" | "subscribe") => {
-      if (!book || isActionLoading) {
+      if (!book || isActionLoading || book.priceStars === 0) {
         return;
       }
 
@@ -331,10 +354,10 @@ export default function BookPage(): JSX.Element {
   }, [closeReader, id, resetFile]);
 
   useEffect(() => {
-    if (!isPurchased && isReading && !isPreviewMode) {
+    if (!hasFullAccess && isReading && !isPreviewMode) {
       closeReader();
     }
-  }, [closeReader, isPurchased, isPreviewMode, isReading]);
+  }, [closeReader, hasFullAccess, isPreviewMode, isReading]);
 
   useEffect(() => {
     if (!invoice) {
@@ -412,14 +435,18 @@ export default function BookPage(): JSX.Element {
   }, [book, handleRead, searchParams]);
 
   useEffect(() => {
-    const fileId = purchaseDetails?.walrusFileId ?? null;
+    const fileId =
+      purchaseDetails?.walrusFileId ??
+      (isFreeBook && typeof book?.walrusFileId === "string" && book.walrusFileId.length > 0
+        ? book.walrusFileId
+        : null);
     if (!fileId) {
       resetFile();
       return;
     }
 
     void ensureBookFileUrl(fileId, { mimeType: book?.mimeType });
-  }, [book?.mimeType, ensureBookFileUrl, purchaseDetails?.walrusFileId, resetFile]);
+  }, [book?.mimeType, book?.walrusFileId, ensureBookFileUrl, isFreeBook, purchaseDetails?.walrusFileId, resetFile]);
 
   if (!id) {
     return (
@@ -518,7 +545,7 @@ export default function BookPage(): JSX.Element {
                   </div>
                 </div>
               </Card>
-              {isPurchased ? (
+              {hasFullAccess ? (
                 <>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
                     <Button size="l" onClick={() => void handleRead()}>

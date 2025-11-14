@@ -12,6 +12,7 @@ const createInitialFormState = (): PublishFormState => ({
   globalCategory: "",
   category: "",
   price: "",
+  isFree: false,
   hashtags: [],
   hashtagsInput: "",
   fileName: "",
@@ -145,7 +146,19 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
     (
       event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     ) => {
-      const { name, value } = event.target;
+      const { name } = event.target;
+
+      if (event.target instanceof HTMLInputElement && event.target.type === "checkbox") {
+        const { checked } = event.target;
+        setFormState((prev) => ({
+          ...prev,
+          [name]: checked,
+          ...(name === "isFree" && checked ? { price: "" } : {}),
+        }));
+        return;
+      }
+
+      const value = event.target.value;
 
       if (name === "globalCategory") {
         setFormState((prev) => ({

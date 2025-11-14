@@ -7,16 +7,12 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
 
-const GLOBAL_CATEGORY_OPTIONS = [
-  { value: "Book", label: "Book" },
-  { value: "Article", label: "Article" },
-  { value: "Comics & Graphic Novels", label: "Comics & Graphic Novels" },
-] as const;
+const GLOBAL_CATEGORY_OPTIONS = ["book", "article", "comics"] as const;
 
-type GlobalCategoryValue = (typeof GLOBAL_CATEGORY_OPTIONS)[number]["value"];
+type GlobalCategoryValue = (typeof GLOBAL_CATEGORY_OPTIONS)[number];
 
 const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: string; label: string }>> = {
-  Book: [
+  book: [
     { value: "Science Fiction", label: "Science Fiction" },
     { value: "Fantasy", label: "Fantasy" },
     { value: "Mystery & Thrillers", label: "Mystery & Thrillers" },
@@ -28,7 +24,7 @@ const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: str
     { value: "Business & Finance", label: "Business & Finance" },
     { value: "Children’s Literature", label: "Children’s Literature" },
   ],
-  Article: [
+  article: [
     { value: "News & Politics", label: "News & Politics" },
     { value: "Science & Technology", label: "Science & Technology" },
     { value: "Business & Economics", label: "Business & Economics" },
@@ -40,7 +36,7 @@ const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: str
     { value: "Health & Medicine", label: "Health & Medicine" },
     { value: "Culture & Arts", label: "Culture & Arts" },
   ],
-  "Comics & Graphic Novels": [
+  comics: [
     { value: "Superheroes", label: "Superheroes" },
     { value: "Manga", label: "Manga" },
     { value: "Fantasy", label: "Fantasy" },
@@ -55,7 +51,7 @@ const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: str
 };
 
 function isKnownGlobalCategory(value: string): value is GlobalCategoryValue {
-  return GLOBAL_CATEGORY_OPTIONS.some((option) => option.value === value);
+  return GLOBAL_CATEGORY_OPTIONS.some((option) => option === value);
 }
 
 export type PublishSectionProps = {
@@ -172,8 +168,8 @@ export function PublishSection({
                 {t("account.publish.form.globalCategory.placeholder")}
               </option>
               {GLOBAL_CATEGORY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+                <option key={option} value={option}>
+                  {t(`globalCategories.${option}`)}
                 </option>
               ))}
             </Select>
@@ -197,31 +193,52 @@ export function PublishSection({
               ))}
             </Select>
           </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            <Text weight="2">{t("account.publish.form.price.label")}</Text>
-            <input
-              required
-              type="number"
-              name="price"
-              value={formState.price}
-              onChange={onInputChange}
-              min={0}
-              step={1}
-              inputMode="numeric"
-              placeholder={t("account.publish.form.price.placeholder")}
-              disabled={isFormDisabled}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 12,
-                border: `1px solid ${theme.separator}`,
-                background: theme.section,
-                color: theme.text,
-              }}
-            />
-            <Text style={{ color: theme.hint }}>
-              {t("account.publish.form.price.hint")}
-            </Text>
-          </label>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <input
+                type="checkbox"
+                name="isFree"
+                checked={formState.isFree}
+                onChange={onInputChange}
+                disabled={isFormDisabled}
+                style={{ width: 18, height: 18 }}
+              />
+              <Text weight="2">{t("account.publish.form.free.label")}</Text>
+            </label>
+            {formState.isFree ? (
+              <Text style={{ color: theme.hint }}>
+                {t("account.publish.form.free.hint")}
+              </Text>
+            ) : (
+              <>
+                <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <Text weight="2">{t("account.publish.form.price.label")}</Text>
+                  <input
+                    required
+                    type="number"
+                    name="price"
+                    value={formState.price}
+                    onChange={onInputChange}
+                    min={0}
+                    step={1}
+                    inputMode="numeric"
+                    placeholder={t("account.publish.form.price.placeholder")}
+                    disabled={isFormDisabled}
+                    style={{
+                      padding: "12px 14px",
+                      borderRadius: 12,
+                      border: `1px solid ${theme.separator}`,
+                      background: theme.section,
+                      color: theme.text,
+                    }}
+                  />
+                </label>
+                <Text style={{ color: theme.hint }}>
+                  {t("account.publish.form.price.hint")}
+                </Text>
+              </>
+            )}
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Text weight="2">{t("account.publish.form.hashtags.label")}</Text>
             <div

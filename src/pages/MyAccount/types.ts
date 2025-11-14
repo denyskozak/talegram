@@ -17,6 +17,7 @@ export type PublishFormState = {
   globalCategory: string;
   category: string;
   price: string;
+  isFree: boolean;
   hashtags: string[];
   hashtagsInput: string;
   fileName: string;

@@ -18,7 +18,9 @@ import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { CategoryTileSkeleton } from "@/shared/ui/Skeletons";
-import {trpc} from "@/shared/api/trpc.ts";
+const GLOBAL_CATEGORIES = ["article", "book", "comics"] as const;
+
+type GlobalCategory = (typeof GLOBAL_CATEGORIES)[number];
 
 export default function HomeCategories(): JSX.Element {
   const navigate = useNavigate();
@@ -28,55 +30,11 @@ export default function HomeCategories(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
-  const [globalCategories, setGlobalCategories] = useState<string[]>([]);
-  const [selectedGlobalCategory, setSelectedGlobalCategory] = useState("book");
-  const [globalCategoriesError, setGlobalCategoriesError] = useState<string | null>(null);
-  const [globalRefreshToken, setGlobalRefreshToken] = useState(0);
+  const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
   const debouncedSearch = useDebouncedValue(search, 250);
   const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
 
   useScrollRestoration(`home-categories-${normalizedSearch || "all"}`);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadGlobalCategories = async () => {
-      try {
-        setGlobalCategoriesError(null);
-        const items = await catalogApi.listGlobalCategories();
-        if (cancelled) {
-          return;
-        }
-
-        const normalizedItems = Array.from(
-          new Set(
-            items
-              .map((item) => item.trim().toLocaleLowerCase())
-              .filter((item): item is string => item.length > 0),
-          ),
-        );
-        setGlobalCategories(normalizedItems);
-
-        const preferred = normalizedItems.includes("book")
-          ? "book"
-          : normalizedItems[0];
-        if (preferred) {
-          setSelectedGlobalCategory(preferred);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error(err);
-          setGlobalCategoriesError(t("errors.loadGlobalCategories"));
-        }
-      }
-    };
-
-    void loadGlobalCategories();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [globalRefreshToken, t]);
 
   const translatedSpecialCategories = useMemo<SpecialCategory[]>(
     () =>
@@ -93,9 +51,14 @@ export default function HomeCategories(): JSX.Element {
         setIsLoading(true);
         setError(null);
 
-        const items = await catalogApi.listCategories(
-          debouncedSearch ? { search: debouncedSearch } : undefined,
-        );
+        const query: { search?: string; globalCategory?: string } = {
+          globalCategory: selectedGlobalCategory,
+        };
+        if (debouncedSearch) {
+          query.search = debouncedSearch;
+        }
+
+        const items = await catalogApi.listCategories(query);
         if (!cancelled) {
           setCategories(items);
         }
@@ -116,7 +79,7 @@ export default function HomeCategories(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, refreshToken, t]);
+  }, [debouncedSearch, refreshToken, selectedGlobalCategory, t]);
 
   const specialCategories: SpecialCategory[] = normalizedSearch
     ? translatedSpecialCategories.filter((category) =>
@@ -126,37 +89,7 @@ export default function HomeCategories(): JSX.Element {
       )
     : translatedSpecialCategories;
 
-  const orderedGlobalCategories = useMemo(() => {
-    if (globalCategories.length === 0) {
-      return [];
-    }
-
-    const preferredOrder = ["article", "book", "comic"];
-    const sorted = [...globalCategories].sort((a, b) => {
-      const indexA = preferredOrder.indexOf(a);
-      const indexB = preferredOrder.indexOf(b);
-
-      if (indexA === -1 && indexB === -1) {
-        return a.localeCompare(b);
-      }
-      if (indexA === -1) {
-        return 1;
-      }
-      if (indexB === -1) {
-        return -1;
-      }
-
-      return indexA - indexB;
-    });
-
-    return sorted;
-  }, [globalCategories]);
-
   const displayedCategories: Category[] = [...specialCategories, ...categories];
-
-  const handleGlobalCategoriesRetry = () => {
-    setGlobalRefreshToken((prev) => prev + 1);
-  };
 
   const handleCategoryClick = (category: Category) => {
     if (isSpecialCategoryId(category.id)) {
@@ -177,30 +110,21 @@ export default function HomeCategories(): JSX.Element {
       <Title level="1" weight="2" style={{ marginBottom: 16 }}>
         {t("homeCategories.title")}
       </Title>
-      {globalCategoriesError ? (
-        <ErrorBanner
-          style={{ margin: "16px 0" }}
-          message={globalCategoriesError}
-          onRetry={handleGlobalCategoriesRetry}
-        />
-      ) : null}
-      {orderedGlobalCategories.length > 0 ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-          <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
-          <SegmentedControl
-            value={selectedGlobalCategory}
-            onChange={(value) => setSelectedGlobalCategory(value as string)}
-          >
-            {orderedGlobalCategories.map((category) => (
-              <SegmentedControl.Item key={category} value={category}>
-                {t(`globalCategories.${category}`, {
-                  defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
-                })}
-              </SegmentedControl.Item>
-            ))}
-          </SegmentedControl>
-        </div>
-      ) : null}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
+        <SegmentedControl
+          value={selectedGlobalCategory}
+          onChange={(value) => setSelectedGlobalCategory(value as GlobalCategory)}
+        >
+          {GLOBAL_CATEGORIES.map((category) => (
+            <SegmentedControl.Item key={category} value={category}>
+              {t(`globalCategories.${category}`, {
+                defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
+              })}
+            </SegmentedControl.Item>
+          ))}
+        </SegmentedControl>
+      </div>
       <Input
         type="search"
         value={search}

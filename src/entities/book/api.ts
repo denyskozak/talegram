@@ -5,6 +5,7 @@ import type { Book, CatalogApi, ID, Review } from "./types";
 
 type ListCategoriesPayload = {
   search?: string;
+  globalCategory?: string;
 };
 
 type ListBooksPayload = {

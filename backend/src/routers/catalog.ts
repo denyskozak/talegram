@@ -15,6 +15,7 @@ import { fetchWalrusFilesBase64 } from '../utils/walrus-files.js';
 
 const listCategoriesInput = z.object({
   search: z.string().trim().optional(),
+  globalCategory: z.enum(['article', 'book', 'comics']).optional(),
 });
 
 const listBooksInput = z.object({
@@ -52,7 +53,7 @@ const createReviewInput = z.object({
 export const catalogRouter = createRouter({
   listCategories: procedure
     .input(listCategoriesInput.optional())
-    .query(({ input }) => listCategories(input?.search)),
+    .query(({ input }) => listCategories(input ?? {})),
   listGlobalCategories: procedure.query(() => listGlobalCategories()),
   listBooks: procedure
     .input(listBooksInput.optional())
