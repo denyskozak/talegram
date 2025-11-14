@@ -8,6 +8,7 @@
     "deploy": "gh-pages -d dist",
     "dev": "vite",
     "dev:https": "cross-env HTTPS=true vite",
+    "dev:admin": "cd admin && npm run dev",
     "build": "tsc --noEmit && vite build",
     "test": "npm run test:build && npm run test:run",
     "test:build": "tsc --project tsconfig.test.json",
