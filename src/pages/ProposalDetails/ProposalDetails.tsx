@@ -15,6 +15,7 @@ import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/sha
 import { fetchDecryptedFile } from "@/shared/api/storage";
 import {base64ToUint8Array} from "@/shared/lib/base64";
 import {downloadFile} from "@telegram-apps/sdk-react";
+import { getGlobalCategoryLabel } from "@/entities/category/globalCategories";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -327,6 +328,12 @@ export default function ProposalDetails(): JSX.Element {
                             {t("account.proposalDetails.sections.overview")}
                         </Title>
                         <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                            <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                                <Text weight="2">{t("account.proposalDetails.globalCategory")}</Text>
+                                <Chip mode="outline">
+                                    {getGlobalCategoryLabel(proposal.globalCategory, t)}
+                                </Chip>
+                            </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.category")}</Text>
                                 <Chip mode="outline">{proposal.category}</Chip>

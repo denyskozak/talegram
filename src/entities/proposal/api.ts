@@ -9,6 +9,7 @@ export type SubmitProposalPayload = {
   title: string;
   author: string;
   description: string;
+  globalCategory: string;
   category: string;
   price: number;
   hashtags: string[];
@@ -24,6 +25,7 @@ export async function submitBookProposal(
   formData.append("title", payload.title);
   formData.append("author", payload.author);
   formData.append("description", payload.description);
+  formData.append("globalCategory", payload.globalCategory);
   formData.append("category", payload.category);
   formData.append("price", payload.price.toString(10));
   formData.append("hashtags", JSON.stringify(payload.hashtags));

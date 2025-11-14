@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Banner, Input, Title } from "@telegram-apps/telegram-ui";
+import { Banner, Input, SegmentedControl, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { CategoryTile } from "@/entities/category/components/CategoryTile";
@@ -12,6 +12,12 @@ import {
   type SpecialCategory,
   isSpecialCategoryId,
 } from "@/entities/category/customCategories";
+import {
+  DEFAULT_GLOBAL_CATEGORY,
+  GLOBAL_CATEGORY_SEGMENTS,
+  findGlobalCategoryByCategoryTitle,
+  type GlobalCategoryValue,
+} from "@/entities/category/globalCategories";
 import { catalogApi } from "@/entities/book/api";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
@@ -28,6 +34,7 @@ export default function HomeCategories(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
+  const [globalCategory, setGlobalCategory] = useState<GlobalCategoryValue>(DEFAULT_GLOBAL_CATEGORY);
   const debouncedSearch = useDebouncedValue(search, 250);
   const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
 
@@ -73,15 +80,36 @@ export default function HomeCategories(): JSX.Element {
     };
   }, [debouncedSearch, refreshToken, t]);
 
-  const specialCategories: SpecialCategory[] = normalizedSearch
-    ? translatedSpecialCategories.filter((category) =>
-        [category.title, category.slug].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedSearch),
-        ),
-      )
-    : translatedSpecialCategories;
+  const specialCategories: SpecialCategory[] = useMemo(() => {
+    if (globalCategory !== DEFAULT_GLOBAL_CATEGORY) {
+      return [];
+    }
 
-  const displayedCategories: Category[] = [...specialCategories, ...categories];
+    if (!normalizedSearch) {
+      return translatedSpecialCategories;
+    }
+
+    return translatedSpecialCategories.filter((category) =>
+      [category.title, category.slug].some((value) =>
+        value.toLocaleLowerCase().includes(normalizedSearch),
+      ),
+    );
+  }, [globalCategory, normalizedSearch, translatedSpecialCategories]);
+
+  const filteredCategories = useMemo(
+    () =>
+      categories.filter((category) => {
+        const categoryGlobal = findGlobalCategoryByCategoryTitle(category.title);
+        if (!categoryGlobal) {
+          return globalCategory === DEFAULT_GLOBAL_CATEGORY;
+        }
+
+        return categoryGlobal === globalCategory;
+      }),
+    [categories, globalCategory],
+  );
+
+  const displayedCategories: Category[] = [...specialCategories, ...filteredCategories];
 
   const handleCategoryClick = (category: Category) => {
     if (isSpecialCategoryId(category.id)) {
@@ -102,6 +130,17 @@ export default function HomeCategories(): JSX.Element {
       <Title level="1" weight="2" style={{ marginBottom: 16 }}>
         {t("homeCategories.title")}
       </Title>
+      <SegmentedControl style={{ marginBottom: 16 }}>
+        {GLOBAL_CATEGORY_SEGMENTS.map((segment) => (
+          <SegmentedControl.Item
+            key={segment.value}
+            selected={segment.value === globalCategory}
+            onClick={() => setGlobalCategory(segment.value)}
+          >
+            {t(segment.labelKey, segment.defaultLabel)}
+          </SegmentedControl.Item>
+        ))}
+      </SegmentedControl>
       <Input
         type="search"
         value={search}

@@ -389,6 +389,11 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
+    if (formState.globalCategory.trim().length === 0) {
+      showToast(t("account.publish.toastMissingGlobalCategory"));
+      return;
+    }
+
     if (formState.category.trim().length === 0) {
       showToast(t("account.publish.toastMissingCategory"));
       return;
@@ -402,6 +407,7 @@ export default function MyAccount(): JSX.Element {
         title: formState.title,
         author: formState.author,
         description: formState.description,
+        globalCategory: formState.globalCategory.trim().toLocaleLowerCase(),
         category: formState.category.trim(),
         price: normalizedPrice,
         hashtags: submissionHashtags,

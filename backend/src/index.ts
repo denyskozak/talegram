@@ -119,13 +119,14 @@ async function handleCreateProposalRequest(
         const title = fields['title'];
         const author = fields['author'];
         const description = fields['description'];
+        const globalCategory = fields['globalCategory'];
         const category = fields['category'];
         const priceRaw = fields['price'];
         const hashtagsRaw = fields['hashtags'];
         const file = files['file'];
         const cover = files['cover'];
 
-        if (!title || !author || !description || !category) {
+        if (!title || !author || !description || !globalCategory || !category) {
             res.statusCode = 400;
             res.end('Missing required fields');
             return;
@@ -168,6 +169,7 @@ async function handleCreateProposalRequest(
             title,
             author,
             description,
+            globalCategory,
             category,
             price: normalizedPrice,
             hashtags: parseHashtagsField(hashtagsRaw),

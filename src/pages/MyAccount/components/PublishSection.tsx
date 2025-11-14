@@ -3,22 +3,14 @@ import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
+import {
+  GLOBAL_CATEGORY_SEGMENTS,
+  getCategoryOptionsByGlobal,
+  isGlobalCategoryValue,
+} from "@/entities/category/globalCategories";
 
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
-
-const CATEGORY_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "fantasy", label: "Fantasy — Фэнтези" },
-  { value: "science-fiction", label: "Science Fiction — Научная фантастика" },
-  { value: "mystery", label: "Mystery — Детектив" },
-  { value: "romance", label: "Romance — Романтика" },
-  { value: "thriller", label: "Thriller — Триллер" },
-  { value: "non-fiction", label: "Non-fiction — Нон-фикшн" },
-  { value: "historical", label: "Historical — Историческое" },
-  { value: "self-help", label: "Self-help — Саморазвитие" },
-  { value: "poetry", label: "Poetry — Поэзия" },
-  { value: "young-adult", label: "Young Adult — Подростковое" },
-];
 
 export type PublishSectionProps = {
   formState: PublishFormState;
@@ -58,6 +50,10 @@ export function PublishSection({
   onHashtagKeyDown,
 }: PublishSectionProps): JSX.Element {
   const isFormDisabled = isAuthorsLoading || !canSubmit;
+  const isGlobalCategorySelected = isGlobalCategoryValue(formState.globalCategory);
+  const categoryOptions = isGlobalCategorySelected
+    ? getCategoryOptionsByGlobal(formState.globalCategory)
+    : [];
 
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -118,18 +114,37 @@ export function PublishSection({
             />
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Text weight="2">{t("account.publish.form.globalCategory.label")}</Text>
+            <Select
+              required
+              name="globalCategory"
+              value={formState.globalCategory}
+              onChange={onInputChange}
+              disabled={isFormDisabled}
+            >
+              <option value="" disabled>
+                {t("account.publish.form.globalCategory.placeholder")}
+              </option>
+              {GLOBAL_CATEGORY_SEGMENTS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {t(option.labelKey, option.defaultLabel)}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Text weight="2">{t("account.publish.form.category.label")}</Text>
             <Select
               required
               name="category"
               value={formState.category}
               onChange={onInputChange}
-              disabled={isFormDisabled}
+              disabled={isFormDisabled || !isGlobalCategorySelected}
             >
               <option value="" disabled>
                 {t("account.publish.form.category.placeholder")}
               </option>
-              {CATEGORY_OPTIONS.map((option) => (
+              {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
