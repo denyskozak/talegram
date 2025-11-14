@@ -9,6 +9,7 @@ const createInitialFormState = (): PublishFormState => ({
   title: "",
   author: "",
   description: "",
+  globalCategory: "",
   category: "",
   price: "",
   hashtags: [],
@@ -145,6 +146,16 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
       event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     ) => {
       const { name, value } = event.target;
+
+      if (name === "globalCategory") {
+        setFormState((prev) => ({
+          ...prev,
+          globalCategory: value,
+          category: "",
+        }));
+        return;
+      }
+
       setFormState((prev) => ({ ...prev, [name]: value }));
     },
     [],

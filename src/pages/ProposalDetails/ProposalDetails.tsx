@@ -328,6 +328,10 @@ export default function ProposalDetails(): JSX.Element {
                         </Title>
                         <div style={{display: "flex", flexDirection: "column", gap: 12}}>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                                <Text weight="2">{t("account.proposalDetails.globalCategory")}</Text>
+                                <Chip mode="outline">{proposal.globalCategory}</Chip>
+                            </div>
+                            <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.category")}</Text>
                                 <Chip mode="outline">{proposal.category}</Chip>
                             </div>

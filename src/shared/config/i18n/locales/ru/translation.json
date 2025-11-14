@@ -239,6 +239,10 @@
           "label": "Автор",
           "placeholder": "Введите имя автора"
         },
+        "globalCategory": {
+          "label": "Глобальная категория",
+          "placeholder": "Выберите глобальную категорию"
+        },
         "category": {
           "label": "Категория",
           "placeholder": "Выберите жанр или подборку"
@@ -278,6 +282,7 @@
       "toastError": "Не удалось отправить книгу. Попробуйте позже.",
       "toastMissingFile": "Прикрепите PDF-файл перед отправкой.",
       "toastMissingCover": "Добавьте изображение обложки.",
+      "toastMissingGlobalCategory": "Выберите глобальную категорию.",
       "toastMissingCategory": "Выберите категорию для книги.",
       "toastMissingPrice": "Укажите цену в Stars.",
       "toastInvalidPrice": "Введите неотрицательное число Stars.",
@@ -331,6 +336,7 @@
         "description": "Описание",
         "files": "Переданные файлы"
       },
+      "globalCategory": "Глобальная категория",
       "category": "Категория",
       "price": "Цена",
       "hashtags": "Хештеги",

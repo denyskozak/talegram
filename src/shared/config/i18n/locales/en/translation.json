@@ -239,6 +239,10 @@
           "label": "Author",
           "placeholder": "Enter the author name"
         },
+        "globalCategory": {
+          "label": "Global category",
+          "placeholder": "Select the global category"
+        },
         "category": {
           "label": "Category",
           "placeholder": "Select the genre or collection"
@@ -278,6 +282,7 @@
       "toastError": "Failed to submit the book. Try again later.",
       "toastMissingFile": "Attach the PDF file before submitting.",
       "toastMissingCover": "Add a cover image.",
+      "toastMissingGlobalCategory": "Choose the global category.",
       "toastMissingCategory": "Choose a category for the book.",
       "toastMissingPrice": "Set the price in Stars.",
       "toastInvalidPrice": "Enter a non-negative number of Stars.",
@@ -331,6 +336,7 @@
         "description": "Description",
         "files": "Submitted files"
       },
+      "globalCategory": "Global category",
       "category": "Category",
       "price": "Price",
       "hashtags": "Hashtags",
