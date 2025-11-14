@@ -50,6 +50,7 @@ function applyCors(req: http.IncomingMessage, res: http.ServerResponse) {
     res.setHeader('Vary', 'Origin');
 
     if (ALLOWED_ORIGINS.has(origin)) {
+        console.log("origin: ", origin);
         res.setHeader('Access-Control-Allow-Origin', origin);
         // Нужны ли куки/Authorization — оставляем true
         res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -75,6 +76,7 @@ function applyCors(req: http.IncomingMessage, res: http.ServerResponse) {
 
 const server = http.createServer(async (req, res) => {
     applyCors(req, res);
+
 
     res.setHeader('ngrok-skip-browser-warning', 'true');
 

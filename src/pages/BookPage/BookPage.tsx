@@ -48,6 +48,13 @@ export default function BookPage(): JSX.Element {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isConfirmingPurchase, setIsConfirmingPurchase] = useState(false);
   const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
+    const telegramUserId = useMemo(() => {
+        const user = launchParams?.tgWebAppData?.user;
+        const rawId = user?.id;
+
+
+        return String(rawId);
+    }, [launchParams]);
   const {
     bookFileUrl,
     ensureBookFileUrl,
@@ -65,20 +72,7 @@ export default function BookPage(): JSX.Element {
   const isFreeBook = Boolean(book && book.priceStars === 0);
   const hasFullAccess = isPurchased || isFreeBook;
 
-  const telegramUserId = useMemo(() => {
-    const user = launchParams?.tgWebAppData?.user;
-    const rawId = user?.id;
 
-    if (typeof rawId === "number") {
-      return rawId.toString(10);
-    }
-
-    if (typeof rawId === "string" && rawId.trim().length > 0) {
-      return rawId.trim();
-    }
-
-    return undefined;
-  }, [launchParams]);
 
   const loadBook = useCallback(async () => {
     if (!id) {
