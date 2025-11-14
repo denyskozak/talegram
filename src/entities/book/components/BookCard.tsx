@@ -47,7 +47,9 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
             {book.title}
           </Title>
           <Text style={{ color: "var(--app-subtitle-color)" }}>{book.authors.join(", ")}</Text>
-          <BookRating value={book.rating.average} votes={book.rating.votes} />
+          {book.rating.average > 0 && (
+            <BookRating value={book.rating.average} votes={book.rating.votes} />
+          )}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {book.tags.slice(0, 3).map((tag) => (
               <Chip key={tag} mode="outline">

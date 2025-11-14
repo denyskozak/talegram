@@ -216,18 +216,26 @@
       "tonBadge": "TON NFT",
       "status": {
         "owned": "Owned",
-        "listed": "Listed for sale"
+        "listed": "Listed for sale",
+        "liked": "Liked"
       },
       "purchased": "Purchased {{value}}",
       "paymentId": "Payment ID {{id}}",
       "loading": "Loading your books...",
       "empty": "You haven't purchased any books yet.",
+      "emptyLiked": "You haven't liked any books yet.",
       "loadError": "We couldn't load your bookshelf.",
       "retry": "Try again",
+      "filters": {
+        "purchased": "Purchased",
+        "liked": "Liked"
+      },
       "actions": {
         "read": "Read",
         "download": "Download"
       },
+      "like": "Like \"{{title}}\"",
+      "unlike": "Remove like from \"{{title}}\"",
       "toast": {
         "missingFile": "The download link isn't ready yet. Please try again soon.",
         "downloadError": "We couldn't download your book. Try again later."

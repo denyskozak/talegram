@@ -38,7 +38,10 @@ export type MyBook = {
     walrusBlobId: string | null;
     walrusFileId: string | null;
   };
+  liked: boolean;
 };
+
+export type MyBooksFilter = "purchased" | "liked";
 
 export type VotingProposal = ProposalForVoting & {
   coverPreviewUrl?: string | null;
