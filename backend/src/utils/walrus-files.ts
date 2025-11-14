@@ -2,6 +2,9 @@ import { Buffer } from 'node:buffer';
 
 import { suiClient } from '../services/walrus-storage.js';
 
+type WriteWalrusFilesParams = Parameters<typeof suiClient.walrus.writeFiles>[0];
+type WriteWalrusFilesResult = Awaited<ReturnType<typeof suiClient.walrus.writeFiles>>;
+
 const MAX_CACHE_SIZE = 100;
 const fileCache = new Map<string, string | null>();
 
@@ -104,4 +107,34 @@ export async function fetchWalrusFilesBase64(
 export async function fetchWalrusFileBase64(id: string): Promise<string | null> {
   const result = await fetchWalrusFilesBase64([id]);
   return result.get(id.trim()) ?? null;
+}
+
+export async function writeWalrusFiles(
+  params: WriteWalrusFilesParams,
+): Promise<WriteWalrusFilesResult> {
+  const result = await suiClient.walrus.writeFiles(params);
+
+  await Promise.all(
+    result.map(async (item, index) => {
+      if (!item) {
+        return;
+      }
+
+      try {
+        const file = params.files[index];
+        if (!file) {
+          return;
+        }
+
+        const bytes = await file.bytes();
+        const base64 = Buffer.from(bytes).toString('base64');
+        touchCacheEntry(item.id, base64);
+      } catch (error) {
+        // Ignore caching errors but log them for visibility.
+        console.error('Failed to cache Walrus file after upload', error);
+      }
+    }),
+  );
+
+  return result;
 }

@@ -7,6 +7,7 @@ import {
   listBooks,
   listCategories,
   listCategoryTags,
+  listGlobalCategories,
   listReviews,
 } from '../data/catalog.js';
 import { getPurchaseDetails } from '../stores/purchasesStore.js';
@@ -52,6 +53,7 @@ export const catalogRouter = createRouter({
   listCategories: procedure
     .input(listCategoriesInput.optional())
     .query(({ input }) => listCategories(input?.search)),
+  listGlobalCategories: procedure.query(() => listGlobalCategories()),
   listBooks: procedure
     .input(listBooksInput.optional())
     .query(async ({ input }) => {

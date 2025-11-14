@@ -3,9 +3,9 @@ import { TRPCError } from '@trpc/server';
 import { WalrusFile } from '@mysten/walrus';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
-import { suiClient } from '../walrus-storage.js';
 import { keypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
+import { writeWalrusFiles } from '../../utils/walrus-files.js';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -101,7 +101,7 @@ export async function createBookProposal(
       },
   });
 
-  const [uploadResult, coverUploadResult] = await suiClient.walrus.writeFiles({
+  const [uploadResult, coverUploadResult] = await writeWalrusFiles({
       files: [bookFile, coverFile],
       epochs: 3,
       deletable: true,

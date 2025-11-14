@@ -41,11 +41,25 @@ export function HeaderBar(): JSX.Element {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <img
-            src="/logo-v-1.webp"
-            alt={t("app.name")}
-            style={{ width: 32, height: 32, borderRadius: 8 }}
-          />
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            aria-label={t("app.name")}
+            style={{
+              display: "inline-flex",
+              padding: 0,
+              margin: 0,
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+            }}
+          >
+            <img
+              src="/logo-v-1.webp"
+              alt={t("app.name")}
+              style={{ width: 32, height: 32, borderRadius: 8 }}
+            />
+          </button>
           <Title level="2" weight="2" style={{ cursor: "pointer" }} onClick={() => navigate("/")}>
             {t("app.name")}
           </Title>
