@@ -116,6 +116,9 @@ export class BookProposal {
   @Column({ name: 'reviewer_notes', type: 'text', nullable: true })
   reviewerNotes!: string | null;
 
+  @Column({ name: 'is_deleted', type: 'boolean', default: false })
+  isDeleted!: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt!: Date;
 
