@@ -141,7 +141,9 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
   }, []);
 
   const handleInputChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (
+      event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    ) => {
       const { name, value } = event.target;
       setFormState((prev) => ({ ...prev, [name]: value }));
     },
