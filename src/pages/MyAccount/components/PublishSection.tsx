@@ -1,4 +1,4 @@
-import { Button, Card, Text, Title } from "@telegram-apps/telegram-ui";
+import { Button, Card, Select, Text, Title } from "@telegram-apps/telegram-ui";
 import type {
   ChangeEvent,
   FormEvent,
@@ -12,6 +12,19 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
 
+const BOOK_CATEGORY_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: "fiction", label: "Fiction — Художественная литература" },
+  { value: "non-fiction", label: "Non-Fiction — Нон-фикшн" },
+  { value: "science-fiction", label: "Science Fiction — Научная фантастика" },
+  { value: "fantasy", label: "Fantasy — Фэнтези" },
+  { value: "mystery-thriller", label: "Mystery & Thriller — Детективы и триллеры" },
+  { value: "romance", label: "Romance — Романы о любви" },
+  { value: "historical-fiction", label: "Historical Fiction — Историческая проза" },
+  { value: "self-help", label: "Self-Help — Саморазвитие" },
+  { value: "business-finance", label: "Business & Finance — Бизнес и финансы" },
+  { value: "young-adult", label: "Young Adult — Подростковая литература" },
+];
+
 export type PublishSectionProps = {
   formState: PublishFormState;
   theme: ThemeColors;
@@ -22,7 +35,9 @@ export type PublishSectionProps = {
   fileInputRef: RefObject<HTMLInputElement>;
   coverInputRef: RefObject<HTMLInputElement>;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onInputChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  onInputChange: (
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => void;
   onFileSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   onCoverSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   onHashtagAdd: (value: string) => void;
@@ -107,24 +122,26 @@ export function PublishSection({
               }}
             />
           </label>
-          <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Text weight="2">{t("account.publish.form.category.label")}</Text>
-            <input
+            <Select
               required
               name="category"
               value={formState.category}
               onChange={onInputChange}
-              placeholder={t("account.publish.form.category.placeholder")}
               disabled={isFormDisabled}
-              style={{
-                padding: "12px 14px",
-                borderRadius: 12,
-                border: `1px solid ${theme.separator}`,
-                background: theme.section,
-                color: theme.text,
-              }}
-            />
-          </label>
+              style={{ width: "100%" }}
+            >
+              <option value="" disabled hidden>
+                {t("account.publish.form.category.placeholder")}
+              </option>
+              {BOOK_CATEGORY_OPTIONS.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </Select>
+          </div>
           <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Text weight="2">{t("account.publish.form.price.label")}</Text>
             <input

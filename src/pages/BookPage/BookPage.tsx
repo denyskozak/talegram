@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
 import type { Book, ID } from "@/entities/book/types";
+import { copyTextToClipboard } from "@telegram-apps/sdk";
 import { downloadFile } from "@telegram-apps/sdk-react";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
@@ -124,7 +125,7 @@ export default function BookPage(): JSX.Element {
 
   const handleShare = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await copyTextToClipboard(window.location.href);
       showToast(t("book.toast.linkCopied"));
     } catch (err) {
       showToast(t("book.toast.linkFailed"));

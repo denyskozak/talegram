@@ -29,7 +29,7 @@ export type UsePublishFormResult = {
   fileInputRef: RefObject<HTMLInputElement>;
   coverInputRef: RefObject<HTMLInputElement>;
   handleInputChange: (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   handleFileSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   handleCoverSelect: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -141,7 +141,7 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
   }, []);
 
   const handleInputChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value } = event.target;
       setFormState((prev) => ({ ...prev, [name]: value }));
     },

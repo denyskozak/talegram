@@ -13,6 +13,50 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
 import "./ReadingOverlay.css";
 
+const ensureCanvasClipCompatibility = (() => {
+  let patched = false;
+
+  return () => {
+    if (patched) {
+      return;
+    }
+
+    if (typeof window === "undefined" || typeof window.CanvasRenderingContext2D === "undefined") {
+      return;
+    }
+
+    const contextPrototype = window.CanvasRenderingContext2D.prototype;
+    const originalClip = contextPrototype.clip;
+
+    const patchedClip: typeof contextPrototype.clip = function patchedClip(
+      pathOrFillRule?: CanvasFillRule | Path2D | { name?: CanvasFillRule } | null,
+      fillRule?: CanvasFillRule,
+    ) {
+      if (pathOrFillRule == null && typeof fillRule === "undefined") {
+        return originalClip.call(this);
+      }
+
+      if (pathOrFillRule && typeof pathOrFillRule === "object") {
+        const candidate = pathOrFillRule as { name?: CanvasFillRule };
+        if (typeof candidate.name === "string") {
+          return originalClip.call(this, candidate.name);
+        }
+      }
+
+      return originalClip.call(
+        this,
+        pathOrFillRule as CanvasFillRule | Path2D | undefined,
+        fillRule,
+      );
+    };
+
+    contextPrototype.clip = patchedClip;
+    patched = true;
+  };
+})();
+
+ensureCanvasClipCompatibility();
+
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 type ViewerPalette = {
