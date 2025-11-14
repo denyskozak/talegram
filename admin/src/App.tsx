@@ -5,6 +5,7 @@ import { BookListPage } from './pages/BookListPage.js';
 import { BookCreatePage } from './pages/BookCreatePage.js';
 import { BookEditPage } from './pages/BookEditPage.js';
 import { AuthorListPage } from './pages/AuthorListPage.js';
+import { SettingsPage } from './pages/SettingsPage.js';
 import { AdminLayout } from './components/AdminLayout.js';
 
 function RequireAuth({ children }: { children: React.ReactNode }): JSX.Element {
@@ -38,6 +39,9 @@ export default function App(): JSX.Element {
         </Route>
         <Route path="authors">
           <Route index element={<AuthorListPage />} />
+        </Route>
+        <Route path="settings">
+          <Route index element={<SettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

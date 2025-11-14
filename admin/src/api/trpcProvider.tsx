@@ -6,24 +6,46 @@ type TrpcContextValue = {
   client: TRPCClient<AppRouter>;
   token: string | null;
   setToken: (token: string | null) => void;
+  backendUrl: string;
+  defaultBackendUrl: string;
+  setBackendUrl: (url: string) => void;
 };
 
 const DEFAULT_BACKEND_URL = 'http://localhost:5174/api';
 const STORAGE_KEY = 'talegram-admin-token';
+const BACKEND_URL_STORAGE_KEY = 'talegram-admin-backend-url';
 
-function resolveBackendUrl(): string {
-  const rawUrl = import.meta.env.VITE_BACKEND_URL ?? DEFAULT_BACKEND_URL;
-  const trimmed = rawUrl.trim();
-  if (trimmed.length === 0) {
-    return DEFAULT_BACKEND_URL;
+function normalizeBackendUrl(raw: string | null | undefined): string | null {
+  if (typeof raw !== 'string') {
+    return null;
   }
 
-  return trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+  const trimmed = raw.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return null;
+    }
+
+    // Ensure consistent representation without trailing slash.
+    const normalized = url.href.endsWith('/') ? url.href.slice(0, -1) : url.href;
+    return normalized;
+  } catch (error) {
+    console.error('Failed to normalize backend URL', error);
+    return null;
+  }
 }
 
-const backendUrl = resolveBackendUrl();
+function resolveBackendUrl(): string {
+  const normalized = normalizeBackendUrl(import.meta.env.VITE_BACKEND_URL);
+  return normalized ?? DEFAULT_BACKEND_URL;
+}
 
-function createClient(token: string | null): TRPCClient<AppRouter> {
+function createClient(backendUrl: string, token: string | null): TRPCClient<AppRouter> {
   return createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
@@ -48,25 +70,60 @@ function createClient(token: string | null): TRPCClient<AppRouter> {
 const TrpcContext = createContext<TrpcContextValue | undefined>(undefined);
 
 export function TrpcProvider({ children }: { children: React.ReactNode }): JSX.Element {
+  const defaultBackendUrl = resolveBackendUrl();
   const [token, setTokenState] = useState<string | null>(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
     const stored = window.sessionStorage.getItem(STORAGE_KEY);
     return stored && stored.length > 0 ? stored : null;
+  });
+  const [backendUrl, setBackendUrlState] = useState<string>(() => {
+    if (typeof window === 'undefined') {
+      return defaultBackendUrl;
+    }
+
+    const stored = window.localStorage.getItem(BACKEND_URL_STORAGE_KEY);
+    const normalized = normalizeBackendUrl(stored);
+    return normalized ?? defaultBackendUrl;
   });
 
   const setToken = useCallback((value: string | null) => {
     setTokenState(value);
-    if (value) {
-      window.sessionStorage.setItem(STORAGE_KEY, value);
-    } else {
-      window.sessionStorage.removeItem(STORAGE_KEY);
+    if (typeof window !== 'undefined') {
+      if (value) {
+        window.sessionStorage.setItem(STORAGE_KEY, value);
+      } else {
+        window.sessionStorage.removeItem(STORAGE_KEY);
+      }
     }
   }, []);
 
-  const client = useMemo(() => createClient(token), [token]);
+  const setBackendUrl = useCallback(
+    (value: string) => {
+      const normalized = normalizeBackendUrl(value) ?? defaultBackendUrl;
+      setBackendUrlState(normalized);
+
+      if (typeof window !== 'undefined') {
+        if (normalized === defaultBackendUrl) {
+          window.localStorage.removeItem(BACKEND_URL_STORAGE_KEY);
+        } else {
+          window.localStorage.setItem(BACKEND_URL_STORAGE_KEY, normalized);
+        }
+      }
+
+      // Reset admin session to avoid leaking credentials across environments.
+      setToken(null);
+    },
+    [defaultBackendUrl, setToken],
+  );
+
+  const client = useMemo(() => createClient(backendUrl, token), [backendUrl, token]);
 
   const value = useMemo<TrpcContextValue>(
-    () => ({ client, token, setToken }),
-    [client, token, setToken],
+    () => ({ client, token, setToken, backendUrl, setBackendUrl, defaultBackendUrl }),
+    [client, token, setToken, backendUrl, setBackendUrl, defaultBackendUrl],
   );
 
   return <TrpcContext.Provider value={value}>{children}</TrpcContext.Provider>;
@@ -80,3 +137,5 @@ export function useTrpc(): TrpcContextValue {
 
   return context;
 }
+
+export { DEFAULT_BACKEND_URL, normalizeBackendUrl };
