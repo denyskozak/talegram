@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, SegmentedControl, Title } from "@telegram-apps/telegram-ui";
+import type { CSSProperties } from "react";
+import { Button, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import type { Book } from "@/entities/book/types";
-import { themePalette } from "@/shared/config";
-import { getSystemTheme, ReaderTheme } from "@/shared/lib";
+import { useTMA } from "@/app/providers/TMAProvider";
+import type { ThemeParams } from "@telegram-apps/sdk";
 
 import { Document, Page, pdfjs } from "react-pdf";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
@@ -13,6 +14,83 @@ import "react-pdf/dist/esm/Page/TextLayer.css";
 import "./ReadingOverlay.css";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
+
+type ViewerPalette = {
+  background: string;
+  color: string;
+  border: string;
+  page: {
+    background: string;
+    border: string;
+    shadow: string;
+    filter?: string;
+  };
+};
+
+const LIGHT_VIEWER_PALETTE: ViewerPalette = {
+  background: "#fdfdfd",
+  color: "#1c1c1c",
+  border: "rgba(15, 23, 42, 0.12)",
+  page: {
+    background: "#ffffff",
+    border: "rgba(15, 23, 42, 0.08)",
+    shadow: "rgba(15, 23, 42, 0.12)",
+  },
+};
+
+const DARK_VIEWER_PALETTE: ViewerPalette = {
+  background: "#121212",
+  color: "#f1f5f9",
+  border: "rgba(248, 250, 252, 0.16)",
+  page: {
+    background: "#1b2029",
+    border: "rgba(148, 163, 184, 0.22)",
+    shadow: "rgba(15, 23, 42, 0.55)",
+    filter: "invert(0.92) hue-rotate(180deg)",
+  },
+};
+
+function getLuminance(color?: string): number | null {
+  if (!color) {
+    return null;
+  }
+
+  const normalized = color.startsWith("#") ? color.slice(1) : color;
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return null;
+  }
+
+  const r = parseInt(normalized.slice(0, 2), 16) / 255;
+  const g = parseInt(normalized.slice(2, 4), 16) / 255;
+  const b = parseInt(normalized.slice(4, 6), 16) / 255;
+
+  const toLinear = (channel: number) =>
+    channel <= 0.03928 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+
+  const linearR = toLinear(r);
+  const linearG = toLinear(g);
+  const linearB = toLinear(b);
+
+  return 0.2126 * linearR + 0.7152 * linearG + 0.0722 * linearB;
+}
+
+function getViewerPalette(theme?: ThemeParams | null): ViewerPalette {
+  const luminance = getLuminance(theme?.bg_color);
+  const isDark = luminance !== null ? luminance < 0.35 : false;
+  const base = isDark ? DARK_VIEWER_PALETTE : LIGHT_VIEWER_PALETTE;
+
+  return {
+    background: theme?.bg_color ?? base.background,
+    color: theme?.text_color ?? base.color,
+    border: theme?.section_separator_color ?? base.border,
+    page: {
+      background: theme?.secondary_bg_color ?? base.page.background,
+      border: theme?.section_separator_color ?? base.page.border,
+      shadow: base.page.shadow,
+      filter: isDark ? base.page.filter : undefined,
+    },
+  };
+}
 
 type ReadingOverlayProps = {
   book: Book;
@@ -23,14 +101,31 @@ type ReadingOverlayProps = {
 export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverlayProps): JSX.Element {
   const { t } = useTranslation();
   const [fontSize, setFontSize] = useState(18);
-  const [theme, setTheme] = useState<ReaderTheme>(() => getSystemTheme());
-  const palette = themePalette[theme];
+  const { theme } = useTMA();
+  const palette = useMemo(() => getViewerPalette(theme), [theme]);
   const [numPages, setNumPages] = useState(0);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [viewerWidth, setViewerWidth] = useState(0);
   const viewerContainerRef = useRef<HTMLDivElement | null>(null);
 
   const showPreviewContent = preview || !book.bookFileURL;
+
+  const documentOptions = useMemo(
+    () => ({
+      standardFontDataUrl: "pdfjs-dist/standard_fonts/",
+    }),
+    [],
+  );
+
+  const viewerThemeStyles = useMemo<CSSProperties>(
+    () => ({
+      "--reader-page-background": palette.page.background,
+      "--reader-page-border": palette.page.border,
+      "--reader-page-shadow": palette.page.shadow,
+      "--reader-page-filter": palette.page.filter ?? "none",
+    }),
+    [palette],
+  );
 
   const paragraphs = useMemo(() => {
     const author = book.authors[0] ?? t("book.reader.unknownAuthor");
@@ -76,7 +171,8 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
     }
 
     const updateWidth = () => {
-      setViewerWidth(container.clientWidth);
+      const width = container.clientWidth;
+      setViewerWidth((current) => (current === width ? current : width));
     };
 
     updateWidth();
@@ -113,6 +209,14 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
   const increaseFont = () => {
     setFontSize((current) => Math.min(26, current + 2));
   };
+
+  const handlePageRenderError = useCallback((error: Error) => {
+    if ((error as { name?: string }).name === "AbortException") {
+      return;
+    }
+
+    console.error("Failed to render page", error);
+  }, []);
 
   return (
     <div
@@ -168,22 +272,10 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
               flexWrap: "wrap",
               gap: 12,
               alignItems: "center",
+              justifyContent: "space-between",
               borderBottom: `1px solid ${palette.border}`,
             }}
           >
-            <div style={{ width: "70%", margin: "0 auto" }}>
-              <SegmentedControl>
-                {(["light", "sepia", "dark"] as ReaderTheme[]).map((value) => (
-                  <SegmentedControl.Item
-                    key={value}
-                    selected={value === theme}
-                    onClick={() => setTheme(value)}
-                  >
-                    {t(`book.reader.theme.${value}` as const)}
-                  </SegmentedControl.Item>
-                ))}
-              </SegmentedControl>
-            </div>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <span style={{ fontSize: 13, opacity: 0.7 }}>{t("book.reader.fontLabel")}</span>
               <Button
@@ -193,7 +285,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
                 disabled={fontSize <= 14}
                 aria-label={t("book.reader.fontDecrease")}
               >
-                <span style={{ color: themePalette[theme].color }}>A-</span>
+                <span style={{ color: palette.color }}>A-</span>
               </Button>
               <Button
                 size="s"
@@ -202,7 +294,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
                 disabled={fontSize >= 26}
                 aria-label={t("book.reader.fontIncrease")}
               >
-                <span style={{ color: themePalette[theme].color }}>A+</span>
+                <span style={{ color: palette.color }}>A+</span>
               </Button>
             </div>
 
@@ -229,7 +321,6 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
         <div
           ref={viewerContainerRef}
           className="reading-overlay__viewer"
-          data-reader-theme={theme}
           style={{
             flex: 1,
             padding: "20px",
@@ -239,6 +330,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
             backgroundColor: palette.background,
             overflowY: "auto",
             scrollbarWidth: "thin",
+            ...viewerThemeStyles,
           }}
         >
           <Document
@@ -257,9 +349,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
                 {pdfError ?? t("book.reader.loadError")}
               </div>
             }
-            options={{
-              standardFontDataUrl: "pdfjs-dist/standard_fonts/",
-            }}
+            options={documentOptions}
           >
             {Array.from({ length: numPages }, (_, index) => (
               <Page
@@ -268,6 +358,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
                 pageNumber={index + 1}
                 width={viewerWidth ? Math.min(viewerWidth - 40, 900) : undefined}
                 renderAnnotationLayer={false}
+                onRenderError={handlePageRenderError}
                 loading={
                   <div style={{ textAlign: "center", padding: "16px", color: palette.color }}>
                     {t("book.reader.loading")}
