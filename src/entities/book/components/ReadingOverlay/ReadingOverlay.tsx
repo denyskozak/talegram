@@ -7,11 +7,11 @@ import type { Book } from "@/entities/book/types";
 import { useTMA } from "@/app/providers/TMAProvider";
 import type { ThemeParams } from "@telegram-apps/sdk";
 
-import { SpecialZoomLevel, Viewer, Worker } from "@react-pdf-viewer/core";
+import { SpecialZoomLevel, Viewer } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
-import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+// import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "./ReadingOverlay.css";
 
 type ViewerPalette = {
@@ -97,67 +97,15 @@ type ReadingOverlayProps = {
   preview?: boolean;
 };
 
-export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Element {
   const { t } = useTranslation();
-  const [fontSize, setFontSize] = useState(18);
   const { theme } = useTMA();
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
-  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
-
-  const showPreviewContent = preview || !book.bookFileURL;
-
-  const viewerThemeStyles = useMemo<CSSProperties>(
-    () => ({
-      "--reader-page-background": palette.page.background,
-      "--reader-page-border": palette.page.border,
-      "--reader-page-shadow": palette.page.shadow,
-      "--reader-page-filter": palette.page.filter ?? "none",
-    }),
-    [palette],
-  );
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
   const luminance = useMemo(() => getLuminance(theme?.bg_color), [theme]);
   const isDarkTheme = luminance !== null ? luminance < 0.35 : false;
 
-  const paragraphs = useMemo(() => {
-    const author = book.authors[0] ?? t("book.reader.unknownAuthor");
-    const focus = book.tags[0]
-      ? t("book.reader.sampleFocusTag", { tag: book.tags[0] })
-      : t("book.reader.sampleFocusFallback");
-
-    return [
-      t("book.reader.sampleIntro", { title: book.title, author }),
-      book.description,
-      t("book.reader.sampleMiddle", { focus }),
-      t("book.reader.sampleOutro"),
-    ];
-  }, [book.authors, book.description, book.tags, book.title, t]);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onClose();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose]);
-
-  const decreaseFont = () => {
-    setFontSize((current) => Math.max(14, current - 2));
-  };
-
-  const increaseFont = () => {
-    setFontSize((current) => Math.min(26, current + 2));
-  };
 
   const renderViewerLoader = useCallback(
     () => (
@@ -225,86 +173,14 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
           {t("book.reader.close")}
         </Button>
       </header>
-      {showPreviewContent ? (
-        <>
-          <div
-            style={{
-              padding: "12px 20px",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 12,
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderBottom: `1px solid ${palette.border}`,
-            }}
-          >
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <span style={{ fontSize: 13, opacity: 0.7 }}>{t("book.reader.fontLabel")}</span>
-              <Button
-                size="s"
-                mode="outline"
-                onClick={decreaseFont}
-                disabled={fontSize <= 14}
-                aria-label={t("book.reader.fontDecrease")}
-              >
-                <span style={{ color: palette.color }}>A-</span>
-              </Button>
-              <Button
-                size="s"
-                mode="outline"
-                onClick={increaseFont}
-                disabled={fontSize >= 26}
-                aria-label={t("book.reader.fontIncrease")}
-              >
-                <span style={{ color: palette.color }}>A+</span>
-              </Button>
-            </div>
-
-            <span style={{ fontSize: 12, opacity: 0.6 }}>{t("book.reader.demoNotice")}</span>
-          </div>
-          <div
-            style={{
-              flex: 1,
-              padding: "20px 20px 32px",
-              fontSize,
-              lineHeight: 1.7,
-              overflowY: "auto",
-              scrollbarWidth: "thin",
-            }}
-          >
-            {paragraphs.map((paragraph, index) => (
-              <p key={index} style={{ margin: 0, marginBottom: 20 }}>
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        </>
-      ) : (
-        <div
-          className="reading-overlay__viewer"
-          style={{
-            flex: 1,
-            padding: "20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-            backgroundColor: palette.background,
-            overflow: "hidden",
-            ...viewerThemeStyles,
-          }}
-        >
-          <Worker workerUrl={pdfWorkerSrc}>
-            <Viewer
-              fileUrl={book.bookFileURL ?? ""}
-              plugins={[defaultLayoutPluginInstance]}
-              theme={isDarkTheme ? "dark" : "light"}
-              defaultScale={SpecialZoomLevel.PageFit}
-              renderLoader={renderViewerLoader}
-              renderError={renderViewerError}
-            />
-          </Worker>
-        </div>
-      )}
+        <Viewer
+            fileUrl={book.bookFileURL ?? ""}
+            plugins={[defaultLayoutPluginInstance]}
+            theme={isDarkTheme ? "dark" : "light"}
+            defaultScale={SpecialZoomLevel.PageFit}
+            renderLoader={renderViewerLoader}
+            renderError={renderViewerError}
+        />
     </div>
   );
 }
