@@ -199,7 +199,7 @@
   "globalCategories": {
     "article": "Articles",
     "book": "Books",
-    "comic": "Comics"
+    "comics": "Comics"
   },
   "account": {
     "title": "My account",
@@ -253,6 +253,10 @@
         "category": {
           "label": "Category",
           "placeholder": "Select the genre or collection"
+        },
+        "free": {
+          "label": "Free?",
+          "hint": "Readers will access it at no cost."
         },
         "price": {
           "label": "Price in Stars ⭐",

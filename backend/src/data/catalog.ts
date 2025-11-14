@@ -77,6 +77,31 @@ function matchesTags(entity: BookEntity, tags?: string[]): boolean {
   return tags.every((tag) => entityTags.includes(tag));
 }
 
+function normalizeGlobalCategory(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLocaleLowerCase();
+  if (normalized.length === 0) {
+    return null;
+  }
+
+  if (normalized.startsWith('article')) {
+    return 'article';
+  }
+
+  if (normalized.startsWith('book')) {
+    return 'book';
+  }
+
+  if (normalized.startsWith('comic')) {
+    return 'comics';
+  }
+
+  return normalized;
+}
+
 async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
   return {
     id: entity.id,
@@ -120,12 +145,22 @@ function sortEntities(entities: BookEntity[], sort: BookSort): BookEntity[] {
   return sorted.map((item) => item.entity);
 }
 
-export async function listCategories(search?: string): Promise<Category[]> {
+export async function listCategories(params: {
+  search?: string;
+  globalCategory?: string;
+} = {}): Promise<Category[]> {
   const repository = await getBookRepository();
-  const entities = await repository.find({ select: ['categories'] });
+  const entities = await repository.find({ relations: { proposal: true } });
+
+  const normalizedGlobalCategory = normalizeGlobalCategory(params.globalCategory);
+  const filteredByGlobalCategory = normalizedGlobalCategory
+    ? entities.filter((entity) =>
+        normalizeGlobalCategory(entity.proposal?.globalCategory) === normalizedGlobalCategory,
+      )
+    : entities;
 
   const counts = new Map<string, number>();
-  for (const entity of entities) {
+  for (const entity of filteredByGlobalCategory) {
     const categories = ensureArray(entity.categories);
     for (const categoryId of categories) {
       counts.set(categoryId, (counts.get(categoryId) ?? 0) + 1);
@@ -142,11 +177,11 @@ export async function listCategories(search?: string): Promise<Category[]> {
     }))
     .sort((a, b) => a.title.localeCompare(b.title));
 
-  if (!search) {
+  if (!params.search) {
     return categories;
   }
 
-  const normalized = normalize(search);
+  const normalized = normalize(params.search);
   return categories.filter((category) =>
     normalize(category.title).includes(normalized) || normalize(category.slug).includes(normalized),
   );

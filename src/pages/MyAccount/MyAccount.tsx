@@ -365,19 +365,22 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
-    const trimmedPrice = formState.price.trim();
-    if (trimmedPrice.length === 0) {
-      showToast(t("account.publish.toastMissingPrice"));
-      return;
-    }
+    let normalizedPrice = 0;
+    if (!formState.isFree) {
+      const trimmedPrice = formState.price.trim();
+      if (trimmedPrice.length === 0) {
+        showToast(t("account.publish.toastMissingPrice"));
+        return;
+      }
 
-    const parsedPrice = Number.parseFloat(trimmedPrice);
-    if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-      showToast(t("account.publish.toastInvalidPrice"));
-      return;
-    }
+      const parsedPrice = Number.parseFloat(trimmedPrice);
+      if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+        showToast(t("account.publish.toastInvalidPrice"));
+        return;
+      }
 
-    const normalizedPrice = Math.round(parsedPrice);
+      normalizedPrice = Math.round(parsedPrice);
+    }
 
     if (!formState.file) {
       showToast(t("account.publish.toastMissingFile"));
