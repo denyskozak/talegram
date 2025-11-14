@@ -103,7 +103,6 @@ export const proposalsRouter = createRouter({
       };
     });
 
-      console.log("normalized: ", normalized);
     return {
       allowedVotersCount: getAllowedTelegramVoterUsernames().length,
       proposals: normalized,

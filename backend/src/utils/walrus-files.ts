@@ -9,7 +9,6 @@ const MAX_CACHE_SIZE = 100;
 const fileCache = new Map<string, string | null>();
 
 function touchCacheEntry(key: string, value: string | null): void {
-    console.log("touchCacheEntgry: ", key, value?.slice(0, 100));
   if (fileCache.has(key)) {
     fileCache.delete(key);
   }
@@ -26,7 +25,6 @@ function touchCacheEntry(key: string, value: string | null): void {
 export async function fetchWalrusFilesBase64(
   ids: string[],
 ): Promise<Map<string, string | null>> {
-    console.log("fileCache: ", fileCache);
   const uniqueIds = Array.from(
     new Set(
       ids
@@ -40,17 +38,16 @@ export async function fetchWalrusFilesBase64(
 
   for (const id of uniqueIds) {
     if (fileCache.has(id)) {
-        console.log("id: ", id);
-        console.log("fileCache: ", fileCache);
+
       const cached = fileCache.get(id) ?? null;
-        console.log("cached: ", cached);
+
       touchCacheEntry(id, cached);
       result.set(id, cached);
     } else {
       missingIds.push(id);
     }
   }
-    console.log("missingIds: ", missingIds);
+
   if (missingIds.length > 0) {
     try {
       const files = await suiClient.walrus.getFiles({ ids: missingIds });
@@ -62,7 +59,6 @@ export async function fetchWalrusFilesBase64(
           }
 
           if (!file) {
-              console.log("1: ", 1);
             touchCacheEntry(fileId, null);
             result.set(fileId, null);
             return;
@@ -71,7 +67,7 @@ export async function fetchWalrusFilesBase64(
           try {
             const bytes = await file.bytes();
             const base64 = Buffer.from(bytes).toString('base64');
-              console.log("2: ", 2);
+
             touchCacheEntry(fileId, base64);
             result.set(fileId, base64);
           } catch (error) {

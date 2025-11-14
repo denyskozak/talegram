@@ -133,8 +133,7 @@ export async function createBookProposal(
     : 0;
 
   const currency = 'stars';
-    console.log("uploadResult: ", uploadResult);
-    console.log("coverUploadResult: ", coverUploadResult);
+
   const proposal = bookProposalRepository.create({
     title: params.title,
     author: params.author,

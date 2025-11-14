@@ -67,12 +67,10 @@ export const catalogRouter = createRouter({
             .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
         ),
       );
-        console.log("coverWalrusFileIds: ", coverWalrusFileIds);
       const coverDataById =
         coverWalrusFileIds.length > 0
           ? await fetchWalrusFilesBase64(coverWalrusFileIds)
           : new Map<string, string | null>();
-        console.log("coverDataById: ", coverDataById);
       const items = result.items.map((book) => {
         const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
         const coverImageData =
@@ -83,7 +81,6 @@ export const catalogRouter = createRouter({
         return { ...bookForClient, coverImageData };
       });
 
-        console.log("items: ", items);
       return { ...result, items };
     }),
   getBook: procedure.input(getBookInput).query(async ({ input }) => {
