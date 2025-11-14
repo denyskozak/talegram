@@ -13,7 +13,7 @@ import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 import { fetchDecryptedFile } from "@/shared/api/storage";
-import {downloadFile} from "@telegram-apps/sdk-react";
+import { downloadFile } from "@telegram-apps/sdk-react";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -152,11 +152,18 @@ export default function ProposalDetails(): JSX.Element {
                 }),
             );
             const resolvedFileName = proposal.fileName ?? file.fileName ?? `${proposal.title}.pdf`;
-            if (downloadFile.isAvailable()) {
-                await downloadFile(
-                    downloadUrl,
-                    resolvedFileName,
-                );
+            try {
+                if (downloadFile.isAvailable()) {
+                    await downloadFile(
+                        downloadUrl,
+                        resolvedFileName,
+                    );
+                } else {
+                    showToast(t("account.voting.downloadError"));
+                    return;
+                }
+            } finally {
+                URL.revokeObjectURL(downloadUrl);
             }
         } catch (downloadError) {
             console.error("Failed to download proposal manuscript", downloadError);

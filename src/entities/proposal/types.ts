@@ -22,6 +22,7 @@ export type BookProposal = {
     fileName: string;
     fileSize?: number | null;
     status: ProposalStatus;
+    isDeleted: boolean;
     reviewerNotes?: string | null;
     createdAt: string;
     updatedAt: string;

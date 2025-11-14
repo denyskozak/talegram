@@ -53,7 +53,18 @@ function MyBookCard({
   onToggleLike,
 }: MyBookCardProps): JSX.Element {
   const { book, purchase } = item;
-  const coverUrl = useWalrusCover(book.coverWalrusFileId, book.coverMimeType);
+  const walrusCoverUrl = useWalrusCover(
+    book.coverImageData ? null : book.coverWalrusFileId,
+    book.coverMimeType,
+  );
+  const coverUrl = useMemo(() => {
+    if (book.coverImageData) {
+      const mimeType = book.coverMimeType ?? "image/jpeg";
+      return `data:${mimeType};base64,${book.coverImageData}`;
+    }
+
+    return walrusCoverUrl;
+  }, [book.coverImageData, book.coverMimeType, walrusCoverUrl]);
   const author = book.authors.join(", ");
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);

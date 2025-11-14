@@ -352,13 +352,8 @@ export default function MyAccount(): JSX.Element {
         if (downloadFile.isAvailable()) {
           await downloadFile(downloadUrl, fileName);
         } else {
-          const anchor = document.createElement("a");
-          anchor.href = downloadUrl;
-          anchor.rel = "noreferrer";
-          anchor.download = fileName;
-          document.body.appendChild(anchor);
-          anchor.click();
-          document.body.removeChild(anchor);
+          showToast(t("account.myBooks.toast.downloadError"));
+          return;
         }
       } catch (error) {
         console.error("Failed to download book", error);

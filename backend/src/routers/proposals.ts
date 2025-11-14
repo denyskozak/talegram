@@ -17,7 +17,7 @@ import {
 } from '../utils/telegram.js';
 
 const REQUIRED_APPROVALS = 1;
-const REQUIRED_REJECTIONS = 2;
+const REQUIRED_REJECTIONS = 1;
 
 
 
@@ -41,6 +41,7 @@ export const proposalsRouter = createRouter({
     await initializeDataSource();
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
     const proposals = await bookProposalRepository.find({
+      where: { isDeleted: false },
       order: { createdAt: 'DESC' },
     });
 
@@ -56,7 +57,7 @@ export const proposalsRouter = createRouter({
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposals = await bookProposalRepository.find({
-      where: { status: ProposalStatus.PENDING },
+      where: { status: ProposalStatus.PENDING, isDeleted: false },
       order: { createdAt: 'DESC' },
       relations: { votes: true },
     });
@@ -118,7 +119,7 @@ export const proposalsRouter = createRouter({
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposal = await bookProposalRepository.findOne({
-      where: { id: input.proposalId },
+      where: { id: input.proposalId, isDeleted: false },
       relations: { votes: true },
     });
     if (!proposal) {
@@ -164,6 +165,10 @@ export const proposalsRouter = createRouter({
 
       const proposal = await proposalRepository.findOne({ where: { id: input.proposalId } });
       if (!proposal) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
+      }
+
+      if (proposal.isDeleted) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
       }
 
@@ -277,8 +282,10 @@ export const proposalsRouter = createRouter({
       }
 
       if (negativeVotes >= REQUIRED_REJECTIONS) {
+        proposal.status = ProposalStatus.REJECTED;
+        proposal.isDeleted = true;
+        await proposalRepository.save(proposal);
         await voteRepository.delete({ proposalId: input.proposalId });
-        await proposalRepository.delete({ id: input.proposalId });
 
         return {
           status: 'REJECTED' as const,
