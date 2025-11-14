@@ -8,7 +8,7 @@ type TrpcContextValue = {
   setToken: (token: string | null) => void;
 };
 
-const DEFAULT_BACKEND_URL = 'http://localhost:3000';
+const DEFAULT_BACKEND_URL = 'http://localhost:5174/api';
 const STORAGE_KEY = 'talegram-admin-token';
 
 function resolveBackendUrl(): string {

@@ -23,7 +23,7 @@
     }
   },
   "footer": {
-    "languageLabel": "Language",
+    "languageLabel": "Language to",
     "contact": "Contact",
     "themeToggleLabel": "Switch to {{mode}}",
     "theme": {

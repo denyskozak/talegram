@@ -6,5 +6,13 @@ export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   server: {
     port: 5174,
+      proxy: {
+        '/api': {
+            target: 'http://localhost:3000',
+            rewrite: (path) => {
+                return path.replace('/api', '')
+            }
+        }
+      }
   },
 });
