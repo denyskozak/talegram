@@ -12,7 +12,7 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import { fetchDecryptedFile } from "@/shared/api/storage";
+import {buildFileDownloadUrl, fetchDecryptedFile} from "@/shared/api/storage";
 import { downloadFile } from "@telegram-apps/sdk-react";
 
 function formatDate(value: string): string {
@@ -36,7 +36,13 @@ export default function ProposalDetails(): JSX.Element {
     const [error, setError] = useState<string | null>(null);
     const [pendingVote, setPendingVote] = useState<VoteDirection | null>(null);
     const [isDownloading, setIsDownloading] = useState(false);
+    const telegramUserId = useMemo(() => {
+        const user = launchParams?.tgWebAppData?.user;
+        const rawId = user?.id;
 
+
+        return String(rawId);
+    }, [launchParams]);
     const allowedVoterUsernames = useMemo(
         () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
         [],
@@ -145,13 +151,9 @@ export default function ProposalDetails(): JSX.Element {
 
         setIsDownloading(true);
         try {
-            const file = await fetchDecryptedFile(proposal.walrusFileId);
-            const downloadUrl = URL.createObjectURL(
-                new Blob([file.data], {
-                    type: file.mimeType ?? proposal.mimeType ?? "application/octet-stream",
-                }),
-            );
-            const resolvedFileName = proposal.fileName ?? file.fileName ?? `${proposal.title}.pdf`;
+            const resolvedFileName = proposal.fileName ?? `${proposal.title}.pdf`;
+            const downloadUrl = buildFileDownloadUrl(proposal.walrusFileId, { telegramUserId });
+
             try {
                 if (downloadFile.isAvailable()) {
                     await downloadFile(

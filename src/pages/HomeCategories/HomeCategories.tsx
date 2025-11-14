@@ -1,163 +1,165 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {useEffect, useMemo, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
-import { Banner, Input, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
-import { useTranslation } from "react-i18next";
+import {Banner, Input, SegmentedControl, Text, Title} from "@telegram-apps/telegram-ui";
+import {useTranslation} from "react-i18next";
 
-import { CategoryTile } from "@/entities/category/components/CategoryTile";
-import type { Category } from "@/entities/category/types";
+import {CategoryTile} from "@/entities/category/components/CategoryTile";
+import type {Category} from "@/entities/category/types";
 import {
-  SPECIAL_CATEGORIES,
-  SPECIAL_CATEGORY_MAP,
-  type SpecialCategory,
-  isSpecialCategoryId,
+    SPECIAL_CATEGORIES,
+    SPECIAL_CATEGORY_MAP,
+    type SpecialCategory,
+    isSpecialCategoryId,
 } from "@/entities/category/customCategories";
-import { catalogApi } from "@/entities/book/api";
-import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
-import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
-import { EmptyState } from "@/shared/ui/EmptyState";
-import { ErrorBanner } from "@/shared/ui/ErrorBanner";
-import { CategoryTileSkeleton } from "@/shared/ui/Skeletons";
+import {catalogApi} from "@/entities/book/api";
+import {useDebouncedValue} from "@/shared/hooks/useDebouncedValue";
+import {useScrollRestoration} from "@/shared/hooks/useScrollRestoration";
+import {EmptyState} from "@/shared/ui/EmptyState";
+import {ErrorBanner} from "@/shared/ui/ErrorBanner";
+import {CategoryTileSkeleton} from "@/shared/ui/Skeletons";
+
 const GLOBAL_CATEGORIES = ["article", "book", "comics"] as const;
 
 type GlobalCategory = (typeof GLOBAL_CATEGORIES)[number];
 
 export default function HomeCategories(): JSX.Element {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-  const [search, setSearch] = useState("");
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState(0);
-  const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
-  const debouncedSearch = useDebouncedValue(search, 250);
-  const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
+    const navigate = useNavigate();
+    const {t} = useTranslation();
+    const [search, setSearch] = useState("");
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [refreshToken, setRefreshToken] = useState(0);
+    const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
+    const debouncedSearch = useDebouncedValue(search, 250);
+    const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
 
-  useScrollRestoration(`home-categories-${normalizedSearch || "all"}`);
+    useScrollRestoration(`home-categories-${normalizedSearch || "all"}`);
 
-  const translatedSpecialCategories = useMemo<SpecialCategory[]>(
-    () =>
-      SPECIAL_CATEGORIES.map((category) => ({
-        ...category,
-        title: t(category.titleKey),
-      })),
-    [t],
-  );
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+    const translatedSpecialCategories = useMemo<SpecialCategory[]>(
+        () =>
+            SPECIAL_CATEGORIES.map((category) => ({
+                ...category,
+                title: t(category.titleKey),
+            })),
+        [t],
+    );
+    useEffect(() => {
+        let cancelled = false;
+        const load = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
 
-        const query: { search?: string; globalCategory?: string } = {
-          globalCategory: selectedGlobalCategory,
+                const query: { search?: string; globalCategory?: string } = {
+                    globalCategory: selectedGlobalCategory,
+                };
+                if (debouncedSearch) {
+                    query.search = debouncedSearch;
+                }
+
+                const items = await catalogApi.listCategories(query);
+                if (!cancelled) {
+                    setCategories(items);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    console.error(err);
+                    setError(t("errors.loadCategories"));
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsLoading(false);
+                }
+            }
         };
-        if (debouncedSearch) {
-          query.search = debouncedSearch;
-        }
 
-        const items = await catalogApi.listCategories(query);
-        if (!cancelled) {
-          setCategories(items);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          console.error(err);
-          setError(t("errors.loadCategories"));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
+        void load();
 
-    void load();
+        return () => {
+            cancelled = true;
+        };
+    }, [debouncedSearch, refreshToken, selectedGlobalCategory, t]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedSearch, refreshToken, selectedGlobalCategory, t]);
-
-  const specialCategories: SpecialCategory[] = normalizedSearch
-    ? translatedSpecialCategories.filter((category) =>
-        [category.title, category.slug].some((value) =>
-          value.toLocaleLowerCase().includes(normalizedSearch),
-        ),
-      )
-    : translatedSpecialCategories;
-
-  const displayedCategories: Category[] = [...specialCategories, ...categories];
-
-  const handleCategoryClick = (category: Category) => {
-    if (isSpecialCategoryId(category.id)) {
-      navigate(SPECIAL_CATEGORY_MAP[category.id].path);
-      return;
-    }
-
-    navigate(`/category/${category.id}`);
-  };
-
-  return (
-    <main style={{ padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720 }}>
-      <Banner
-        header={t("homeCategories.alphaBanner.title")}
-        subheader={t("homeCategories.alphaBanner.description")}
-        style={{ marginBottom: 16 }}
-      />
-      <Title level="1" weight="2">
-        {t("homeCategories.title")}
-      </Title>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-        <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
-        <SegmentedControl
-          value={selectedGlobalCategory}
-          onChange={(value) => setSelectedGlobalCategory(value as GlobalCategory)}
-        >
-          {GLOBAL_CATEGORIES.map((category) => (
-            <SegmentedControl.Item key={category} value={category}>
-              {t(`globalCategories.${category}`, {
-                defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
-              })}
-            </SegmentedControl.Item>
-          ))}
-        </SegmentedControl>
-      </div>
-      <Input
-        type="search"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={t("homeCategories.searchPlaceholder")}
-        aria-label={t("homeCategories.searchPlaceholder")}
-        style={{ marginBottom: 16 }}
-      />
-      {error && <ErrorBanner  style={{  margin: "16px 0" }} message={error} onRetry={() => setRefreshToken((prev) => prev + 1)} />}
-      {isLoading && displayedCategories.length === 0 ? (
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <CategoryTileSkeleton key={index} />
-          ))}
-        </div>
-      ) : displayedCategories.length > 0 ? (
-        <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
-          {displayedCategories.map((category) => (
-            <CategoryTile
-              key={category.id}
-              category={category}
-              onClick={() => handleCategoryClick(category)}
-            />
-          ))}
-        </div>
-      ) : (
-        !isLoading && (
-          <EmptyState
-            title={t("homeCategories.emptyTitle")}
-            description={t("homeCategories.emptyDescription")}
-          />
+    const specialCategories: SpecialCategory[] = normalizedSearch
+        ? translatedSpecialCategories.filter((category) =>
+            [category.title, category.slug].some((value) =>
+                value.toLocaleLowerCase().includes(normalizedSearch),
+            ),
         )
-      )}
-    </main>
-  );
+        : translatedSpecialCategories;
+
+    const displayedCategories: Category[] = [...specialCategories, ...categories];
+
+    const handleCategoryClick = (category: Category) => {
+        if (isSpecialCategoryId(category.id)) {
+            navigate(SPECIAL_CATEGORY_MAP[category.id].path);
+            return;
+        }
+
+        navigate(`/category/${category.id}`);
+    };
+
+    return (
+        <main style={{padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720}}>
+            <Banner
+                header={t("homeCategories.alphaBanner.title")}
+                subheader={t("homeCategories.alphaBanner.description")}
+                style={{marginBottom: 16}}
+            />
+            <Title level="1" weight="2">
+                {t("homeCategories.title")}
+            </Title>
+            <div style={{display: "flex", flexDirection: "column", gap: 8, marginBottom: 16}}>
+                <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
+                <SegmentedControl
+                >
+                    {GLOBAL_CATEGORIES.map((category) => (
+                        <SegmentedControl.Item key={category}
+                                               onClick={() => setSelectedGlobalCategory(category)}
+                                               value={category} selected={selectedGlobalCategory === category}>
+                            {t(`globalCategories.${category}`, {
+                                defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
+                            })}
+                        </SegmentedControl.Item>
+                    ))}
+                </SegmentedControl>
+            </div>
+            <Input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t("homeCategories.searchPlaceholder")}
+                aria-label={t("homeCategories.searchPlaceholder")}
+                style={{marginBottom: 16}}
+            />
+            {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
+                                   onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
+            {isLoading && displayedCategories.length === 0 ? (
+                <div style={{display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"}}>
+                    {Array.from({length: 6}).map((_, index) => (
+                        <CategoryTileSkeleton key={index}/>
+                    ))}
+                </div>
+            ) : displayedCategories.length > 0 ? (
+                <div style={{display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"}}>
+                    {displayedCategories.map((category) => (
+                        <CategoryTile
+                            key={category.id}
+                            category={category}
+                            onClick={() => handleCategoryClick(category)}
+                        />
+                    ))}
+                </div>
+            ) : (
+                !isLoading && (
+                    <EmptyState
+                        title={t("homeCategories.emptyTitle")}
+                        description={t("homeCategories.emptyDescription")}
+                    />
+                )
+            )}
+        </main>
+    );
 }

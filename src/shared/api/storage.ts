@@ -19,8 +19,11 @@ export async function fetchDecryptedFile(
   const downloadUrl = buildFileDownloadUrl(fileId, { telegramUserId: options.telegramUserId ?? undefined });
   const response = await fetch(downloadUrl, {
     method: "GET",
-    credentials: "include",
+    // credentials: "include",
     signal: options.signal,
+      headers: {
+          "ngrok-skip-browser-warning": "true",
+      },
   });
 
   if (!response.ok) {
