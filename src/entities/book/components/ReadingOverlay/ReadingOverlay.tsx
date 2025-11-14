@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Button, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
@@ -7,13 +7,12 @@ import type { Book } from "@/entities/book/types";
 import { useTMA } from "@/app/providers/TMAProvider";
 import type { ThemeParams } from "@telegram-apps/sdk";
 
-import { Document, Page, pdfjs } from "react-pdf";
+import { SpecialZoomLevel, Viewer, Worker } from "@react-pdf-viewer/core";
+import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
+import "@react-pdf-viewer/core/lib/styles/index.css";
+import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
-import "react-pdf/dist/esm/Page/AnnotationLayer.css";
-import "react-pdf/dist/esm/Page/TextLayer.css";
 import "./ReadingOverlay.css";
-
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 type ViewerPalette = {
   background: string;
@@ -103,19 +102,9 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
   const [fontSize, setFontSize] = useState(18);
   const { theme } = useTMA();
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
-  const [numPages, setNumPages] = useState(0);
-  const [pdfError, setPdfError] = useState<string | null>(null);
-  const [viewerWidth, setViewerWidth] = useState(0);
-  const viewerContainerRef = useRef<HTMLDivElement | null>(null);
+  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
 
   const showPreviewContent = preview || !book.bookFileURL;
-
-  const documentOptions = useMemo(
-    () => ({
-      standardFontDataUrl: "pdfjs-dist/standard_fonts/",
-    }),
-    [],
-  );
 
   const viewerThemeStyles = useMemo<CSSProperties>(
     () => ({
@@ -126,6 +115,9 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
     }),
     [palette],
   );
+
+  const luminance = useMemo(() => getLuminance(theme?.bg_color), [theme]);
+  const isDarkTheme = luminance !== null ? luminance < 0.35 : false;
 
   const paragraphs = useMemo(() => {
     const author = book.authors[0] ?? t("book.reader.unknownAuthor");
@@ -159,49 +151,6 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
     };
   }, [onClose]);
 
-  useEffect(() => {
-    setNumPages(0);
-    setPdfError(null);
-  }, [book.bookFileURL]);
-
-  useEffect(() => {
-    const container = viewerContainerRef.current;
-    if (!container) {
-      return;
-    }
-
-    const updateWidth = () => {
-      const width = container.clientWidth;
-      setViewerWidth((current) => (current === width ? current : width));
-    };
-
-    updateWidth();
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateWidth();
-    });
-
-    resizeObserver.observe(container);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [showPreviewContent]);
-
-  const handleDocumentLoadSuccess = useCallback(({ numPages: totalPages }: { numPages: number }) => {
-    setNumPages(totalPages);
-    setPdfError(null);
-  }, []);
-
-  const handleDocumentLoadError = useCallback(
-    (error: Error) => {
-      console.error("Failed to render book file", error);
-      setPdfError(t("book.reader.loadError"));
-      setNumPages(0);
-    },
-    [t],
-  );
-
   const decreaseFont = () => {
     setFontSize((current) => Math.max(14, current - 2));
   };
@@ -210,13 +159,26 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
     setFontSize((current) => Math.min(26, current + 2));
   };
 
-  const handlePageRenderError = useCallback((error: Error) => {
-    if ((error as { name?: string }).name === "AbortException") {
-      return;
-    }
+  const renderViewerLoader = useCallback(
+    () => (
+      <div style={{ textAlign: "center", padding: "32px 16px", color: palette.color }}>
+        {t("book.reader.loading")}
+      </div>
+    ),
+    [palette.color, t],
+  );
 
-    console.error("Failed to render page", error);
-  }, []);
+  const renderViewerError = useCallback(
+    (error: unknown) => {
+      console.error("Failed to render book file", error);
+      return (
+        <div style={{ textAlign: "center", padding: "32px 16px", color: palette.color }}>
+          {t("book.reader.loadError")}
+        </div>
+      );
+    },
+    [palette.color, t],
+  );
 
   return (
     <div
@@ -319,7 +281,6 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
         </>
       ) : (
         <div
-          ref={viewerContainerRef}
           className="reading-overlay__viewer"
           style={{
             flex: 1,
@@ -328,46 +289,20 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
             flexDirection: "column",
             gap: 16,
             backgroundColor: palette.background,
-            overflowY: "auto",
-            scrollbarWidth: "thin",
+            overflow: "hidden",
             ...viewerThemeStyles,
           }}
         >
-          <Document
-            key={book.bookFileURL}
-            className="reading-overlay__document"
-            file={book.bookFileURL ?? undefined}
-            onLoadSuccess={handleDocumentLoadSuccess}
-            onLoadError={handleDocumentLoadError}
-            loading={
-              <div style={{ textAlign: "center", padding: "32px 16px", color: palette.color }}>
-                {t("book.reader.loading")}
-              </div>
-            }
-            error={
-              <div style={{ textAlign: "center", padding: "32px 16px", color: palette.color }}>
-                {pdfError ?? t("book.reader.loadError")}
-              </div>
-            }
-            options={documentOptions}
-          >
-            {Array.from({ length: numPages }, (_, index) => (
-              <Page
-                key={`page_${index + 1}`}
-                className="reading-overlay__page"
-                pageNumber={index + 1}
-                width={viewerWidth ? Math.min(viewerWidth - 40, 900) : undefined}
-                renderAnnotationLayer={false}
-                renderMode="svg"
-                onRenderError={handlePageRenderError}
-                loading={
-                  <div style={{ textAlign: "center", padding: "16px", color: palette.color }}>
-                    {t("book.reader.loading")}
-                  </div>
-                }
-              />
-            ))}
-          </Document>
+          <Worker workerUrl={pdfWorkerSrc}>
+            <Viewer
+              fileUrl={book.bookFileURL ?? ""}
+              plugins={[defaultLayoutPluginInstance]}
+              theme={isDarkTheme ? "dark" : "light"}
+              defaultScale={SpecialZoomLevel.PageFit}
+              renderLoader={renderViewerLoader}
+              renderError={renderViewerError}
+            />
+          </Worker>
         </div>
       )}
     </div>
