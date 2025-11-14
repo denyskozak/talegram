@@ -23,6 +23,7 @@ import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
 import { useBookReader } from "@/entities/book/hooks/useBookReader";
 import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
+import { buildFileDownloadUrl } from "@/shared/api/storage";
 import { BookPageSkeleton } from "./BookPageSkeleton";
 
 export default function BookPage(): JSX.Element {
@@ -198,20 +199,13 @@ export default function BookPage(): JSX.Element {
         return;
       }
 
-      const url = await ensureBookFileUrl(fileId, {
-        mimeType: book?.mimeType,
-      });
-      if (!url) {
-        showToast(t("book.toast.downloadFailed"));
-        return;
-      }
-
       const fileName = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
+      const downloadUrl = buildFileDownloadUrl(fileId, { telegramUserId });
       if (downloadFile.isAvailable()) {
-        await downloadFile(url, fileName);
+        await downloadFile(downloadUrl, fileName);
       } else {
         const anchor = document.createElement("a");
-        anchor.href = url;
+        anchor.href = downloadUrl;
         anchor.rel = "noreferrer";
         anchor.download = fileName;
         document.body.appendChild(anchor);
@@ -224,7 +218,7 @@ export default function BookPage(): JSX.Element {
     } finally {
       setIsDownloading(false);
     }
-  }, [book, ensureBookFileUrl, hasFullAccess, purchaseDetails, showToast, t]);
+  }, [book, hasFullAccess, purchaseDetails, showToast, t, telegramUserId]);
 
   const handleStartPurchase = useCallback(
     async (action: "buy" | "subscribe") => {

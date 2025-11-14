@@ -36,6 +36,7 @@ import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramU
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import { downloadFile } from "@telegram-apps/sdk-react";
+import { buildFileDownloadUrl } from "@/shared/api/storage";
 
 const LIKED_BOOKS_STORAGE_PREFIX = "talegram:liked-books";
 
@@ -346,19 +347,13 @@ export default function MyAccount(): JSX.Element {
 
       setDownloadingBookId(bookId);
       try {
-        const url = await ensureBookFileUrl(fileId, { mimeType: item.book.mimeType });
-        if (!url) {
-          showToast(t("account.myBooks.toast.downloadError"));
-          resetFile();
-          return;
-        }
-
         const fileName = item.book.fileName ?? `${item.book.title}.pdf`;
+        const downloadUrl = buildFileDownloadUrl(fileId, { telegramUserId });
         if (downloadFile.isAvailable()) {
-          await downloadFile(url, fileName);
+          await downloadFile(downloadUrl, fileName);
         } else {
           const anchor = document.createElement("a");
-          anchor.href = url;
+          anchor.href = downloadUrl;
           anchor.rel = "noreferrer";
           anchor.download = fileName;
           document.body.appendChild(anchor);
@@ -372,7 +367,7 @@ export default function MyAccount(): JSX.Element {
         setDownloadingBookId(null);
       }
     },
-    [ensureBookFileUrl, myBooks, resetFile, showToast, t],
+    [myBooks, showToast, t, telegramUserId],
   );
 
   const handleToggleLike = useCallback(
