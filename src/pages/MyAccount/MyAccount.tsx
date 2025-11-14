@@ -10,8 +10,8 @@ import { useToast } from "@/shared/ui/ToastProvider";
 import { fetchProposalsForVoting, submitBookProposal } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 import { fetchAuthors } from "@/entities/author/api";
-import { fetchDecryptedFile } from "@/shared/api/storage";
-import { base64ToUint8Array } from "@/shared/lib/base64";
+import { useBookReader } from "@/entities/book/hooks/useBookReader";
+import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
 
 import {
   BOOK_SECTION,
@@ -82,6 +82,17 @@ export default function MyAccount(): JSX.Element {
   const [myBooks, setMyBooks] = useState<MyBook[]>([]);
   const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
   const [myBooksError, setMyBooksError] = useState<string | null>(null);
+  const [activeBook, setActiveBook] = useState<MyBook | null>(null);
+  const [downloadingBookId, setDownloadingBookId] = useState<string | null>(null);
+  const {
+    bookFileUrl,
+    ensureBookFileUrl,
+    openReader,
+    closeReader,
+    isReading,
+    isPreviewMode,
+    resetFile,
+  } = useBookReader({ mimeType: activeBook?.book.mimeType });
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
@@ -206,6 +217,90 @@ export default function MyAccount(): JSX.Element {
     void loadMyBooks();
   }, [loadMyBooks]);
 
+  const handleReadBook = useCallback(
+    async (bookId: string) => {
+      const item = myBooks.find((entry) => entry.book.id === bookId);
+      if (!item) {
+        return;
+      }
+
+      const fileId =
+        item.purchase.walrusFileId ?? item.book.walrusFileId ?? null;
+
+      if (!fileId) {
+        showToast(t("account.myBooks.toast.missingFile"));
+        return;
+      }
+
+      setActiveBook(item);
+      const success = await openReader({ fileId, mimeType: item.book.mimeType });
+      if (!success) {
+        showToast(t("account.myBooks.toast.downloadError"));
+        setActiveBook(null);
+        resetFile();
+      }
+    },
+    [myBooks, openReader, resetFile, showToast, t],
+  );
+
+  const handleDownloadBook = useCallback(
+    async (bookId: string) => {
+      const item = myBooks.find((entry) => entry.book.id === bookId);
+      if (!item) {
+        return;
+      }
+
+      const fileId =
+        item.purchase.walrusFileId ?? item.book.walrusFileId ?? null;
+
+      if (!fileId) {
+        showToast(t("account.myBooks.toast.missingFile"));
+        return;
+      }
+
+      setDownloadingBookId(bookId);
+      try {
+        const url = await ensureBookFileUrl(fileId, { mimeType: item.book.mimeType });
+        if (!url) {
+          showToast(t("account.myBooks.toast.downloadError"));
+          resetFile();
+          return;
+        }
+
+        const fileName = item.book.fileName ?? `${item.book.title}.pdf`;
+        if (downloadFile.isAvailable()) {
+          await downloadFile(url, fileName);
+        } else {
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.rel = "noreferrer";
+          anchor.download = fileName;
+          document.body.appendChild(anchor);
+          anchor.click();
+          document.body.removeChild(anchor);
+        }
+      } catch (error) {
+        console.error("Failed to download book", error);
+        showToast(t("account.myBooks.toast.downloadError"));
+      } finally {
+        setDownloadingBookId(null);
+      }
+    },
+    [ensureBookFileUrl, myBooks, resetFile, showToast, t],
+  );
+
+  const handleCloseReaderOverlay = useCallback(() => {
+    closeReader();
+    resetFile();
+    setActiveBook(null);
+  }, [closeReader, resetFile]);
+
+  useEffect(() => {
+    if (activeSection !== BOOK_SECTION && isReading) {
+      handleCloseReaderOverlay();
+    }
+  }, [activeSection, handleCloseReaderOverlay, isReading]);
+
   const loadVotingProposals = useCallback(async () => {
     setIsVotingLoading(true);
     setVotingError(null);
@@ -329,16 +424,17 @@ export default function MyAccount(): JSX.Element {
     allowedVotersCount > 0 ? allowedVotersCount : allowedVoterUsernames.size;
 
   return (
-    <div
-      style={{
-        margin: "0 auto",
-        maxWidth: 720,
-        padding: "24px 16px 32px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 24,
-      }}
-    >
+    <>
+      <div
+        style={{
+          margin: "0 auto",
+          maxWidth: 720,
+          padding: "24px 16px 32px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+        }}
+      >
       <header style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         <Title level="1" weight="2">
           {t("account.title")}
@@ -366,6 +462,9 @@ export default function MyAccount(): JSX.Element {
           isLoading={isMyBooksLoading}
           error={myBooksError}
           onRetry={handleRetryMyBooks}
+          onRead={handleReadBook}
+          onDownload={handleDownloadBook}
+          downloadingBookId={downloadingBookId}
         />
       )}
 
@@ -405,12 +504,21 @@ export default function MyAccount(): JSX.Element {
         />
       )}
 
-      <PublishResultModal
-        result={publishResult}
-        onClose={handlePublishModalClose}
-        t={t}
-        theme={theme}
-      />
-    </div>
+        <PublishResultModal
+          result={publishResult}
+          onClose={handlePublishModalClose}
+          t={t}
+          theme={theme}
+        />
+      </div>
+
+      {activeBook && isReading && (
+        <ReadingOverlay
+          book={{ ...activeBook.book, bookFileURL: bookFileUrl ?? undefined }}
+          onClose={handleCloseReaderOverlay}
+          preview={isPreviewMode}
+        />
+      )}
+    </>
   );
 }
