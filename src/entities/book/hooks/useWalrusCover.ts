@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import { fetchDecryptedFile } from "@/shared/api/storage";
-import { base64ToUint8Array } from "@/shared/lib/base64";
 
 export function useWalrusCover(
   fileId?: string | null,
@@ -24,7 +23,7 @@ export function useWalrusCover(
       }
 
       try {
-        const blob = await fetchDecryptedFile(fileId);
+        const file = await fetchDecryptedFile(fileId);
         if (isCancelled) {
           return;
         }
@@ -33,11 +32,8 @@ export function useWalrusCover(
           URL.revokeObjectURL(urlRef.current);
         }
 
-        const objectUrl = URL.createObjectURL(
-          new Blob([base64ToUint8Array(blob.data)], {
-            type: blob.mimeType ?? mimeType ?? "image/jpeg",
-          }),
-        );
+        const resolvedMimeType = file.mimeType ?? mimeType ?? "image/jpeg";
+        const objectUrl = URL.createObjectURL(new Blob([file.data], { type: resolvedMimeType }));
 
         urlRef.current = objectUrl;
         setCoverUrl(objectUrl);

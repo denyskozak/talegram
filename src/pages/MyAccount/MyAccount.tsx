@@ -98,7 +98,7 @@ export default function MyAccount(): JSX.Element {
     isReading,
     isPreviewMode,
     resetFile,
-  } = useBookReader({ mimeType: activeBook?.book.mimeType });
+  } = useBookReader({ mimeType: activeBook?.book.mimeType, telegramUserId });
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
