@@ -28,6 +28,7 @@
   "errors": {
     "genericTitle": "Что-то пошло не так",
     "loadCategories": "Не удалось загрузить категории",
+    "loadGlobalCategories": "Не удалось загрузить глобальные категории",
     "loadBooks": "Не удалось загрузить книги",
     "loadBook": "Не удалось загрузить книгу",
     "loadReviews": "Не удалось загрузить отзывы",
@@ -43,6 +44,7 @@
       "title": "Альфа-версия",
       "description": "Многие функции не доступны."
     },
+    "globalCategoryLabel": "Глобальная категория",
     "emptyTitle": "Ничего не найдено",
     "emptyDescription": "Попробуйте изменить запрос"
   },
@@ -193,6 +195,11 @@
     "booksCount_few": "{{count}} книги",
     "booksCount_many": "{{count}} книг",
     "booksCount_other": "{{count}} книг"
+  },
+  "globalCategories": {
+    "article": "Статьи",
+    "book": "Книги",
+    "comic": "Комиксы"
   },
   "account": {
     "title": "Личный кабинет",

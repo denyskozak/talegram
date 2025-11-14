@@ -5,6 +5,7 @@ import { sortBooks, type BookSort } from '../utils/sortBooks.js';
 import { appDataSource, initializeDataSource } from '../utils/data-source.js';
 import { Book as BookEntity } from '../entities/Book.js';
 import { formatCategoryTitle } from '../utils/categories.js';
+import { BookProposal } from '../entities/BookProposal.js';
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
@@ -47,6 +48,11 @@ function ensureArray(value: string[] | null | undefined): string[] {
 async function getBookRepository(): Promise<Repository<BookEntity>> {
   await initializeDataSource();
   return appDataSource.getRepository(BookEntity);
+}
+
+async function getBookProposalRepository(): Promise<Repository<BookProposal>> {
+  await initializeDataSource();
+  return appDataSource.getRepository(BookProposal);
 }
 
 function matchesSearch(entity: BookEntity, search?: string): boolean {
@@ -144,6 +150,36 @@ export async function listCategories(search?: string): Promise<Category[]> {
   return categories.filter((category) =>
     normalize(category.title).includes(normalized) || normalize(category.slug).includes(normalized),
   );
+}
+
+export async function listGlobalCategories(): Promise<string[]> {
+  const repository = await getBookProposalRepository();
+  const proposals = await repository.find({ select: ['globalCategory'] });
+
+  const unique = new Set(
+    proposals
+      .map((proposal) => proposal.globalCategory?.trim().toLocaleLowerCase())
+      .filter((value): value is string => typeof value === 'string' && value.length > 0),
+  );
+
+  const preferredOrder = ['article', 'book', 'comic'];
+
+  return Array.from(unique).sort((a, b) => {
+    const indexA = preferredOrder.indexOf(a);
+    const indexB = preferredOrder.indexOf(b);
+
+    if (indexA === -1 && indexB === -1) {
+      return a.localeCompare(b);
+    }
+    if (indexA === -1) {
+      return 1;
+    }
+    if (indexB === -1) {
+      return -1;
+    }
+
+    return indexA - indexB;
+  });
 }
 
 export async function listBooks(params: {

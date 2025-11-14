@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Banner, Input, Title } from "@telegram-apps/telegram-ui";
+import { Banner, Input, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { CategoryTile } from "@/entities/category/components/CategoryTile";
@@ -28,10 +28,55 @@ export default function HomeCategories(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
+  const [globalCategories, setGlobalCategories] = useState<string[]>([]);
+  const [selectedGlobalCategory, setSelectedGlobalCategory] = useState("book");
+  const [globalCategoriesError, setGlobalCategoriesError] = useState<string | null>(null);
+  const [globalRefreshToken, setGlobalRefreshToken] = useState(0);
   const debouncedSearch = useDebouncedValue(search, 250);
   const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
 
   useScrollRestoration(`home-categories-${normalizedSearch || "all"}`);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadGlobalCategories = async () => {
+      try {
+        setGlobalCategoriesError(null);
+        const items = await catalogApi.listGlobalCategories();
+        if (cancelled) {
+          return;
+        }
+
+        const normalizedItems = Array.from(
+          new Set(
+            items
+              .map((item) => item.trim().toLocaleLowerCase())
+              .filter((item): item is string => item.length > 0),
+          ),
+        );
+        setGlobalCategories(normalizedItems);
+
+        const preferred = normalizedItems.includes("book")
+          ? "book"
+          : normalizedItems[0];
+        if (preferred) {
+          setSelectedGlobalCategory(preferred);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error(err);
+          setGlobalCategoriesError(t("errors.loadGlobalCategories"));
+        }
+      }
+    };
+
+    void loadGlobalCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [globalRefreshToken, t]);
 
   const translatedSpecialCategories = useMemo<SpecialCategory[]>(
     () =>
@@ -81,7 +126,37 @@ export default function HomeCategories(): JSX.Element {
       )
     : translatedSpecialCategories;
 
+  const orderedGlobalCategories = useMemo(() => {
+    if (globalCategories.length === 0) {
+      return [];
+    }
+
+    const preferredOrder = ["article", "book", "comic"];
+    const sorted = [...globalCategories].sort((a, b) => {
+      const indexA = preferredOrder.indexOf(a);
+      const indexB = preferredOrder.indexOf(b);
+
+      if (indexA === -1 && indexB === -1) {
+        return a.localeCompare(b);
+      }
+      if (indexA === -1) {
+        return 1;
+      }
+      if (indexB === -1) {
+        return -1;
+      }
+
+      return indexA - indexB;
+    });
+
+    return sorted;
+  }, [globalCategories]);
+
   const displayedCategories: Category[] = [...specialCategories, ...categories];
+
+  const handleGlobalCategoriesRetry = () => {
+    setGlobalRefreshToken((prev) => prev + 1);
+  };
 
   const handleCategoryClick = (category: Category) => {
     if (isSpecialCategoryId(category.id)) {
@@ -102,6 +177,30 @@ export default function HomeCategories(): JSX.Element {
       <Title level="1" weight="2" style={{ marginBottom: 16 }}>
         {t("homeCategories.title")}
       </Title>
+      {globalCategoriesError ? (
+        <ErrorBanner
+          style={{ margin: "16px 0" }}
+          message={globalCategoriesError}
+          onRetry={handleGlobalCategoriesRetry}
+        />
+      ) : null}
+      {orderedGlobalCategories.length > 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+          <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
+          <SegmentedControl
+            value={selectedGlobalCategory}
+            onChange={(value) => setSelectedGlobalCategory(value as string)}
+          >
+            {orderedGlobalCategories.map((category) => (
+              <SegmentedControl.Item key={category} value={category}>
+                {t(`globalCategories.${category}`, {
+                  defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
+                })}
+              </SegmentedControl.Item>
+            ))}
+          </SegmentedControl>
+        </div>
+      ) : null}
       <Input
         type="search"
         value={search}

@@ -34,6 +34,7 @@
   "errors": {
     "genericTitle": "Something went wrong",
     "loadCategories": "Failed to load categories",
+    "loadGlobalCategories": "Failed to load global categories",
     "loadBooks": "Failed to load books",
     "loadBook": "Failed to load the book",
     "loadReviews": "Failed to load reviews",
@@ -49,6 +50,7 @@
       "title": "Alpha version",
       "description": "Most functions disabled."
     },
+    "globalCategoryLabel": "Global category",
     "emptyTitle": "Nothing found",
     "emptyDescription": "Try changing the query"
   },
@@ -193,6 +195,11 @@
     "aria": "Category {{title}}",
     "booksCount": "{{count}} book",
     "booksCount_plural": "{{count}} books"
+  },
+  "globalCategories": {
+    "article": "Articles",
+    "book": "Books",
+    "comic": "Comics"
   },
   "account": {
     "title": "My account",

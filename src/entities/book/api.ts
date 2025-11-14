@@ -33,6 +33,9 @@ export const catalogApi: CatalogApi = {
   listCategories(query) {
     return trpc.catalog.listCategories.query(query satisfies ListCategoriesPayload);
   },
+  listGlobalCategories() {
+    return trpc.catalog.listGlobalCategories.query();
+  },
   listBooks(params) {
     return trpc.catalog.listBooks.query(
       params satisfies ListBooksPayload,
