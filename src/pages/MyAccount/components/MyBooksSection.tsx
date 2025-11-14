@@ -87,7 +87,6 @@ function MyBookCard({ item, theme, t, onRead, onDownload, downloadingBookId }: M
             {author.length > 0 && <Text style={{ color: theme.subtitle }}>{author}</Text>}
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Chip mode="elevated">{t("account.myBooks.tonBadge")}</Chip>
             <Chip mode="outline">{t("account.myBooks.status.owned")}</Chip>
             <Chip mode="outline">{t("account.myBooks.purchased", { value: formattedPurchasedAt })}</Chip>
           </div>
@@ -97,17 +96,16 @@ function MyBookCard({ item, theme, t, onRead, onDownload, downloadingBookId }: M
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
             <Button
               type="button"
-              size="s"
-              mode="outline"
+              size="l"
               onClick={() => onRead(book.id)}
             >
               {t("account.myBooks.actions.read")}
             </Button>
             <Button
               type="button"
-              size="s"
+              size="l"
               mode="outline"
-              disabled={!purchase.walrusFileId || isDownloading}
+              disabled={isDownloading}
               loading={isDownloading}
               onClick={() => onDownload(book.id)}
             >
@@ -133,12 +131,6 @@ export function MyBooksSection({
 }: MyBooksSectionProps): JSX.Element {
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <Title level="2" weight="2">
-          {t("account.myBooks.title")}
-        </Title>
-        <Text style={{ color: theme.subtitle }}>{t("account.myBooks.description")}</Text>
-      </div>
       {isLoading ? (
         <Card style={{ padding: 16 }}>
           <Text style={{ color: theme.subtitle }}>{t("account.myBooks.loading")}</Text>
