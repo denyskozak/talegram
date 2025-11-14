@@ -358,6 +358,7 @@ export function ReadingOverlay({ book, onClose, preview = false }: ReadingOverla
                 pageNumber={index + 1}
                 width={viewerWidth ? Math.min(viewerWidth - 40, 900) : undefined}
                 renderAnnotationLayer={false}
+                renderMode="svg"
                 onRenderError={handlePageRenderError}
                 loading={
                   <div style={{ textAlign: "center", padding: "16px", color: palette.color }}>

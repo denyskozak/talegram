@@ -8,6 +8,7 @@ import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
 import type { Book, ID } from "@/entities/book/types";
 import { downloadFile } from "@telegram-apps/sdk-react";
+import { copyTextToClipboard } from "@telegram-apps/sdk";
 import { paymentsApi } from "@/entities/payment/api";
 import type { Invoice } from "@/entities/payment/types";
 import { purchasesApi } from "@/entities/purchase/api";
@@ -116,7 +117,7 @@ export default function BookPage(): JSX.Element {
 
   const handleShare = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await copyTextToClipboard(window.location.href);
       showToast(t("book.toast.linkCopied"));
     } catch (err) {
       showToast(t("book.toast.linkFailed"));
