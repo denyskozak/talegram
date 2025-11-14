@@ -7,18 +7,56 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
 
-const CATEGORY_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "fantasy", label: "Fantasy — Фэнтези" },
-  { value: "science-fiction", label: "Science Fiction — Научная фантастика" },
-  { value: "mystery", label: "Mystery — Детектив" },
-  { value: "romance", label: "Romance — Романтика" },
-  { value: "thriller", label: "Thriller — Триллер" },
-  { value: "non-fiction", label: "Non-fiction — Нон-фикшн" },
-  { value: "historical", label: "Historical — Историческое" },
-  { value: "self-help", label: "Self-help — Саморазвитие" },
-  { value: "poetry", label: "Poetry — Поэзия" },
-  { value: "young-adult", label: "Young Adult — Подростковое" },
-];
+const GLOBAL_CATEGORY_OPTIONS = [
+  { value: "Book", label: "Book" },
+  { value: "Article", label: "Article" },
+  { value: "Comics & Graphic Novels", label: "Comics & Graphic Novels" },
+] as const;
+
+type GlobalCategoryValue = (typeof GLOBAL_CATEGORY_OPTIONS)[number]["value"];
+
+const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: string; label: string }>> = {
+  Book: [
+    { value: "Science Fiction", label: "Science Fiction" },
+    { value: "Fantasy", label: "Fantasy" },
+    { value: "Mystery & Thrillers", label: "Mystery & Thrillers" },
+    { value: "Novels / Literary Fiction", label: "Novels / Literary Fiction" },
+    { value: "Non-Fiction", label: "Non-Fiction" },
+    { value: "Self-Help & Psychology", label: "Self-Help & Psychology" },
+    { value: "History", label: "History" },
+    { value: "Biographies & Memoirs", label: "Biographies & Memoirs" },
+    { value: "Business & Finance", label: "Business & Finance" },
+    { value: "Children’s Literature", label: "Children’s Literature" },
+  ],
+  Article: [
+    { value: "News & Politics", label: "News & Politics" },
+    { value: "Science & Technology", label: "Science & Technology" },
+    { value: "Business & Economics", label: "Business & Economics" },
+    { value: "Education", label: "Education" },
+    { value: "Sports", label: "Sports" },
+    { value: "Entertainment (movies, music, showbiz)", label: "Entertainment (movies, music, showbiz)" },
+    { value: "Travel", label: "Travel" },
+    { value: "Lifestyle", label: "Lifestyle" },
+    { value: "Health & Medicine", label: "Health & Medicine" },
+    { value: "Culture & Arts", label: "Culture & Arts" },
+  ],
+  "Comics & Graphic Novels": [
+    { value: "Superheroes", label: "Superheroes" },
+    { value: "Manga", label: "Manga" },
+    { value: "Fantasy", label: "Fantasy" },
+    { value: "Science Fiction", label: "Science Fiction" },
+    { value: "Horror", label: "Horror" },
+    { value: "Adventure", label: "Adventure" },
+    { value: "Comedy / Satire", label: "Comedy / Satire" },
+    { value: "Crime / Noir", label: "Crime / Noir" },
+    { value: "Romance", label: "Romance" },
+    { value: "Historical Comics", label: "Historical Comics" },
+  ],
+};
+
+function isKnownGlobalCategory(value: string): value is GlobalCategoryValue {
+  return GLOBAL_CATEGORY_OPTIONS.some((option) => option.value === value);
+}
 
 export type PublishSectionProps = {
   formState: PublishFormState;
@@ -58,6 +96,10 @@ export function PublishSection({
   onHashtagKeyDown,
 }: PublishSectionProps): JSX.Element {
   const isFormDisabled = isAuthorsLoading || !canSubmit;
+  const isGlobalCategorySelected = isKnownGlobalCategory(formState.globalCategory);
+  const categoryOptions = isGlobalCategorySelected
+    ? CATEGORY_OPTIONS_BY_GLOBAL[formState.globalCategory]
+    : [];
 
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -118,18 +160,37 @@ export function PublishSection({
             />
           </label>
           <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <Text weight="2">{t("account.publish.form.globalCategory.label")}</Text>
+            <Select
+              required
+              name="globalCategory"
+              value={formState.globalCategory}
+              onChange={onInputChange}
+              disabled={isFormDisabled}
+            >
+              <option value="" disabled>
+                {t("account.publish.form.globalCategory.placeholder")}
+              </option>
+              {GLOBAL_CATEGORY_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             <Text weight="2">{t("account.publish.form.category.label")}</Text>
             <Select
               required
               name="category"
               value={formState.category}
               onChange={onInputChange}
-              disabled={isFormDisabled}
+              disabled={isFormDisabled || !isGlobalCategorySelected}
             >
               <option value="" disabled>
                 {t("account.publish.form.category.placeholder")}
               </option>
-              {CATEGORY_OPTIONS.map((option) => (
+              {categoryOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

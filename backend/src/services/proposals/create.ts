@@ -21,6 +21,7 @@ export type CreateBookProposalParams = {
   title: string;
   author: string;
   description: string;
+  globalCategory: string;
   category: string;
   price: number;
   hashtags: string[];
@@ -117,6 +118,11 @@ export async function createBookProposal(
 
   await initializeDataSource();
   const bookProposalRepository = appDataSource.getRepository(BookProposal);
+  const globalCategory = params.globalCategory.trim();
+  if (globalCategory.length === 0) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Global category is required' });
+  }
+
   const category = params.category.trim();
   if (category.length === 0) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Category is required' });
@@ -132,6 +138,7 @@ export async function createBookProposal(
     title: params.title,
     author: params.author,
     description: params.description,
+    globalCategory,
     category,
     price: normalizedPrice,
     currency,

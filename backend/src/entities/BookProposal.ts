@@ -32,6 +32,9 @@ export class BookProposal {
   @Column({ type: 'text' })
   description!: string;
 
+  @Column({ name: 'global_category', type: 'text' })
+  globalCategory!: string;
+
   @Column({ type: 'text' })
   category!: string;
 
