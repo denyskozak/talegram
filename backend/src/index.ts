@@ -84,7 +84,7 @@ const server = http.createServer(async (req, res) => {
     const url = safeParseUrl(req.url, req.headers.host);
     const bookDownloadMatch =
         req.method === 'GET'
-            ? url?.pathname.match(/^\/books\/([^/]+)\/(book|cover)\/download$/)
+            ? url?.pathname.match(/^\/books\/([^/]+)\/(book|cover)\/download\.epub$/)
             : null;
     if (bookDownloadMatch) {
         const rawBookId = bookDownloadMatch[1];

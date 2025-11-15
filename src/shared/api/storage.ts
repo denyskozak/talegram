@@ -67,7 +67,7 @@ export function buildBookFileDownloadUrl(
   }
 
   const url = new URL(
-    `/books/${encodeURIComponent(normalized)}/${fileKind}/download${fileKind === 'book' ? '.epub' : ''}`,
+    `/books/${encodeURIComponent(normalized)}/${fileKind}/download.epub`,
     `${backendUrl}/`,
   );
 
