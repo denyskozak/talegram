@@ -1,15 +1,17 @@
 import type {
   BookProposal,
+  ProposalVoteChoice,
   ProposalVotingListResponse,
   SubmitProposalVoteResult,
-} from './types';
-import { trpc, resolveBackendUrl } from '@/shared/api/trpc';
+} from "./types";
+import { trpc, resolveBackendUrl } from "@/shared/api/trpc";
+import type { GlobalCategory } from "@/shared/lib/globalCategories";
 
 export type SubmitProposalPayload = {
   title: string;
   author: string;
   description: string;
-  globalCategory: string;
+  globalCategory: GlobalCategory;
   category: string;
   price: number;
   hashtags: string[];
@@ -75,6 +77,9 @@ export type SubmitProposalVotePayload = {
 export async function submitProposalVote(
   payload: SubmitProposalVotePayload,
 ): Promise<SubmitProposalVoteResult> {
-    console.log("trpc.proposals: ", trpc.proposals.voteForProposal, payload);
-  return trpc.proposals.voteForProposal.mutate(payload);
+  const result = await trpc.proposals.voteForProposal.mutate(payload);
+  const normalizedUserVote: ProposalVoteChoice =
+    result.userVote === "positive" ? "positive" : "negative";
+
+  return { ...result, userVote: normalizedUserVote };
 }

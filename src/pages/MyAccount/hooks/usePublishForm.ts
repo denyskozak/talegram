@@ -2,6 +2,8 @@ import { useCallback, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent, RefObject } from "react";
 import type { TFunction } from "i18next";
 
+import { isGlobalCategory } from "@/shared/lib/globalCategories";
+
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
 
@@ -31,7 +33,7 @@ export type UsePublishFormResult = {
   fileInputRef: RefObject<HTMLInputElement>;
   coverInputRef: RefObject<HTMLInputElement>;
   handleInputChange: (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   handleFileSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   handleCoverSelect: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -163,7 +165,7 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
       if (name === "globalCategory") {
         setFormState((prev) => ({
           ...prev,
-          globalCategory: value,
+          globalCategory: isGlobalCategory(value) ? value : "",
           category: "",
         }));
         return;

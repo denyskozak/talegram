@@ -3,16 +3,13 @@ import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
+import { GLOBAL_CATEGORIES, isGlobalCategory, type GlobalCategory } from "@/shared/lib/globalCategories";
 
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
 import { QuoteCarouselNotice } from "./QuoteCarouselNotice";
 
-const GLOBAL_CATEGORY_OPTIONS = ["book", "article", "comics"] as const;
-
-type GlobalCategoryValue = (typeof GLOBAL_CATEGORY_OPTIONS)[number];
-
-const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: string; label: string }>> = {
+const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategory, Array<{ value: string; label: string }>> = {
   book: [
     { value: "Science Fiction", label: "Science Fiction" },
     { value: "Fantasy", label: "Fantasy" },
@@ -50,10 +47,6 @@ const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategoryValue, Array<{ value: str
     { value: "Historical Comics", label: "Historical Comics" },
   ],
 };
-
-function isKnownGlobalCategory(value: string): value is GlobalCategoryValue {
-  return GLOBAL_CATEGORY_OPTIONS.some((option) => option === value);
-}
 
 export type PublishSectionProps = {
   formState: PublishFormState;
@@ -93,10 +86,11 @@ export function PublishSection({
   onHashtagKeyDown,
 }: PublishSectionProps): JSX.Element {
   const isFormDisabled = isAuthorsLoading || !canSubmit;
-  const isGlobalCategorySelected = isKnownGlobalCategory(formState.globalCategory);
-  const categoryOptions = isGlobalCategorySelected
-    ? CATEGORY_OPTIONS_BY_GLOBAL[formState.globalCategory]
-    : [];
+  const isGlobalCategorySelected = isGlobalCategory(formState.globalCategory);
+  let categoryOptions: Array<{ value: string; label: string }> = [];
+  if (isGlobalCategory(formState.globalCategory)) {
+    categoryOptions = CATEGORY_OPTIONS_BY_GLOBAL[formState.globalCategory];
+  }
 
   return (
     <section style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -168,7 +162,7 @@ export function PublishSection({
               <option value="" disabled>
                 {t("account.publish.form.globalCategory.placeholder")}
               </option>
-              {GLOBAL_CATEGORY_OPTIONS.map((option) => (
+              {GLOBAL_CATEGORIES.map((option) => (
                 <option key={option} value={option}>
                   {t(`globalCategories.${option}`)}
                 </option>

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { LanguageToggle } from "@/shared/ui/LanguageToggle";
 
-export function FooterBar(): ReactNode {
+export function FooterBar(): JSX.Element {
   const theme = useTheme();
   const { t } = useTranslation();
 

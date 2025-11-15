@@ -22,7 +22,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
-    return '';
+    return resolveBookCover({ id: book.id, coverUrl: book.coverUrl });
   }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id]);
 
   return (
@@ -38,7 +38,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
             src={coverSrc}
             alt={t("book.coverAlt", { title: book.title })}
             loading="lazy"
-            // onError={handleBookCoverError}
+            onError={handleBookCoverError}
             style={{ width: "100%", height: "100%", objectFit: "contain" }}
           />
         </div>

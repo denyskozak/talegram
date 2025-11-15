@@ -1,7 +1,6 @@
-import type { Category } from "@/entities/category/types";
 import { trpc } from "@/shared/api/trpc";
 
-import type { Book, CatalogApi, ID, Review } from "./types";
+import type { Book, CatalogApi, ID } from "./types";
 
 type ListCategoriesPayload = {
   search?: string;
@@ -32,28 +31,51 @@ type CreateReviewPayload = {
 
 export const catalogApi: CatalogApi = {
   listCategories(query) {
-    return trpc.catalog.listCategories.query(query satisfies ListCategoriesPayload);
+    const payload: ListCategoriesPayload | undefined = query
+      ? {
+          search: query.search,
+          globalCategory: query.globalCategory,
+        }
+      : undefined;
+
+    return trpc.catalog.listCategories.query(payload);
   },
   listGlobalCategories() {
     return trpc.catalog.listGlobalCategories.query();
   },
   listBooks(params) {
-    return trpc.catalog.listBooks.query(
-      params satisfies ListBooksPayload,
-    );
+    return trpc.catalog.listBooks
+      .query(params satisfies ListBooksPayload)
+      .then((response: { items: Book[]; nextCursor?: string }) => ({
+        items: response.items as Book[],
+        nextCursor: response.nextCursor,
+      }));
   },
   getBook(id, params) {
-    return trpc.catalog.getBook.query({ id, telegramUserId: params?.telegramUserId });
+    return trpc.catalog.getBook
+      .query({ id, telegramUserId: params?.telegramUserId })
+      .then((book: Book) => book as Book);
   },
   listReviews(bookId, cursor, limit) {
-    return trpc.catalog.listReviews.query({
-      bookId,
-      cursor,
-      limit,
-    } satisfies ListReviewsPayload);
+    const payload: ListReviewsPayload = { bookId };
+    if (typeof cursor === "string") {
+      payload.cursor = cursor;
+    }
+    if (typeof limit === "number") {
+      payload.limit = limit;
+    }
+
+    return trpc.catalog.listReviews.query(payload);
   },
   createReview(payload) {
-    return trpc.catalog.createReview.mutate(payload satisfies CreateReviewPayload);
+    const normalizedPayload: CreateReviewPayload = {
+      bookId: payload.bookId,
+      authorName: payload.authorName,
+      rating: payload.rating,
+      text: payload.text,
+    };
+
+    return trpc.catalog.createReview.mutate(normalizedPayload);
   },
 };
 

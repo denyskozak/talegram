@@ -12,7 +12,7 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import {buildFileDownloadUrl, fetchDecryptedFile} from "@/shared/api/storage";
+import {buildFileDownloadUrl} from "@/shared/api/storage";
 import { downloadFile } from "@telegram-apps/sdk-react";
 
 function formatDate(value: string): string {
