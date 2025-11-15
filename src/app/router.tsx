@@ -20,7 +20,7 @@ export function AppRouter(): JSX.Element {
     { path: "/account", element: <MyAccountPage /> },
     { path: "/proposals/:id", element: <ProposalDetailsPage /> },
     { path: "/book/:id", element: <BookPage /> },
-    { path: "/reader/:fileId", element: <ReaderPage /> },
+    { path: "/reader/:bookId", element: <ReaderPage /> },
     { path: "/contact", element: <ContactPage /> },
     { path: "*", element: <Navigate to="/" replace /> },
   ]);

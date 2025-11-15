@@ -1,29 +1,34 @@
 import { resolveBackendUrl } from "./trpc";
 
+export type BookFileKind = "book" | "cover";
+
 export type DecryptedFile = {
-  fileId: string;
+  bookId: string;
+  fileKind: BookFileKind;
   fileName: string | null;
   mimeType: string | null;
   data: ArrayBuffer;
 };
 
-type FetchDecryptedFileOptions = {
+type FetchBookFileOptions = {
   telegramUserId?: string | null;
   signal?: AbortSignal;
 };
 
-export async function fetchDecryptedFile(
-  fileId: string,
-  options: FetchDecryptedFileOptions = {},
+export async function fetchBookFile(
+  bookId: string,
+  fileKind: BookFileKind,
+  options: FetchBookFileOptions = {},
 ): Promise<DecryptedFile> {
-  const downloadUrl = buildFileDownloadUrl(fileId, { telegramUserId: options.telegramUserId ?? undefined });
+  const downloadUrl = buildBookFileDownloadUrl(bookId, fileKind, {
+    telegramUserId: options.telegramUserId ?? undefined,
+  });
   const response = await fetch(downloadUrl, {
     method: "GET",
-    // credentials: "include",
     signal: options.signal,
-      headers: {
-          "ngrok-skip-browser-warning": "true",
-      },
+    headers: {
+      "ngrok-skip-browser-warning": "true",
+    },
   });
 
   if (!response.ok) {
@@ -37,7 +42,8 @@ export async function fetchDecryptedFile(
   );
 
   return {
-    fileId,
+    bookId,
+    fileKind,
     fileName,
     mimeType,
     data,
@@ -45,6 +51,32 @@ export async function fetchDecryptedFile(
 }
 
 const backendUrl = resolveBackendUrl();
+
+type BuildBookDownloadUrlOptions = {
+  telegramUserId?: string | null;
+};
+
+export function buildBookFileDownloadUrl(
+  bookId: string,
+  fileKind: BookFileKind,
+  options: BuildBookDownloadUrlOptions = {},
+): string {
+  const normalized = bookId.trim();
+  if (normalized.length === 0) {
+    throw new Error("bookId must be a non-empty string");
+  }
+
+  const url = new URL(
+    `/books/${encodeURIComponent(normalized)}/${fileKind}/download`,
+    `${backendUrl}/`,
+  );
+
+  if (options.telegramUserId) {
+    url.searchParams.set("telegramUserId", options.telegramUserId);
+  }
+
+  return url.toString();
+}
 
 type BuildDownloadUrlOptions = {
   telegramUserId?: string | null;

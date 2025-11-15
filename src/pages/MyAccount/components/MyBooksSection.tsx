@@ -53,10 +53,11 @@ function MyBookCard({
   onToggleLike,
 }: MyBookCardProps): JSX.Element {
   const { book, purchase } = item;
-  const walrusCoverUrl = useWalrusCover(
-    book.coverImageData ? null : book.coverWalrusFileId,
-    book.coverMimeType,
-  );
+  const walrusCoverUrl = useWalrusCover({
+    bookId: book.coverImageData ? null : book.id,
+    mimeType: book.coverMimeType,
+    enabled: !book.coverImageData,
+  });
   const coverUrl = useMemo(() => {
     if (book.coverImageData) {
       const mimeType = book.coverMimeType ?? "image/jpeg";

@@ -1,8 +1,14 @@
 import { Buffer } from 'node:buffer';
+import http from 'node:http';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
+import { Book } from '../entities/Book.js';
+import { BookProposal } from '../entities/BookProposal.js';
+import { Purchase } from '../entities/Purchase.js';
+import { decryptBookFile } from '../services/encryption.js';
 import { suiClient } from '../services/walrus-storage.js';
+import { appDataSource, initializeDataSource } from './data-source.js';
 
 type WriteWalrusFilesParams = Parameters<typeof suiClient.walrus.writeFiles>[0];
 type WriteWalrusFilesResult = Awaited<ReturnType<typeof suiClient.walrus.writeFiles>>;
@@ -14,6 +20,20 @@ const MISS_EXTENSION = '.miss';
 
 const fileCache = new Map<string, string | null>();
 let ensureCacheDirectoryPromise: Promise<void> | null = null;
+
+const AES_GCM_IV_LENGTH = 12;
+const AES_GCM_TAG_LENGTH = 16;
+
+const MIME_EXTENSION_MAP: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/epub+zip': 'epub',
+  'application/x-mobipocket-ebook': 'mobi',
+  'text/plain': 'txt',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+};
+
+export type BookFileKind = 'book' | 'cover';
 
 function ensureCacheDirectory(): Promise<void> {
   if (ensureCacheDirectoryPromise === null) {
@@ -116,6 +136,127 @@ function touchCacheEntry(key: string, value: string | null, options: { persist?:
   if (options.persist) {
     void persistCacheEntry(key, value);
   }
+}
+
+function decodeBase64Buffer(value: string | null | undefined): Buffer | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  try {
+    return Buffer.from(trimmed, 'base64');
+  } catch (error) {
+    return null;
+  }
+}
+
+function resolveWalrusStorageId(
+  primary: string | null | undefined,
+  fallback: string | null | undefined,
+): string | null {
+  if (typeof primary === 'string') {
+    const normalized = primary.trim();
+    if (normalized.length > 0) {
+      return normalized;
+    }
+  }
+
+  if (typeof fallback === 'string') {
+    const normalized = fallback.trim();
+    if (normalized.length > 0) {
+      return normalized;
+    }
+  }
+
+  return null;
+}
+
+function matchesCoverFile(
+  source: { coverWalrusFileId?: string | null; coverWalrusBlobId?: string | null },
+  id: string,
+): boolean {
+  const normalizedId = id.trim();
+  return (
+    (typeof source.coverWalrusFileId === 'string' && source.coverWalrusFileId.trim() === normalizedId) ||
+    (typeof source.coverWalrusBlobId === 'string' && source.coverWalrusBlobId.trim() === normalizedId)
+  );
+}
+
+async function fetchWalrusFileBuffer(id: string): Promise<Buffer | null> {
+  const base64 = await fetchWalrusFileBase64(id);
+  if (!base64) {
+    return null;
+  }
+
+  try {
+    return Buffer.from(base64, 'base64');
+  } catch (error) {
+    console.warn('Failed to decode Walrus file base64 payload', { id, error });
+    return null;
+  }
+}
+
+function guessExtensionFromMime(mimeType: string | null | undefined): string | null {
+  if (typeof mimeType !== 'string') {
+    return null;
+  }
+
+  const normalized = mimeType.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  return MIME_EXTENSION_MAP[normalized] ?? null;
+}
+
+function sanitizeFileNameBase(base: string | null | undefined): string {
+  const candidate = typeof base === 'string' ? base.replace(/[\s]+/g, ' ').trim() : '';
+  if (!candidate) {
+    return 'book-file';
+  }
+
+  return candidate.replace(/[\\/:*?"<>|]+/g, '_');
+}
+
+function determineDownloadFileName(book: Book, fileKind: BookFileKind): string {
+  const explicitName = fileKind === 'cover' ? book.coverFileName : book.fileName;
+  const normalized = typeof explicitName === 'string' ? explicitName.trim() : '';
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  const baseName = sanitizeFileNameBase(book.title);
+  const mimeType = fileKind === 'cover' ? book.coverMimeType : book.mimeType;
+  const extension = guessExtensionFromMime(mimeType) ?? (fileKind === 'cover' ? 'jpg' : 'bin');
+
+  if (fileKind === 'cover') {
+    return `${baseName}-cover.${extension}`;
+  }
+
+  return `${baseName}.${extension}`;
+}
+
+function sanitizeForHeader(value: string): string {
+  const trimmed = value.trim();
+  const safe = trimmed.length > 0 ? trimmed : 'book-file';
+  return safe.replace(/["\\]+/g, '_');
+}
+
+function formatContentDispositionHeader(fileName: string): string {
+  const sanitized = sanitizeForHeader(fileName);
+  const encoded = encodeURIComponent(sanitized);
+  return `attachment; filename="${sanitized}"; filename*=UTF-8''${encoded}`;
+}
+
+function respondWithError(res: http.ServerResponse, statusCode: number, message: string): void {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ error: message }));
 }
 
 export async function fetchWalrusFilesBase64(
@@ -222,6 +363,319 @@ export async function fetchWalrusFilesBase64(
 export async function fetchWalrusFileBase64(id: string): Promise<string | null> {
   const result = await fetchWalrusFilesBase64([id]);
   return result.get(id.trim()) ?? null;
+}
+
+export async function handleFileDownloadRequest(
+  _req: http.IncomingMessage,
+  res: http.ServerResponse,
+  params: { bookId: string; fileKind: BookFileKind; telegramUserId: string | null },
+): Promise<void> {
+  const normalizedBookId = params.bookId.trim();
+  if (!normalizedBookId) {
+    respondWithError(res, 400, 'Invalid book id');
+    return;
+  }
+
+  try {
+    await initializeDataSource();
+  } catch (error) {
+    console.error('Failed to initialize data source for file download', error);
+    respondWithError(res, 500, 'Failed to process file download');
+    return;
+  }
+
+  const bookRepository = appDataSource.getRepository(Book);
+  let book: Book | null = null;
+
+  try {
+    book = await bookRepository.findOne({ where: { id: normalizedBookId } });
+  } catch (error) {
+    console.error('Failed to load book for download request', { bookId: normalizedBookId, error });
+    respondWithError(res, 500, 'Failed to process file download');
+    return;
+  }
+
+  if (!book) {
+    respondWithError(res, 404, 'Book not found');
+    return;
+  }
+
+  if (params.fileKind === 'book') {
+    const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
+    if (price > 0) {
+      if (!params.telegramUserId) {
+        respondWithError(res, 401, 'Telegram user id is required to download this book');
+        return;
+      }
+
+      try {
+        const purchaseRepository = appDataSource.getRepository(Purchase);
+        const purchase = await purchaseRepository.findOne({
+          where: { bookId: normalizedBookId, telegramUserId: params.telegramUserId },
+        });
+
+        if (!purchase) {
+          respondWithError(res, 403, 'Purchase required to download this book');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to verify purchase before download', {
+          bookId: normalizedBookId,
+          telegramUserId: params.telegramUserId,
+          error,
+        });
+        respondWithError(res, 500, 'Failed to process file download');
+        return;
+      }
+    }
+  }
+
+  const storageId =
+    params.fileKind === 'cover'
+      ? resolveWalrusStorageId(book.coverWalrusFileId, book.coverWalrusBlobId)
+      : resolveWalrusStorageId(book.walrusFileId, book.walrusBlobId);
+
+  if (!storageId) {
+    respondWithError(res, 404, 'File not found');
+    return;
+  }
+
+  const walrusBuffer = await fetchWalrusFileBuffer(storageId);
+  if (!walrusBuffer) {
+    respondWithError(res, 404, 'File not found');
+    return;
+  }
+
+  let responseBuffer = walrusBuffer;
+  let mimeType = params.fileKind === 'cover' ? book.coverMimeType ?? null : book.mimeType ?? null;
+
+  if (params.fileKind === 'book') {
+    const iv = decodeBase64Buffer(book.fileEncryptionIv);
+    const authTag = decodeBase64Buffer(book.fileEncryptionTag);
+
+    if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
+      try {
+        responseBuffer = decryptBookFile(walrusBuffer, iv, authTag);
+      } catch (error) {
+        console.warn('Failed to decrypt Walrus file, falling back to encrypted payload', {
+          bookId: normalizedBookId,
+          storageId,
+          error,
+        });
+      }
+    } else {
+      console.warn('Missing or invalid encryption metadata for Walrus file', {
+        bookId: normalizedBookId,
+        storageId,
+      });
+    }
+  }
+
+  const fileName = determineDownloadFileName(book, params.fileKind);
+  const resolvedMimeType = mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : 'application/octet-stream');
+
+  const cacheTimeMs = 2 * 24 * 3600 * 1000;
+  res.statusCode = 200;
+  res.setHeader('Content-Type', resolvedMimeType);
+  res.setHeader('Content-Length', responseBuffer.byteLength.toString(10));
+  res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
+  res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
+  res.setHeader('Expires', new Date(Date.now() + cacheTimeMs).toUTCString());
+  res.end(responseBuffer);
+}
+
+export async function handleWalrusFileDownloadRequest(
+  _req: http.IncomingMessage,
+  res: http.ServerResponse,
+  params: { fileId: string; telegramUserId: string | null },
+): Promise<void> {
+  const normalizedFileId = params.fileId.trim();
+  if (!normalizedFileId) {
+    respondWithError(res, 400, 'Invalid file id');
+    return;
+  }
+
+  try {
+    await initializeDataSource();
+  } catch (error) {
+    console.error('Failed to initialize data source for file download', error);
+    respondWithError(res, 500, 'Failed to process file download');
+    return;
+  }
+
+  const bookRepository = appDataSource.getRepository(Book);
+  let book: Book | null = null;
+
+  try {
+    book = await bookRepository.findOne({
+      where: [
+        { walrusFileId: normalizedFileId },
+        { coverWalrusFileId: normalizedFileId },
+        { walrusBlobId: normalizedFileId },
+        { coverWalrusBlobId: normalizedFileId },
+      ],
+    });
+  } catch (error) {
+    console.error('Failed to load book for legacy download request', {
+      fileId: normalizedFileId,
+      error,
+    });
+    respondWithError(res, 500, 'Failed to process file download');
+    return;
+  }
+
+  const proposalRepository = appDataSource.getRepository(BookProposal);
+  let proposal: BookProposal | null = null;
+
+  if (!book) {
+    try {
+      proposal = await proposalRepository.findOne({
+        where: [
+          { walrusFileId: normalizedFileId },
+          { coverWalrusFileId: normalizedFileId },
+          { walrusBlobId: normalizedFileId },
+          { coverWalrusBlobId: normalizedFileId },
+        ],
+      });
+    } catch (error) {
+      console.error('Failed to load proposal for legacy download request', {
+        fileId: normalizedFileId,
+        error,
+      });
+      respondWithError(res, 500, 'Failed to process file download');
+      return;
+    }
+  }
+
+  if (!book && !proposal) {
+    respondWithError(res, 404, 'File metadata not found');
+    return;
+  }
+
+  const isCoverFile = matchesCoverFile(book ?? proposal!, normalizedFileId);
+
+  if (book && !isCoverFile) {
+    const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
+    if (price > 0) {
+      if (!params.telegramUserId) {
+        respondWithError(res, 401, 'Telegram user id is required to download this book');
+        return;
+      }
+
+      try {
+        const purchaseRepository = appDataSource.getRepository(Purchase);
+        const purchase = await purchaseRepository.findOne({
+          where: { bookId: book.id, telegramUserId: params.telegramUserId },
+        });
+
+        if (!purchase) {
+          respondWithError(res, 403, 'Purchase required to download this book');
+          return;
+        }
+      } catch (error) {
+        console.error('Failed to verify purchase before legacy download', {
+          fileId: normalizedFileId,
+          telegramUserId: params.telegramUserId,
+          error,
+        });
+        respondWithError(res, 500, 'Failed to process file download');
+        return;
+      }
+    }
+  }
+
+  const walrusBuffer = await fetchWalrusFileBuffer(normalizedFileId);
+  if (!walrusBuffer) {
+    respondWithError(res, 404, 'File not found');
+    return;
+  }
+
+  let responseBuffer = walrusBuffer;
+  let mimeType: string | null;
+  let fileName: string;
+
+  if (book) {
+    mimeType = isCoverFile ? book.coverMimeType ?? null : book.mimeType ?? null;
+
+    if (!isCoverFile) {
+      const iv = decodeBase64Buffer(book.fileEncryptionIv);
+      const authTag = decodeBase64Buffer(book.fileEncryptionTag);
+
+      if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
+        try {
+          responseBuffer = decryptBookFile(walrusBuffer, iv, authTag);
+        } catch (error) {
+          console.warn('Failed to decrypt Walrus file, falling back to encrypted payload', {
+            fileId: normalizedFileId,
+            error,
+          });
+        }
+      } else {
+        console.warn('Missing or invalid encryption metadata for Walrus file', {
+          fileId: normalizedFileId,
+        });
+      }
+    }
+
+    fileName = determineDownloadFileName(book, isCoverFile ? 'cover' : 'book');
+  } else {
+    const proposalEntity = proposal!;
+    mimeType = isCoverFile ? proposalEntity.coverMimeType ?? null : proposalEntity.mimeType ?? null;
+
+    if (!isCoverFile) {
+      const iv = decodeBase64Buffer(proposalEntity.fileEncryptionIv);
+      const authTag = decodeBase64Buffer(proposalEntity.fileEncryptionTag);
+
+      if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
+        try {
+          responseBuffer = decryptBookFile(walrusBuffer, iv, authTag);
+        } catch (error) {
+          console.warn('Failed to decrypt Walrus proposal file, falling back to encrypted payload', {
+            fileId: normalizedFileId,
+            error,
+          });
+        }
+      }
+    }
+
+    const explicitName = isCoverFile ? proposalEntity.coverFileName : proposalEntity.fileName;
+    const normalizedName = typeof explicitName === 'string' ? explicitName.trim() : '';
+    if (normalizedName.length > 0) {
+      fileName = normalizedName;
+    } else {
+      const baseName = sanitizeFileNameBase(proposalEntity.title);
+      const extension = guessExtensionFromMime(mimeType) ?? (isCoverFile ? 'jpg' : 'bin');
+      fileName = isCoverFile ? `${baseName}-cover.${extension}` : `${baseName}.${extension}`;
+    }
+  }
+
+  const resolvedMimeType = mimeType ?? (isCoverFile ? 'image/jpeg' : 'application/octet-stream');
+  const cacheTimeMs = 2 * 24 * 3600 * 1000;
+
+  res.statusCode = 200;
+  res.setHeader('Content-Type', resolvedMimeType);
+  res.setHeader('Content-Length', responseBuffer.byteLength.toString(10));
+  res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
+  res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
+  res.setHeader('Expires', new Date(Date.now() + cacheTimeMs).toUTCString());
+  res.end(responseBuffer);
+}
+
+export async function warmWalrusFileCache(id: string | null | undefined): Promise<void> {
+  if (typeof id !== 'string') {
+    return;
+  }
+
+  const normalized = id.trim();
+  if (!normalized) {
+    return;
+  }
+
+  try {
+    await fetchWalrusFileBase64(normalized);
+  } catch (error) {
+    console.warn('Failed to warm Walrus cache', { id: normalized, error });
+  }
 }
 
 export async function writeWalrusFiles(

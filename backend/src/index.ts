@@ -11,13 +11,7 @@ import {
     MAX_FILE_SIZE_BYTES,
     createBookProposal,
 } from './services/proposals/create.js';
-import {
-    FileNotFoundError,
-    WalrusFileFetchError,
-    resolveDecryptedFile,
-    type ResolvedFile,
-} from './services/storage/files.js';
-import { Purchase } from './entities/Purchase.js';
+import { handleFileDownloadRequest, handleWalrusFileDownloadRequest } from './utils/walrus-files.js';
 
 config();
 
@@ -88,8 +82,42 @@ const server = http.createServer(async (req, res) => {
     }
 
     const url = safeParseUrl(req.url, req.headers.host);
+    const bookDownloadMatch =
+        req.method === 'GET'
+            ? url?.pathname.match(/^\/books\/([^/]+)\/(book|cover)\/download$/)
+            : null;
+    if (bookDownloadMatch) {
+        const rawBookId = bookDownloadMatch[1];
+        let decodedBookId: string;
+        try {
+            decodedBookId = decodeURIComponent(rawBookId);
+        } catch (error) {
+            respondWithError(res, 400, 'Invalid book id');
+            return;
+        }
+
+        const telegramUserId = normalizeTelegramUserId(url?.searchParams.get('telegramUserId') ?? null);
+        const fileKind = bookDownloadMatch[2] === 'cover' ? 'cover' : 'book';
+
+        await handleFileDownloadRequest(req, res, {
+            bookId: decodedBookId,
+            fileKind,
+            telegramUserId,
+        });
+        return;
+    }
+
     if (req.method === 'GET' && url?.pathname.startsWith('/file/download/')) {
-        await handleFileDownloadRequest(req, res, url);
+        const fileId = extractFileIdFromPath(url.pathname);
+        if (!fileId) {
+            respondWithError(res, 400, 'Invalid file id');
+            return;
+        }
+
+        await handleWalrusFileDownloadRequest(req, res, {
+            fileId,
+            telegramUserId: normalizeTelegramUserId(url.searchParams.get('telegramUserId')),
+        });
         return;
     }
     if (req.method === 'POST' && url?.pathname === '/proposals') {
@@ -210,70 +238,6 @@ async function handleCreateProposalRequest(
     }
 }
 
-async function handleFileDownloadRequest(
-    _req: http.IncomingMessage,
-    res: http.ServerResponse,
-    url: URL,
-): Promise<void> {
-    const fileId = extractFileIdFromPath(url.pathname);
-
-    if (!fileId) {
-        respondWithError(res, 400, 'Invalid file id');
-        return;
-    }
-
-    const telegramUserId = normalizeTelegramUserId(url.searchParams.get('telegramUserId'));
-
-    try {
-        const resolved = await resolveDecryptedFile(fileId);
-
-        if (resolved.sourceType === 'book' && !resolved.isCoverFile) {
-            const price = resolved.book.priceStars ?? 0;
-            if (price > 0) {
-                if (!telegramUserId) {
-                    respondWithError(res, 401, 'Telegram user id is required to download this book');
-                    return;
-                }
-
-                const purchaseRepository = appDataSource.getRepository(Purchase);
-                const purchase = await purchaseRepository.findOne({
-                    where: { bookId: resolved.book.id, telegramUserId },
-                });
-
-                if (!purchase) {
-                    respondWithError(res, 403, 'Purchase required to download this book');
-                    return;
-                }
-            }
-        }
-
-        const fileName = determineDownloadFileName(resolved);
-        const contentType = resolved.mimeType ?? 'application/octet-stream';
-
-        const cacheTime =  2 * 24 * 3600 * 1000; // 2d * 24h * 1h
-        res.statusCode = 200;
-        res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Length', resolved.buffer.byteLength.toString(10));
-        res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
-        res.setHeader('Cache-Control', `public, max-age=${cacheTime}`); // кеш на 1 час
-        res.setHeader('Expires', new Date(Date.now() + cacheTime).toUTCString());
-        res.end(resolved.buffer);
-    } catch (error) {
-        if (error instanceof FileNotFoundError) {
-            respondWithError(res, 404, error.message);
-            return;
-        }
-
-        if (error instanceof WalrusFileFetchError) {
-            respondWithError(res, 500, error.message);
-            return;
-        }
-
-        console.error('Failed to handle file download request', error);
-        respondWithError(res, 500, 'Failed to process file download');
-    }
-}
-
 function extractFileIdFromPath(pathname: string): string | null {
     const prefix = '/file/download/';
     if (!pathname.startsWith(prefix)) {
@@ -299,66 +263,6 @@ function normalizeTelegramUserId(rawValue: string | null): string | null {
 
     const trimmed = rawValue.trim();
     return trimmed.length > 0 ? trimmed : null;
-}
-
-function determineDownloadFileName(resolved: ResolvedFile): string {
-    const candidate = resolved.fileName?.trim();
-    if (candidate && candidate.length > 0) {
-        return candidate;
-    }
-
-    if (resolved.sourceType === 'book') {
-        const title = resolved.book.title?.trim();
-        if (title && title.length > 0) {
-            const baseName = sanitizeFileNameBase(title);
-            const extension = guessExtensionFromMime(resolved.mimeType) ?? 'bin';
-            return `${baseName}.${extension}`;
-        }
-    }
-
-    const extension = guessExtensionFromMime(resolved.mimeType);
-    return extension ? `book-file.${extension}` : 'book-file';
-}
-
-const MIME_EXTENSION_MAP: Record<string, string> = {
-    'application/pdf': 'pdf',
-    'application/epub+zip': 'epub',
-    'application/x-mobipocket-ebook': 'mobi',
-    'text/plain': 'txt',
-};
-
-function guessExtensionFromMime(mimeType: string | null): string | null {
-    if (typeof mimeType !== 'string') {
-        return null;
-    }
-
-    const normalized = mimeType.trim().toLowerCase();
-    if (!normalized) {
-        return null;
-    }
-
-    return MIME_EXTENSION_MAP[normalized] ?? null;
-}
-
-function sanitizeFileNameBase(base: string): string {
-    const sanitized = base.replace(/[\s]+/g, ' ').trim();
-    if (!sanitized) {
-        return 'book-file';
-    }
-
-    return sanitized.replace(/[\\/:*?"<>|]+/g, '_');
-}
-
-function formatContentDispositionHeader(fileName: string): string {
-    const sanitized = sanitizeForHeader(fileName);
-    const encoded = encodeURIComponent(sanitized);
-    return `attachment; filename="${sanitized}"; filename*=UTF-8''${encoded}`;
-}
-
-function sanitizeForHeader(value: string): string {
-    const trimmed = value.trim();
-    const safe = trimmed.length > 0 ? trimmed : 'book-file';
-    return safe.replace(/["\\]+/g, '_');
 }
 
 function respondWithError(res: http.ServerResponse, statusCode: number, message: string): void {

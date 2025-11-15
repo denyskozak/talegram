@@ -21,7 +21,7 @@ import { useScrollToTop } from "@/shared/hooks/useScrollToTop";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
-import { buildFileDownloadUrl } from "@/shared/api/storage";
+import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 import { buildMiniAppDirectLink, getTelegramUserId } from "@/shared/lib/telegram";
 import {
   isBookLiked,
@@ -161,19 +161,18 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    const fileId =
-      purchaseDetails?.walrusFileId ??
-      (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0
-        ? book.walrusFileId
-        : null);
+    const hasStorage = Boolean(
+      (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0) ||
+        (typeof book.walrusBlobId === "string" && book.walrusBlobId.length > 0),
+    );
 
-    if (!fileId) {
+    if (!hasStorage) {
       showToast(t("book.toast.downloadFailed"));
       return;
     }
 
-    navigate(`/reader/${encodeURIComponent(fileId)}`);
-  }, [book, hasFullAccess, navigate, purchaseDetails, showToast, t]);
+    navigate(`/reader/${encodeURIComponent(book.id)}`);
+  }, [book, hasFullAccess, navigate, showToast, t]);
 
   const handleReviewCreated = useCallback(() => {
     setBook((prev) => (prev ? { ...prev, reviewsCount: prev.reviewsCount + 1 } : prev));
@@ -187,19 +186,23 @@ export default function BookPage(): JSX.Element {
 
     setIsDownloading(true);
     try {
-      const fileId =
-        purchaseDetails?.walrusFileId ??
-        (typeof book?.walrusFileId === "string" && book.walrusFileId.length > 0
-          ? book.walrusFileId
-          : null);
+      if (!book || !book.id) {
+        showToast(t("book.toast.downloadFailed"));
+        return;
+      }
 
-      if (!fileId) {
+      const hasStorage = Boolean(
+        (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0) ||
+          (typeof book.walrusBlobId === "string" && book.walrusBlobId.length > 0),
+      );
+
+      if (!hasStorage) {
         showToast(t("book.toast.downloadFailed"));
         return;
       }
 
       const fileName = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
-      const downloadUrl = buildFileDownloadUrl(fileId, { telegramUserId });
+      const downloadUrl = buildBookFileDownloadUrl(book.id, "book", { telegramUserId });
       if (downloadFile.isAvailable()) {
         await downloadFile(downloadUrl, fileName);
       } else {
@@ -212,7 +215,7 @@ export default function BookPage(): JSX.Element {
     } finally {
       setIsDownloading(false);
     }
-  }, [book, hasFullAccess, purchaseDetails, showToast, t, telegramUserId]);
+  }, [book, hasFullAccess, showToast, t, telegramUserId]);
 
   const handleStartPurchase = useCallback(
     async (action: "buy" | "subscribe") => {
