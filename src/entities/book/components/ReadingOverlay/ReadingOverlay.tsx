@@ -13,6 +13,7 @@ import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import "@react-pdf-viewer/zoom/lib/styles/index.css";
 // import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "./ReadingOverlay.css";
+import {useLaunchParams} from "@telegram-apps/sdk-react";
 
 type ViewerPalette = {
   background: string;
@@ -103,6 +104,7 @@ export function ReadingOverlay({ book }: ReadingOverlayProps): JSX.Element {
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const zoomPluginInstance = zoomPlugin();
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
   const luminance = useMemo(() => getLuminance(theme?.bg_color), [theme]);
   const isDarkTheme = luminance !== null ? luminance < 0.35 : false;
@@ -144,6 +146,7 @@ export function ReadingOverlay({ book }: ReadingOverlayProps): JSX.Element {
         flexDirection: "column",
         height: "100dvh",
         overflow: "hidden",
+        paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0
       }}
     >
       {/*<header*/}

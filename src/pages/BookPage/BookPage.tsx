@@ -25,6 +25,7 @@ import { useBookReader } from "@/entities/book/hooks/useBookReader";
 import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
 import { buildFileDownloadUrl } from "@/shared/api/storage";
 import { BookPageSkeleton } from "./BookPageSkeleton";
+import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 
 export default function BookPage(): JSX.Element {
   const { id } = useParams<{ id: ID }>();
@@ -562,6 +563,7 @@ export default function BookPage(): JSX.Element {
                       {t("book.actions.download")}
                     </Button>
                   </div>
+                    {isDownloading || isLoading ?  <QuoteCarouselNotice theme={theme} t={t} /> : null}
                   {purchaseDetails && (
                     <Card style={{ padding: 16, borderRadius: 20, display: "flex", flexDirection: "column", gap: 12 }}>
                       <Title level="3" weight="2">

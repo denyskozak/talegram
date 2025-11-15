@@ -33,14 +33,6 @@ export default defineConfig({
         // Exposes your dev server and makes it accessible for the devices in the same network.
         host: true,
         allowedHosts: true,
-        proxy: {
-            '/trpc/': {
-                target: 'https://bridgette-nonfertile-nonimmanently.ngrok-free.dev',
-                changeOrigin: true,
-                secure: false,
-            },
-        },
-
     },
     preview: {
         port: 5153
