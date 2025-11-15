@@ -381,7 +381,7 @@ export function PublishSection({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".pdf"
+              accept=".epub"
               onChange={onFileSelect}
               disabled={isFormDisabled}
               style={{ display: "none" }}

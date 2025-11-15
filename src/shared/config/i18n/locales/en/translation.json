@@ -293,8 +293,8 @@
           "placeholder": "No image selected"
         },
         "file": {
-          "label": "PDF file",
-          "cta": "Upload .pdf",
+          "label": "EPUB file",
+          "cta": "Upload .epub",
           "placeholder": "No file selected"
         },
         "submit": "Submit for review",

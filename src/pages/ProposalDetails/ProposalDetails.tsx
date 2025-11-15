@@ -151,7 +151,7 @@ export default function ProposalDetails(): JSX.Element {
 
         setIsDownloading(true);
         try {
-            const resolvedFileName = proposal.fileName ?? `${proposal.title}.pdf`;
+            const resolvedFileName = proposal.fileName ?? `${proposal.title}.epub`;
             const downloadUrl = buildFileDownloadUrl(proposal.walrusFileId, { telegramUserId });
 
             try {

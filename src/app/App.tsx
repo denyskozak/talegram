@@ -1,7 +1,6 @@
 import {BrowserRouter, useLocation, useNavigate} from "react-router-dom";
 import {useEffect, useState, type TransitionEvent} from "react";
 import {useLaunchParams} from '@telegram-apps/sdk-react';
-import { Worker } from "@react-pdf-viewer/core";
 
 import {AppRoot} from "@telegram-apps/telegram-ui";
 import {TonConnectUIProvider} from "@tonconnect/ui-react";
@@ -159,9 +158,8 @@ export default function App(): JSX.Element {
             <TonConnectUIProvider manifestUrl={manifestUrl} uiPreferences={{theme: "SYSTEM"}}>
                 <TMAProvider>
                     <ThemeProvider>
-                        <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js">
                             <AppContent/>
-                        </Worker>
+
                     </ThemeProvider>
                 </TMAProvider>
             </TonConnectUIProvider>
