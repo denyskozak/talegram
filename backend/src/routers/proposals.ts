@@ -268,9 +268,7 @@ export const proposalsRouter = createRouter({
 
         await Promise.all([
           warmWalrusFileCache(persistedBook.walrusFileId),
-          warmWalrusFileCache(persistedBook.walrusBlobId),
           warmWalrusFileCache(persistedBook.coverWalrusFileId),
-          warmWalrusFileCache(persistedBook.coverWalrusBlobId),
         ]);
 
         await voteRepository.delete({ proposalId: input.proposalId });

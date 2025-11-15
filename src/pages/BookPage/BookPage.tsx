@@ -269,6 +269,11 @@ export default function BookPage(): JSX.Element {
                 throw new Error("Missing telegram user id");
             }
 
+            await purchasesApi.confirm({
+                bookId: book.id,
+                paymentId: invoice.paymentId,
+                telegramUserId,
+            });
 
             setIsPurchased(true);
             setPurchaseModalOpen(false);
