@@ -10,8 +10,6 @@ import { useToast } from "@/shared/ui/ToastProvider";
 import { fetchProposalsForVoting, submitBookProposal } from "@/entities/proposal/api";
 import type { ProposalForVoting } from "@/entities/proposal/types";
 import { fetchAuthors } from "@/entities/author/api";
-import { useBookReader } from "@/entities/book/hooks/useBookReader";
-import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
 
 import {
   BOOK_SECTION,
@@ -87,19 +85,9 @@ export default function MyAccount(): JSX.Element {
   const [myBooks, setMyBooks] = useState<MyBook[]>([]);
   const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
   const [myBooksError, setMyBooksError] = useState<string | null>(null);
-  const [activeBook, setActiveBook] = useState<MyBook | null>(null);
   const [downloadingBookId, setDownloadingBookId] = useState<string | null>(null);
   const likedBookIdsRef = useRef<Set<string>>(new Set());
   const [myBooksFilter, setMyBooksFilter] = useState<MyBooksFilter>("purchased");
-  const {
-    bookFileUrl,
-    openReader,
-    closeReader,
-    isReading,
-    isPreviewMode,
-    resetFile,
-    isReaderLoading,
-  } = useBookReader({ mimeType: activeBook?.book.mimeType, telegramUserId });
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
   );
@@ -285,14 +273,6 @@ export default function MyAccount(): JSX.Element {
 
       const normalized = items.filter((item): item is MyBook => item !== null);
       setMyBooks(normalized);
-      setActiveBook((current) => {
-        if (!current) {
-          return current;
-        }
-
-        const updated = normalized.find((entry) => entry.book.id === current.book.id);
-        return updated ?? current;
-      });
     } catch (error) {
       console.error("Failed to load purchased books", error);
       setMyBooksError(t("account.myBooks.loadError"));
@@ -306,33 +286,22 @@ export default function MyAccount(): JSX.Element {
   }, [loadMyBooks]);
 
   const handleReadBook = useCallback(
-    async (bookId: string) => {
-      if (isReaderLoading) {
-        return;
-      }
-
+    (bookId: string) => {
       const item = myBooks.find((entry) => entry.book.id === bookId);
       if (!item) {
         return;
       }
 
-      const fileId =
-        item.purchase.walrusFileId ?? item.book.walrusFileId ?? null;
+      const fileId = item.purchase.walrusFileId ?? item.book.walrusFileId ?? null;
 
       if (!fileId) {
         showToast(t("account.myBooks.toast.missingFile"));
         return;
       }
 
-      setActiveBook(item);
-      const success = await openReader({ fileId, mimeType: item.book.mimeType });
-      if (!success) {
-        showToast(t("account.myBooks.toast.downloadError"));
-        setActiveBook(null);
-        resetFile();
-      }
+      navigate(`/reader/${encodeURIComponent(fileId)}`);
     },
-    [isReaderLoading, myBooks, openReader, resetFile, showToast, t],
+    [myBooks, navigate, showToast, t],
   );
 
   const handleDownloadBook = useCallback(
@@ -392,28 +361,9 @@ export default function MyAccount(): JSX.Element {
         );
       });
 
-      setActiveBook((current) => {
-        if (!current || current.book.id !== bookId) {
-          return current;
-        }
-
-        return { ...current, liked: likedAfterToggle };
-      });
     },
     [persistLikedBooks],
   );
-
-  const handleCloseReaderOverlay = useCallback(() => {
-    closeReader();
-    resetFile();
-    setActiveBook(null);
-  }, [closeReader, resetFile]);
-
-  useEffect(() => {
-    if (activeSection !== BOOK_SECTION && isReading) {
-      handleCloseReaderOverlay();
-    }
-  }, [activeSection, handleCloseReaderOverlay, isReading]);
 
   const loadVotingProposals = useCallback(async () => {
     setIsVotingLoading(true);
@@ -588,8 +538,6 @@ export default function MyAccount(): JSX.Element {
           onRead={handleReadBook}
           onDownload={handleDownloadBook}
           downloadingBookId={downloadingBookId}
-          isReaderLoading={isReaderLoading}
-          activeBookId={activeBook?.book.id ?? null}
           filter={myBooksFilter}
           onFilterChange={(value) => setMyBooksFilter(value)}
           onToggleLike={handleToggleLike}
@@ -640,13 +588,6 @@ export default function MyAccount(): JSX.Element {
         />
       </div>
 
-      {activeBook && isReading && (
-        <ReadingOverlay
-          book={{ ...activeBook.book, bookFileURL: bookFileUrl ?? undefined }}
-          onClose={handleCloseReaderOverlay}
-          preview={isPreviewMode}
-        />
-      )}
     </>
   );
 }
