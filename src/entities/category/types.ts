@@ -5,5 +5,5 @@ export type Category = {
   title: string;
   slug: string;
   emoji?: string;
-  booksCount: number;
+  booksCount?: number;
 };

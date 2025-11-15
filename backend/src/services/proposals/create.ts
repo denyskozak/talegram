@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { WalrusFile } from '@mysten/walrus';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
-import { keypair } from '../keys.js';
+import { getKeypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
 import { writeWalrusFiles } from '../../utils/walrus-files.js';
 
@@ -105,7 +105,7 @@ export async function createBookProposal(
       files: [bookFile, coverFile],
       epochs: 3,
       deletable: true,
-      signer: keypair,
+      signer: getKeypair(),
   });
 
 

@@ -14,7 +14,6 @@ import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyA
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 import {buildFileDownloadUrl} from "@/shared/api/storage";
 import { downloadFile } from "@telegram-apps/sdk-react";
-import {handleBookCoverError} from "@/entities/book/lib.ts";
 
 function formatDate(value: string): string {
     const date = new Date(value);

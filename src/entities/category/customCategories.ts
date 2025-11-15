@@ -42,7 +42,7 @@ export const SPECIAL_CATEGORIES: SpecialCategory[] = SPECIAL_CATEGORIES_BASE.map
   ({ defaultTitle, ...category }) => ({
     ...category,
     title: defaultTitle,
-    booksCount: TOTAL_BOOKS_COUNT,
+    // booksCount: TOTAL_BOOKS_COUNT,
     path: `/top/${category.slug}`,
   }),
 ) satisfies SpecialCategory[];

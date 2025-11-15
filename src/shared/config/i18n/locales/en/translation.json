@@ -194,7 +194,8 @@
     },
     "aria": "Category {{title}}",
     "booksCount": "{{count}} book",
-    "booksCount_plural": "{{count}} books"
+    "booksCount_plural": "{{count}} books",
+    "specialCategory": "Click"
   },
   "globalCategories": {
     "article": "Articles",

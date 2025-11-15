@@ -9,7 +9,7 @@ import {
 } from '../services/storage/files.js';
 import { suiClient } from '../services/walrus-storage.js';
 
-const MAX_CACHE_SIZE = 100;
+const MAX_CACHE_SIZE = 50;
 
 type CachedDecryptedFile = {
   fileId: string;

@@ -173,6 +173,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <Text weight="2">{t("reviews.form.nameLabel")}</Text>
               <Input
+                  className="input-wrapper"
                 value={authorName}
                 onChange={(event) => setAuthorName(event.target.value)}
                 placeholder={t("reviews.form.namePlaceholder")}

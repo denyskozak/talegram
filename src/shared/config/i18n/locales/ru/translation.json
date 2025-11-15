@@ -194,7 +194,9 @@
     "booksCount_one": "{{count}} книга",
     "booksCount_few": "{{count}} книги",
     "booksCount_many": "{{count}} книг",
-    "booksCount_other": "{{count}} книг"
+    "booksCount_other": "{{count}} книг",
+    "booksCount": "{{count}} книг",
+    "specialCategory": "Нажать"
   },
   "globalCategories": {
     "article": "Статьи",

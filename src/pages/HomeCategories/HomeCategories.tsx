@@ -123,14 +123,15 @@ export default function HomeCategories(): JSX.Element {
                     ))}
                 </SegmentedControl>
             </div>
-            <Input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={t("homeCategories.searchPlaceholder")}
-                aria-label={t("homeCategories.searchPlaceholder")}
-                style={{marginBottom: 16}}
-            />
+            {/*<Input*/}
+            {/*    type="search"*/}
+            {/*    className="input-wrapper"*/}
+            {/*    value={search}*/}
+            {/*    onChange={(event) => setSearch(event.target.value)}*/}
+            {/*    placeholder={t("homeCategories.searchPlaceholder")}*/}
+            {/*    aria-label={t("homeCategories.searchPlaceholder")}*/}
+            {/*    style={{marginBottom: 16}}*/}
+            {/*/>*/}
             {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
                                    onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
             {isLoading && displayedCategories.length === 0 ? (

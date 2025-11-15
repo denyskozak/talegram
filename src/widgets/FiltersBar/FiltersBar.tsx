@@ -44,6 +44,7 @@ export function FiltersBar({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <Input
+          className="input-wrapper"
         type="search"
         value={search}
         onChange={handleSearch}

@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { Button, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import type { Book } from "@/entities/book/types";
@@ -98,13 +97,12 @@ type ReadingOverlayProps = {
   preview?: boolean;
 };
 
-export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({ book }: ReadingOverlayProps): JSX.Element {
   const { t } = useTranslation();
   const { theme } = useTMA();
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
   const defaultLayoutPluginInstance = defaultLayoutPlugin();
   const zoomPluginInstance = zoomPlugin();
-  const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
 
   const luminance = useMemo(() => getLuminance(theme?.bg_color), [theme]);
   const isDarkTheme = luminance !== null ? luminance < 0.35 : false;
