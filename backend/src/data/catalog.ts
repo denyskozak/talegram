@@ -205,15 +205,17 @@ export async function listCategories(params: {
 
 export async function listGlobalCategories(): Promise<string[]> {
   const repository = await getBookProposalRepository();
-  const proposals = await repository.find({ select: ['globalCategory'] });
+  const proposals: Array<Pick<BookProposal, 'globalCategory'>> = await repository.find({
+    select: ['globalCategory'],
+  });
 
-  const unique = new Set(
+  const unique = new Set<string>(
     proposals
       .map((proposal) => proposal.globalCategory?.trim().toLocaleLowerCase())
       .filter((value): value is string => typeof value === 'string' && value.length > 0),
   );
 
-  const preferredOrder = ['article', 'book', 'comic'];
+  const preferredOrder: ReadonlyArray<string> = ['article', 'book', 'comics'];
 
   return Array.from(unique).sort((a, b) => {
     const indexA = preferredOrder.indexOf(a);
@@ -242,7 +244,7 @@ export async function listBooks(params: {
   limit?: number;
 } = {}): Promise<{ items: CatalogBook[]; nextCursor?: string }> {
   const repository = await getBookRepository();
-  const entities = await repository.find();
+  const entities = (await repository.find()) as BookEntity[];
 
   const filtered = entities.filter((entity) => {
     const categoryId = getCategoryId(entity);
@@ -265,7 +267,7 @@ export async function listBooks(params: {
 
 export async function getBook(bookId: ID): Promise<CatalogBook | null> {
   const repository = await getBookRepository();
-  const entity = await repository.findOne({ where: { id: bookId } });
+  const entity = (await repository.findOne({ where: { id: bookId } })) as BookEntity | null;
   if (!entity) {
     return null;
   }
@@ -275,13 +277,13 @@ export async function getBook(bookId: ID): Promise<CatalogBook | null> {
 
 export async function listAllBooks(): Promise<CatalogBook[]> {
   const repository = await getBookRepository();
-  const entities = await repository.find({ order: { title: 'ASC' } });
+  const entities = (await repository.find({ order: { title: 'ASC' } })) as BookEntity[];
   return Promise.all(entities.map((entity) => mapEntityToBook(entity)));
 }
 
 export async function listCategoryTags(categoryId: ID, limit = 9): Promise<string[]> {
   const repository = await getBookRepository();
-  const entities = await repository.find();
+  const entities = (await repository.find()) as BookEntity[];
   const frequency = new Map<string, number>();
 
   for (const entity of entities) {
@@ -295,7 +297,7 @@ export async function listCategoryTags(categoryId: ID, limit = 9): Promise<strin
     }
   }
 
-  return Array.from(frequency.entries())
+  return Array.from<[string, number]>(frequency.entries())
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, limit)
     .map(([tag]) => tag);

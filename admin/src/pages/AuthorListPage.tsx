@@ -1,12 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTrpc } from '../api/trpcProvider.js';
+import type { AuthorSummary, CreateAuthorPayload } from '../types/catalog';
 import './AuthorListPage.css';
-
-type Author = {
-  id: string;
-  name: string;
-  telegramUsername: string;
-};
 
 type RequestState = 'idle' | 'loading' | 'error';
 
@@ -14,7 +9,7 @@ type FormState = 'idle' | 'submitting';
 
 export function AuthorListPage(): JSX.Element {
   const { client } = useTrpc();
-  const [authors, setAuthors] = useState<Author[]>([]);
+  const [authors, setAuthors] = useState<AuthorSummary[]>([]);
   const [state, setState] = useState<RequestState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -74,7 +69,7 @@ export function AuthorListPage(): JSX.Element {
       const created = await client.admin.createAuthor.mutate({
         name: trimmedName,
         telegramUsername: trimmedUsername,
-      });
+      } satisfies CreateAuthorPayload);
       setAuthors((prev) => [...prev, created]);
       setName('');
       setUsername('');

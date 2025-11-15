@@ -60,7 +60,7 @@ export const catalogRouter = createRouter({
     .query(async ({ input }) => {
       const result = await listBooks(input ?? {});
 
-      const coverWalrusFileIds = Array.from(
+      const coverWalrusFileIds = Array.from<string>(
         new Set(
           result.items
             .map((book) => book.coverWalrusFileId)

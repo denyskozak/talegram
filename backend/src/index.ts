@@ -97,7 +97,9 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    trpcHandler(req, res).catch((error) => console.error(error));
+    Promise.resolve(trpcHandler(req, res)).catch((error: unknown) => {
+        console.error(error);
+    });
 });
 
 server.listen(port, () => {

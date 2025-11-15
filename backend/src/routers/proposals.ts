@@ -56,13 +56,13 @@ export const proposalsRouter = createRouter({
     await initializeDataSource();
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
-    const proposals = await bookProposalRepository.find({
+    const proposals = (await bookProposalRepository.find({
       where: { status: ProposalStatus.PENDING, isDeleted: false },
       order: { createdAt: 'DESC' },
       relations: { votes: true },
-    });
+    })) as Array<BookProposal & { votes: ProposalVote[] }>;
 
-    const coverFileIds = Array.from(
+    const coverFileIds = Array.from<string>(
       new Set(
         proposals
           .map((proposal) => proposal.coverWalrusFileId)
@@ -75,7 +75,7 @@ export const proposalsRouter = createRouter({
         ? await fetchWalrusFilesBase64(coverFileIds)
         : new Map<string, string | null>();
 
-    const normalized = proposals.map((proposal: BookProposal & { votes: ProposalVote[] }) => {
+    const normalized = proposals.map((proposal) => {
       const votes = proposal.votes ?? [];
       const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
       const negativeVotes = votes.length - positiveVotes;

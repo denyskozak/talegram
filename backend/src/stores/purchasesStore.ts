@@ -23,7 +23,7 @@ export const setPurchased = async (
   details: PurchaseDetails,
 ): Promise<void> => {
   const repository = appDataSource.getRepository(Purchase);
-  const existing = await repository.findOne({ where: { bookId, telegramUserId } });
+  const existing = (await repository.findOne({ where: { bookId, telegramUserId } })) as Purchase | null;
 
   if (existing) {
     existing.paymentId = details.paymentId;
@@ -51,7 +51,7 @@ export const getPurchaseDetails = async (
   telegramUserId: string,
 ): Promise<PurchaseDetails | undefined> => {
   const repository = appDataSource.getRepository(Purchase);
-  const entity = await repository.findOne({ where: { bookId, telegramUserId } });
+  const entity = (await repository.findOne({ where: { bookId, telegramUserId } })) as Purchase | null;
   if (!entity) {
     return undefined;
   }
@@ -63,10 +63,10 @@ export const listPurchasedBooks = async (
   telegramUserId: string,
 ): Promise<Array<{ bookId: string } & PurchaseDetails>> => {
   const repository = appDataSource.getRepository(Purchase);
-  const entities = await repository.find({
+  const entities = (await repository.find({
     where: { telegramUserId },
     order: { purchasedAt: 'DESC' },
-  });
+  })) as Purchase[];
 
   return entities.map((entity) => ({
     bookId: entity.bookId,
