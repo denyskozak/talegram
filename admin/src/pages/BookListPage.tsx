@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Book } from '../../backend/src/data/types.js';
+import type { Book, Category } from '../types/catalog';
 import { useTrpc } from '../api/trpcProvider.js';
 import './BookListPage.css';
 
@@ -30,7 +30,7 @@ export function BookListPage(): JSX.Element {
           return;
         }
 
-        const categoryMap = categoriesResponse.reduce<CategoryMap>((acc, category) => {
+        const categoryMap = categoriesResponse.reduce<CategoryMap>((acc: CategoryMap, category: Category) => {
           acc[category.id] = category.title;
           return acc;
         }, {});

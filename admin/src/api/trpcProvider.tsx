@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { createTRPCClient, httpBatchLink, type TRPCClient } from '@trpc/client';
-import type { AppRouter } from '../../backend/src/index.js';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import type { AdminTrpcClient, AppRouter } from './appRouter';
 
 type TrpcContextValue = {
-  client: TRPCClient<AppRouter>;
+  client: AdminTrpcClient;
   token: string | null;
   setToken: (token: string | null) => void;
   backendUrl: string;
@@ -45,8 +45,8 @@ function resolveBackendUrl(): string {
   return normalized ?? DEFAULT_BACKEND_URL;
 }
 
-function createClient(backendUrl: string, token: string | null): TRPCClient<AppRouter> {
-  return createTRPCClient<AppRouter>({
+function createClient(backendUrl: string, token: string | null): AdminTrpcClient {
+  const client = createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
         url: backendUrl,
@@ -65,6 +65,8 @@ function createClient(backendUrl: string, token: string | null): TRPCClient<AppR
       }),
     ],
   });
+
+  return client as unknown as AdminTrpcClient;
 }
 
 const TrpcContext = createContext<TrpcContextValue | undefined>(undefined);

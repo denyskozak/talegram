@@ -2,20 +2,15 @@ import type {
   BookProposal,
   ProposalVotingListResponse,
   SubmitProposalVoteResult,
-} from './types';
-import { trpc, resolveBackendUrl } from '@/shared/api/trpc';
-
-export type SubmitProposalPayload = {
-  title: string;
-  author: string;
-  description: string;
-  globalCategory: string;
-  category: string;
-  price: number;
-  hashtags: string[];
-  file: File;
-  coverFile: File;
-};
+} from "./types";
+import { trpc, resolveBackendUrl } from "@/shared/api/trpc";
+import { toGlobalCategory } from "@/shared/constants/globalCategories";
+import type {
+  GetProposalByIdInput,
+  ListProposalsForVotingInput,
+  SubmitProposalPayload,
+  SubmitProposalVotePayload,
+} from "./apiContracts";
 
 export async function submitBookProposal(
   payload: SubmitProposalPayload,
@@ -51,30 +46,82 @@ export async function submitBookProposal(
   return proposal;
 }
 
+type RawProposalVotes = {
+  positiveVotes: number;
+  negativeVotes: number;
+  userVote: string | null;
+};
+
+type RawProposalForVoting = Omit<BookProposal, 'globalCategory' | 'coverWalrusFileId' | 'coverWalrusBlobId' | 'votes'> & {
+  globalCategory: string | null;
+  coverWalrusFileId: string | null;
+  coverWalrusBlobId: string | null;
+  votes: RawProposalVotes;
+};
+
 export async function fetchProposalsForVoting(
   telegramUsername?: string,
 ): Promise<ProposalVotingListResponse> {
-  return trpc.proposals.listForVoting.query({
+  const response = await trpc.proposals.listForVoting.query({
     telegramUsername,
-  });
+  } satisfies ListProposalsForVotingInput);
+
+  return {
+    allowedVotersCount: response.allowedVotersCount,
+    proposals: response.proposals.map((proposal: RawProposalForVoting) => ({
+      ...proposal,
+      globalCategory: toGlobalCategory(proposal.globalCategory) ?? "book",
+      coverWalrusFileId: proposal.coverWalrusFileId ?? null,
+      coverWalrusBlobId: proposal.coverWalrusBlobId ?? null,
+      votes: {
+        positiveVotes: proposal.votes.positiveVotes,
+        negativeVotes: proposal.votes.negativeVotes,
+        userVote:
+          proposal.votes.userVote === "positive"
+            ? "positive"
+            : proposal.votes.userVote === "negative"
+              ? "negative"
+              : null,
+      },
+    })),
+  };
 }
 
 export async function fetchProposalById(
   proposalId: string,
   telegramUsername?: string,
 ): Promise<BookProposal> {
-  return trpc.proposals.getById.query({ proposalId, telegramUsername });
-}
+  const proposal = (await trpc.proposals.getById.query({
+    proposalId,
+    telegramUsername,
+  } satisfies GetProposalByIdInput)) as RawProposalForVoting;
 
-export type SubmitProposalVotePayload = {
-  proposalId: string;
-  telegramUsername: string;
-  isPositive: boolean;
-};
+  return {
+    ...proposal,
+    globalCategory: toGlobalCategory(proposal.globalCategory) ?? "book",
+    coverWalrusFileId: proposal.coverWalrusFileId ?? null,
+    coverWalrusBlobId: proposal.coverWalrusBlobId ?? null,
+    votes: {
+      positiveVotes: proposal.votes.positiveVotes,
+      negativeVotes: proposal.votes.negativeVotes,
+      userVote:
+        proposal.votes.userVote === "positive"
+          ? "positive"
+          : proposal.votes.userVote === "negative"
+            ? "negative"
+            : null,
+    },
+  };
+}
 
 export async function submitProposalVote(
   payload: SubmitProposalVotePayload,
 ): Promise<SubmitProposalVoteResult> {
-    console.log("trpc.proposals: ", trpc.proposals.voteForProposal, payload);
-  return trpc.proposals.voteForProposal.mutate(payload);
+  const result = await trpc.proposals.voteForProposal.mutate(payload);
+
+  if (result.userVote !== "positive" && result.userVote !== "negative") {
+    throw new Error(`Unexpected vote result: ${result.userVote}`);
+  }
+
+  return result as SubmitProposalVoteResult;
 }

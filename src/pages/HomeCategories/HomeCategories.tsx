@@ -13,14 +13,12 @@ import {
   isSpecialCategoryId,
 } from "@/entities/category/customCategories";
 import { catalogApi } from "@/entities/book/api";
+import { GLOBAL_CATEGORIES, type GlobalCategory } from "@/shared/constants/globalCategories";
 import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { CategoryTileSkeleton } from "@/shared/ui/Skeletons";
-const GLOBAL_CATEGORIES = ["article", "book", "comics"] as const;
-
-type GlobalCategory = (typeof GLOBAL_CATEGORIES)[number];
 
 export default function HomeCategories(): JSX.Element {
   const navigate = useNavigate();
@@ -51,7 +49,7 @@ export default function HomeCategories(): JSX.Element {
         setIsLoading(true);
         setError(null);
 
-        const query: { search?: string; globalCategory?: string } = {
+        const query: { search?: string; globalCategory?: GlobalCategory } = {
           globalCategory: selectedGlobalCategory,
         };
         if (debouncedSearch) {
@@ -112,12 +110,13 @@ export default function HomeCategories(): JSX.Element {
       </Title>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
         <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
-        <SegmentedControl
-          value={selectedGlobalCategory}
-          onChange={(value) => setSelectedGlobalCategory(value as GlobalCategory)}
-        >
+        <SegmentedControl>
           {GLOBAL_CATEGORIES.map((category) => (
-            <SegmentedControl.Item key={category} value={category}>
+            <SegmentedControl.Item
+              key={category}
+              selected={category === selectedGlobalCategory}
+              onClick={() => setSelectedGlobalCategory(category)}
+            >
               {t(`globalCategories.${category}`, {
                 defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
               })}
@@ -133,7 +132,13 @@ export default function HomeCategories(): JSX.Element {
         aria-label={t("homeCategories.searchPlaceholder")}
         style={{ marginBottom: 16 }}
       />
-      {error && <ErrorBanner  style={{  margin: "16px 0" }} message={error} onRetry={() => setRefreshToken((prev) => prev + 1)} />}
+      {error && (
+        <ErrorBanner
+          style={{ margin: "16px 0" }}
+          message={error}
+          onRetry={() => setRefreshToken((prev) => prev + 1)}
+        />
+      )}
       {isLoading && displayedCategories.length === 0 ? (
         <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
           {Array.from({ length: 6 }).map((_, index) => (

@@ -35,30 +35,30 @@ export function FooterBar(): JSX.Element {
             {t("footer.languageLabel")}
           </Text>
           <LanguageToggle />
-          {/*<button*/}
-          {/*  type="button"*/}
-          {/*  onClick={toggle}*/}
-          {/*  aria-label={t("footer.themeToggleLabel", {*/}
-          {/*    mode: nextMode === "dark" ? t("footer.theme.dark") : t("footer.theme.light"),*/}
-          {/*  })}*/}
-          {/*  style={{*/}
-          {/*    width: 36,*/}
-          {/*    height: 36,*/}
-          {/*    borderRadius: "50%",*/}
-          {/*    border: `1px solid ${theme.separator}`,*/}
-          {/*    background: theme.section,*/}
-          {/*    color: theme.text,*/}
-          {/*    display: "flex",*/}
-          {/*    alignItems: "center",*/}
-          {/*    justifyContent: "center",*/}
-          {/*    cursor: "pointer",*/}
-          {/*    transition: "background 0.3s ease, color 0.3s ease",*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/*  <span aria-hidden="true" style={{ fontSize: 18 }}>*/}
-          {/*    {themeIcon}*/}
-          {/*  </span>*/}
-          {/*</button>*/}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={t("footer.themeToggleLabel", {
+              mode: nextMode === "dark" ? t("footer.theme.dark") : t("footer.theme.light"),
+            })}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              border: `1px solid ${theme.separator}`,
+              background: theme.section,
+              color: theme.text,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "background 0.3s ease, color 0.3s ease",
+            }}
+          >
+            <span aria-hidden="true" style={{ fontSize: 18 }}>
+              {themeIcon}
+            </span>
+          </button>
         </div>
         <Link
           to="/contact"

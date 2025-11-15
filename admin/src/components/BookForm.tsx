@@ -1,23 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import type { Category } from '../../backend/src/data/types.js';
+import type { BookFormValues, Category } from '../types/catalog';
 import './BookForm.css';
 
-type BookFormData = {
-  id: string;
-  title: string;
-  authors: string[];
-  categories: string;
-  coverUrl: string;
-  description: string;
-  priceStars: number;
-  rating: {
-    average: number;
-    votes: number;
-  };
-  tags: string[];
-  publishedAt?: string;
-  reviewsCount: number;
-};
+type BookFormData = BookFormValues;
 
 type Props = {
   initialValues: BookFormData;

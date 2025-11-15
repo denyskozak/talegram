@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Category } from '../../backend/src/data/types.js';
+import type { BookFormValues, Category } from '../types/catalog';
 import { useTrpc } from '../api/trpcProvider.js';
-import { BookForm, type BookFormData } from '../components/BookForm.js';
+import { BookForm } from '../components/BookForm.js';
 
-const EMPTY_BOOK: BookFormData = {
+const EMPTY_BOOK: BookFormValues = {
   id: '',
   title: '',
   authors: [],
@@ -55,7 +55,7 @@ export function BookCreatePage(): JSX.Element {
     };
   }, [client]);
 
-  const handleSubmit = async (values: BookFormData) => {
+  const handleSubmit = async (values: BookFormValues) => {
     try {
       await client.admin.createBook.mutate(values);
       navigate('/books', { replace: true });

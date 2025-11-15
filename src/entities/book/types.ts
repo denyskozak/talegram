@@ -1,4 +1,5 @@
 import type { Category } from "@/entities/category/types";
+import type { GlobalCategory } from "@/shared/constants/globalCategories";
 
 export type ID = string;
 
@@ -26,7 +27,7 @@ export type Book = {
   mimeType?: string | null;
   fileName?: string | null;
   bookFileURL?: string | null;
-  globalCategory?: string | null;
+  globalCategory?: GlobalCategory | null;
 };
 
 export type Review = {
@@ -39,8 +40,8 @@ export type Review = {
 };
 
 export interface CatalogApi {
-  listCategories(query?: { search?: string; globalCategory?: string }): Promise<Category[]>;
-  listGlobalCategories(): Promise<string[]>;
+  listCategories(query?: { search?: string; globalCategory?: GlobalCategory }): Promise<Category[]>;
+  listGlobalCategories(): Promise<GlobalCategory[]>;
   listBooks(params: {
     categoryId?: ID;
     search?: string;

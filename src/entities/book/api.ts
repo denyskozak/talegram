@@ -1,49 +1,58 @@
-import type { Category } from "@/entities/category/types";
 import { trpc } from "@/shared/api/trpc";
+import { isGlobalCategory, toGlobalCategory, type GlobalCategory } from "@/shared/constants/globalCategories";
 
-import type { Book, CatalogApi, ID, Review } from "./types";
+import type { Book, CatalogApi, ID } from "./types";
+import type {
+  CreateReviewPayload,
+  ListBooksPayload,
+  ListCategoriesPayload,
+  ListReviewsPayload,
+} from "./apiContracts";
 
-type ListCategoriesPayload = {
-  search?: string;
-  globalCategory?: string;
-};
+type RawBook = Omit<Book, "globalCategory"> & { globalCategory?: string | null };
 
-type ListBooksPayload = {
-  categoryId?: ID;
-  search?: string;
-  sort?: "popular" | "rating" | "new";
-  tags?: string[];
-  cursor?: string;
-  limit?: number;
-};
-
-type ListReviewsPayload = {
-  bookId: ID;
-  cursor?: string;
-  limit?: number;
-};
-
-type CreateReviewPayload = {
-  bookId: ID;
-  authorName: string;
-  rating: number;
-  text: string;
-};
+function normalizeBook(book: RawBook): Book {
+  return {
+    ...book,
+    globalCategory: toGlobalCategory(book.globalCategory),
+  };
+}
 
 export const catalogApi: CatalogApi = {
   listCategories(query) {
-    return trpc.catalog.listCategories.query(query satisfies ListCategoriesPayload);
+    if (!query) {
+      return trpc.catalog.listCategories.query(undefined);
+    }
+
+    const payload: ListCategoriesPayload = {};
+
+    if (query.search) {
+      payload.search = query.search;
+    }
+
+    if (query.globalCategory && isGlobalCategory(query.globalCategory)) {
+      payload.globalCategory = query.globalCategory;
+    }
+
+    return trpc.catalog.listCategories.query(payload);
   },
   listGlobalCategories() {
-    return trpc.catalog.listGlobalCategories.query();
-  },
-  listBooks(params) {
-    return trpc.catalog.listBooks.query(
-      params satisfies ListBooksPayload,
+    return trpc.catalog.listGlobalCategories.query().then((items) =>
+      items
+        .map((item) => toGlobalCategory(item))
+        .filter((item): item is GlobalCategory => item !== null),
     );
   },
+  listBooks(params) {
+    return trpc.catalog.listBooks.query(params satisfies ListBooksPayload).then((response) => ({
+      ...response,
+      items: response.items.map((item) => normalizeBook(item as RawBook)),
+    }));
+  },
   getBook(id, params) {
-    return trpc.catalog.getBook.query({ id, telegramUserId: params?.telegramUserId });
+    return trpc.catalog.getBook
+      .query({ id, telegramUserId: params?.telegramUserId })
+      .then((book) => normalizeBook(book as RawBook));
   },
   listReviews(bookId, cursor, limit) {
     return trpc.catalog.listReviews.query({

@@ -1,11 +1,12 @@
 import { Button, Card, Text, Title } from "@telegram-apps/telegram-ui";
+import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 
 interface ErrorBannerProps {
   message: string;
   onRetry?: () => void;
   actionLabel?: string;
-    style: Record<string, string>
+  style?: CSSProperties;
 }
 
 export function ErrorBanner({ message, style = {}, onRetry, actionLabel }: ErrorBannerProps): JSX.Element {

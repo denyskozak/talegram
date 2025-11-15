@@ -455,12 +455,16 @@ export default function BookPage(): JSX.Element {
   }
 
   const coverSrc = useMemo(() => {
-    if (book && book.coverImageData) {
+    if (!book) {
+      return "";
+    }
+
+    if (book.coverImageData) {
       const mimeType = book.coverMimeType ?? "image/jpeg";
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
-    return '';
+    return resolveBookCover({ id: book.id, coverUrl: book.coverUrl });
   }, [book]);
 
   if (isLoading || !book) {

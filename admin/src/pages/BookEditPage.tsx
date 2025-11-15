@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Book, Category } from '../../backend/src/data/types.js';
+import type { Book, BookFormValues, Category } from '../types/catalog';
 import { useTrpc } from '../api/trpcProvider.js';
-import { BookForm, type BookFormData } from '../components/BookForm.js';
+import { BookForm } from '../components/BookForm.js';
 
-function toFormData(book: Book): BookFormData {
+function toFormData(book: Book): BookFormValues {
   return {
     id: book.id,
     title: book.title,
@@ -29,7 +29,7 @@ export function BookEditPage(): JSX.Element {
   const params = useParams<{ bookId: string }>();
   const bookId = params.bookId ?? '';
   const [categories, setCategories] = useState<Category[]>([]);
-  const [initial, setInitial] = useState<BookFormData | null>(null);
+  const [initial, setInitial] = useState<BookFormValues | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +74,7 @@ export function BookEditPage(): JSX.Element {
     };
   }, [client, bookId]);
 
-  const handleSubmit = async (values: BookFormData) => {
+  const handleSubmit = async (values: BookFormValues) => {
     try {
       await client.admin.updateBook.mutate({
         id: bookId,
