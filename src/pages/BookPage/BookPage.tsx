@@ -22,7 +22,13 @@ import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
 import { buildFileDownloadUrl } from "@/shared/api/storage";
-import { getTelegramUserId } from "@/shared/lib/telegram";
+import { buildMiniAppDirectLink, getTelegramUserId } from "@/shared/lib/telegram";
+import {
+  isBookLiked,
+  loadLikedBookIds,
+  persistLikedBookIds,
+  toggleLikedBookId,
+} from "@/shared/lib/likedBooks";
 import { BookPageSkeleton } from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 
@@ -48,12 +54,14 @@ export default function BookPage(): JSX.Element {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isConfirmingPurchase, setIsConfirmingPurchase] = useState(false);
   const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
+  const likedBookIdsRef = useRef<Set<string>>(new Set());
   const telegramUserId = useMemo(
     () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
     [launchParams],
   );
   const autoReadTriggeredRef = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
 
   useScrollToTop([id]);
 
@@ -106,14 +114,31 @@ export default function BookPage(): JSX.Element {
   }, [id, telegramUserId]);
 
   const handleShare = useCallback(async () => {
+    if (!book) {
+      return;
+    }
+
     try {
-      await copyTextToClipboard(window.location.href);
+      const deepLink =
+        buildMiniAppDirectLink({ startParam: `book/${book.id}` }) ?? window.location.href;
+      await copyTextToClipboard(deepLink);
       showToast(t("book.toast.linkCopied"));
     } catch (err) {
       showToast(t("book.toast.linkFailed"));
       console.error(err);
     }
-  }, [showToast, t]);
+  }, [book, showToast, t]);
+
+  const handleToggleLike = useCallback(() => {
+    if (!book) {
+      return;
+    }
+
+    const { liked, updated } = toggleLikedBookId(book.id, likedBookIdsRef.current);
+    likedBookIdsRef.current = updated;
+    setIsLiked(liked);
+    persistLikedBookIds(updated, telegramUserId);
+  }, [book, telegramUserId]);
 
   const handleScrollToReviews = useCallback(() => {
     reviewsRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -368,6 +393,12 @@ export default function BookPage(): JSX.Element {
   }, [refreshPurchaseStatus]);
 
   useEffect(() => {
+    const likedSet = loadLikedBookIds(telegramUserId);
+    likedBookIdsRef.current = likedSet;
+    setIsLiked(book ? isBookLiked(book.id, likedSet) : false);
+  }, [book?.id, telegramUserId]);
+
+  useEffect(() => {
     if (autoReadTriggeredRef.current) {
       return;
     }
@@ -420,23 +451,43 @@ export default function BookPage(): JSX.Element {
   return (
     <>
       <main style={{ margin: "0 auto", maxWidth: 720, paddingBottom: 96 }}>
-        <div style={{ position: "relative" }}>
-          <div style={{ padding: 16, gap: 16, display: "flex", flexDirection: 'column' }}>
-              <div>
-                  <Title level="1" weight="2">
-                      {book.title}
-                  </Title>
-                  <div style={{ color: "var(--app-subtitle-color)" }}>{book.authors.join(", ")}</div>
-                  <Button
-                      aria-label={t("book.share")}
-                      mode="plain"
-                      onClick={handleShare}
-                      style={{ position: "absolute", top: 12, right: 12 }}
-                  >
-                      🔗
-                  </Button>
+        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 12,
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Title level="1" weight="2">
+                  {book.title}
+                </Title>
+                <div style={{ color: "var(--app-subtitle-color)" }}>{book.authors.join(", ")}</div>
               </div>
-              <Card style={{ borderRadius: 24, margin: '0 auto', overflow: "hidden",  width: '80vw' }}>
+              <div style={{ display: "flex", gap: 4 }}>
+                <Button aria-label={t("book.share") } mode="plain" onClick={handleShare}>
+                  🔗
+                </Button>
+                <Button
+                  aria-label={t(isLiked ? "book.actions.unlike" : "book.actions.like", { title: book.title })}
+                  mode="plain"
+                  onClick={handleToggleLike}
+                  aria-pressed={isLiked}
+                >
+                  <span aria-hidden="true">{isLiked ? "❤️" : "🤍"}</span>
+                </Button>
+              </div>
+            </div>
+            <Card style={{ borderRadius: 24, margin: "0 auto", overflow: "hidden", width: "80vw" }}>
               <div style={{ position: "relative", aspectRatio: "10 / 12" }}>
                 <img
                       src={coverSrc}
@@ -448,7 +499,7 @@ export default function BookPage(): JSX.Element {
                 </Card>
               </div>
             </div>
-            <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {book.tags.map((tag) => (
                   <Chip key={tag} mode="outline">

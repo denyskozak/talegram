@@ -108,7 +108,9 @@
       "buy": "Buy",
       "subscribe": "Subscribe",
       "preview": "Read first 50 pages",
-      "confirm": "Complete"
+      "confirm": "Complete",
+      "like": "Like \"{{title}}\"",
+      "unlike": "Remove like from \"{{title}}\""
     },
     "reader": {
       "title": "Reading mode",

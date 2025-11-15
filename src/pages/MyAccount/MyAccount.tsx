@@ -30,14 +30,22 @@ import type {
   PublishResultState,
   VotingProposal,
 } from "./types";
-import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramUsername } from "@/shared/lib/telegram";
+import {
+  getAllowedTelegramVoterUsernames,
+  getTelegramUserId,
+  normalizeTelegramUsername,
+} from "@/shared/lib/telegram";
 import { isGlobalCategory } from "@/shared/lib/globalCategories";
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import { downloadFile } from "@telegram-apps/sdk-react";
 import { buildFileDownloadUrl } from "@/shared/api/storage";
-
-const LIKED_BOOKS_STORAGE_PREFIX = "talegram:liked-books";
+import {
+  isBookLiked,
+  loadLikedBookIds,
+  persistLikedBookIds,
+  toggleLikedBookId,
+} from "@/shared/lib/likedBooks";
 
 export default function MyAccount(): JSX.Element {
   const { t } = useTranslation();
@@ -94,27 +102,6 @@ export default function MyAccount(): JSX.Element {
   const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
   const isAllowedAuthor = telegramUsername ? authorUsernames.has(telegramUsername) : false;
   const canPublish = Boolean(telegramUsername && isAllowedAuthor);
-  const getLikedStorageKey = useCallback(() => {
-    const userKey = telegramUserId ?? "guest";
-    return `${LIKED_BOOKS_STORAGE_PREFIX}:${userKey}`;
-  }, [telegramUserId]);
-  const persistLikedBooks = useCallback(
-    (likedSet: Set<string>) => {
-      if (typeof window === "undefined") {
-        return;
-      }
-
-      try {
-        const key = getLikedStorageKey();
-        const serialized = JSON.stringify(Array.from(likedSet));
-        window.localStorage.setItem(key, serialized);
-      } catch (error) {
-        console.error("Failed to store liked books", error);
-      }
-    },
-    [getLikedStorageKey],
-  );
-
   useEffect(() => {
     let isMounted = true;
 
@@ -158,53 +145,15 @@ export default function MyAccount(): JSX.Element {
   useEffect(() => {
     setMyBooksFilter("purchased");
 
-    if (typeof window === "undefined") {
-      likedBookIdsRef.current = new Set();
-      setMyBooks((books) =>
-        books.map((item) => ({
-          ...item,
-          liked: false,
-        })),
-      );
-      return;
-    }
-
-    try {
-      const stored = window.localStorage.getItem(getLikedStorageKey());
-      if (!stored) {
-        likedBookIdsRef.current = new Set();
-        setMyBooks((books) =>
-          books.map((item) => ({
-            ...item,
-            liked: false,
-          })),
-        );
-        return;
-      }
-
-      const parsed = JSON.parse(stored) as unknown;
-      const likedIds = Array.isArray(parsed)
-        ? parsed.filter((value): value is string => typeof value === "string")
-        : [];
-      const likedSet = new Set<string>(likedIds);
-      likedBookIdsRef.current = likedSet;
-      setMyBooks((books) =>
-        books.map((item) => ({
-          ...item,
-          liked: likedSet.has(item.book.id),
-        })),
-      );
-    } catch (error) {
-      console.error("Failed to load liked books", error);
-      likedBookIdsRef.current = new Set();
-      setMyBooks((books) =>
-        books.map((item) => ({
-          ...item,
-          liked: false,
-        })),
-      );
-    }
-  }, [getLikedStorageKey]);
+    const likedSet = loadLikedBookIds(telegramUserId);
+    likedBookIdsRef.current = likedSet;
+    setMyBooks((books) =>
+      books.map((item) => ({
+        ...item,
+        liked: isBookLiked(item.book.id, likedSet),
+      })),
+    );
+  }, [telegramUserId]);
 
   const enhanceProposalsWithCovers = useCallback(
     async (proposals: ProposalForVoting[]): Promise<VotingProposal[]> => {
@@ -262,7 +211,7 @@ export default function MyAccount(): JSX.Element {
                 walrusBlobId: item.walrusBlobId,
                 walrusFileId: item.walrusFileId,
               },
-              liked: likedSet.has(book.id),
+              liked: isBookLiked(book.id, likedSet),
             } satisfies MyBook;
           } catch (error) {
             console.error("Failed to load book details", error);
@@ -341,29 +290,18 @@ export default function MyAccount(): JSX.Element {
 
   const handleToggleLike = useCallback(
     (bookId: string) => {
-      // @ts-ignore
-        let likedAfterToggle = false;
-
       setMyBooks((books) => {
-        const likedSet = new Set(likedBookIdsRef.current);
-        if (likedSet.has(bookId)) {
-          likedSet.delete(bookId);
-          likedAfterToggle = false;
-        } else {
-          likedSet.add(bookId);
-          likedAfterToggle = true;
-        }
+        const { updated } = toggleLikedBookId(bookId, likedBookIdsRef.current);
+        likedBookIdsRef.current = updated;
+        persistLikedBookIds(updated, telegramUserId);
 
-        likedBookIdsRef.current = likedSet;
-        persistLikedBooks(likedSet);
-
-        return books.map((entry) =>
-          entry.book.id === bookId ? { ...entry, liked: likedSet.has(bookId) } : entry,
-        );
+        return books.map((entry) => ({
+          ...entry,
+          liked: isBookLiked(entry.book.id, updated),
+        }));
       });
-
     },
-    [persistLikedBooks],
+    [telegramUserId],
   );
 
   const loadVotingProposals = useCallback(async () => {
