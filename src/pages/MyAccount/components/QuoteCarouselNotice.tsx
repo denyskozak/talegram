@@ -14,6 +14,10 @@ type QuoteSection = {
   quotes: Quote[];
 };
 
+type DisplayQuote = Quote & {
+  title: string;
+};
+
 type QuoteCarouselNoticeProps = {
   theme: ThemeColors;
   t: TFunction<"translation">;
@@ -37,35 +41,37 @@ export function QuoteCarouselNotice({
     return copy;
   }, []);
 
-  const sections = useMemo(() => {
+  const quotes = useMemo(() => {
     const translatedSections = t("account.publish.form.quoteCarousel.sections", {
       returnObjects: true,
     });
 
     if (!Array.isArray(translatedSections)) {
-      return [] as QuoteSection[];
+      return [] as DisplayQuote[];
     }
 
     const normalized = translatedSections as QuoteSection[];
 
-    return shuffleArray(normalized).map((section) => ({
-      ...section,
-      quotes: shuffleArray(section.quotes ?? []),
-    }));
+    const flattenedQuotes = normalized.flatMap((section) =>
+      (section.quotes ?? []).map((quote) => ({
+        ...quote,
+        title: section.title,
+      })),
+    );
+
+    return shuffleArray(flattenedQuotes);
   }, [shuffleArray, t]);
 
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    setCurrentSectionIndex(0);
     setCurrentQuoteIndex(0);
     setIsVisible(true);
-  }, [sections]);
+  }, [quotes]);
 
   useEffect(() => {
-    if (sections.length === 0) {
+    if (quotes.length === 0) {
       return undefined;
     }
 
@@ -74,21 +80,9 @@ export function QuoteCarouselNotice({
     }, Math.max(0, DISPLAY_DURATION_MS - FADE_DURATION_MS));
 
     const switchTimeout = setTimeout(() => {
-      const currentSection = sections[currentSectionIndex];
-
-      if (!currentSection) {
-        setIsVisible(true);
-        return;
-      }
-
       const nextQuoteIndex = currentQuoteIndex + 1;
-
-      if (nextQuoteIndex < currentSection.quotes.length) {
-        setCurrentQuoteIndex(nextQuoteIndex);
-      } else {
-        setCurrentSectionIndex((currentSectionIndex + 1) % sections.length);
-        setCurrentQuoteIndex(0);
-      }
+      const normalizedIndex = nextQuoteIndex % quotes.length;
+      setCurrentQuoteIndex(normalizedIndex);
 
       setIsVisible(true);
     }, DISPLAY_DURATION_MS);
@@ -97,12 +91,11 @@ export function QuoteCarouselNotice({
       clearTimeout(fadeTimeout);
       clearTimeout(switchTimeout);
     };
-  }, [currentQuoteIndex, currentSectionIndex, sections]);
+  }, [currentQuoteIndex, quotes]);
 
-  const currentSection = sections[currentSectionIndex];
-  const currentQuote = currentSection?.quotes[currentQuoteIndex];
+  const currentQuote = quotes[currentQuoteIndex];
 
-  if (!currentSection || !currentQuote) {
+  if (!currentQuote) {
     return null;
   }
 
@@ -129,12 +122,12 @@ export function QuoteCarouselNotice({
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <Text style={{ color: theme.text }}>
-            <span style={{ color: theme.subtitle }}>{currentSection.title}:</span> {currentQuote.english}
+            <span style={{ color: theme.subtitle }}>{currentQuote.title}:</span> {currentQuote.english}
           </Text>
 
         </div>
         <Text style={{ color: theme.subtitle, fontSize: 12 }}>
-          {currentQuoteIndex + 1} / {currentSection.quotes.length}
+          {currentQuoteIndex + 1} / {quotes.length}
         </Text>
       </div>
     </div>
