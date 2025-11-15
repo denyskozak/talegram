@@ -18,10 +18,7 @@ import {useScrollRestoration} from "@/shared/hooks/useScrollRestoration";
 import {EmptyState} from "@/shared/ui/EmptyState";
 import {ErrorBanner} from "@/shared/ui/ErrorBanner";
 import {CategoryTileSkeleton} from "@/shared/ui/Skeletons";
-
-const GLOBAL_CATEGORIES = ["article", "book", "comics"] as const;
-
-type GlobalCategory = (typeof GLOBAL_CATEGORIES)[number];
+import {GLOBAL_CATEGORIES, type GlobalCategory} from "@/shared/lib/globalCategories";
 
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();

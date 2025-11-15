@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
-import type { Category } from '../../backend/src/data/types.js';
+import type { Category } from '../types/backend';
 import './BookForm.css';
 
 type BookFormData = {

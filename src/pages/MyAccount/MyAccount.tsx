@@ -33,6 +33,7 @@ import type {
   VotingProposal,
 } from "./types";
 import { getAllowedTelegramVoterUsernames, getTelegramUserId, normalizeTelegramUsername } from "@/shared/lib/telegram";
+import { isGlobalCategory } from "@/shared/lib/globalCategories";
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import { downloadFile } from "@telegram-apps/sdk-react";
@@ -505,7 +506,7 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
-    if (formState.globalCategory.trim().length === 0) {
+    if (!isGlobalCategory(formState.globalCategory)) {
       showToast(t("account.publish.toastMissingGlobalCategory"));
       return;
     }
@@ -523,7 +524,7 @@ export default function MyAccount(): JSX.Element {
         title: formState.title,
         author: formState.author,
         description: formState.description,
-        globalCategory: formState.globalCategory.trim(),
+        globalCategory: formState.globalCategory,
         category: formState.category.trim(),
         price: normalizedPrice,
         hashtags: submissionHashtags,

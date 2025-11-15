@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Category } from '../../backend/src/data/types.js';
+import type { Category } from '../types/backend';
 import { useTrpc } from '../api/trpcProvider.js';
 import { BookForm, type BookFormData } from '../components/BookForm.js';
 
@@ -35,7 +35,7 @@ export function BookCreatePage(): JSX.Element {
       try {
         const response = await client.catalog.listCategories.query();
         if (!cancelled) {
-          setCategories(response);
+          setCategories((response ?? []) as Category[]);
         }
       } catch (err) {
         console.error('Failed to load categories', err);

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Book, Category } from '../../backend/src/data/types.js';
+import type { Book, Category } from '../types/backend';
 import { useTrpc } from '../api/trpcProvider.js';
 import { BookForm, type BookFormData } from '../components/BookForm.js';
 
@@ -54,8 +54,8 @@ export function BookEditPage(): JSX.Element {
           return;
         }
 
-        setCategories(categoriesResponse);
-        setInitial(toFormData(bookResponse));
+        setCategories((categoriesResponse ?? []) as Category[]);
+        setInitial(toFormData(bookResponse as Book));
       } catch (err) {
         console.error('Failed to load book data', err);
         if (!cancelled) {

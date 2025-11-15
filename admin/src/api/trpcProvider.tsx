@@ -1,9 +1,9 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { createTRPCClient, httpBatchLink, type TRPCClient } from '@trpc/client';
-import type { AppRouter } from '../../backend/src/index.js';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import type { AppRouter } from '../types/backend';
 
 type TrpcContextValue = {
-  client: TRPCClient<AppRouter>;
+  client: ReturnType<typeof createTRPCClient<AppRouter>> | any;
   token: string | null;
   setToken: (token: string | null) => void;
   backendUrl: string;
@@ -45,7 +45,7 @@ function resolveBackendUrl(): string {
   return normalized ?? DEFAULT_BACKEND_URL;
 }
 
-function createClient(backendUrl: string, token: string | null): TRPCClient<AppRouter> {
+function createClient(backendUrl: string, token: string | null) {
   return createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
@@ -119,7 +119,7 @@ export function TrpcProvider({ children }: { children: React.ReactNode }): JSX.E
     [defaultBackendUrl, setToken],
   );
 
-  const client = useMemo(() => createClient(backendUrl, token), [backendUrl, token]);
+  const client = useMemo(() => createClient(backendUrl, token) as any, [backendUrl, token]);
 
   const value = useMemo<TrpcContextValue>(
     () => ({ client, token, setToken, backendUrl, setBackendUrl, defaultBackendUrl }),

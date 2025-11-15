@@ -1,3 +1,5 @@
+import type { GlobalCategory } from "@/shared/lib/globalCategories";
+
 export type ProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export type BookProposal = {
@@ -5,15 +7,15 @@ export type BookProposal = {
     title: string;
     author: string;
     description: string;
-    globalCategory: string;
+    globalCategory: GlobalCategory;
     category: string;
     price: number;
     currency: string;
     hashtags: string[];
     walrusBlobId: string;
     walrusFileId: string;
-    coverWalrusFileId: string;
-    coverWalrusBlobId?: string;
+    coverWalrusFileId: string | null;
+    coverWalrusBlobId: string | null;
     coverMimeType?: string | null;
     coverFileName?: string | null;
     coverFileSize?: number | null;

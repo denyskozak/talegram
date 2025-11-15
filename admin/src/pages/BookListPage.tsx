@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import type { Book } from '../../backend/src/data/types.js';
+import type { Book, Category } from '../types/backend';
 import { useTrpc } from '../api/trpcProvider.js';
 import './BookListPage.css';
 
@@ -21,19 +21,22 @@ export function BookListPage(): JSX.Element {
       setState('loading');
       setError(null);
       try {
-        const [booksResponse, categoriesResponse] = await Promise.all([
+        const [booksResponseRaw, categoriesResponseRaw] = await Promise.all([
           client.admin.listBooks.query(),
           client.catalog.listCategories.query(),
         ]);
+
+        const booksResponse = booksResponseRaw as Book[];
+        const categoriesResponse = categoriesResponseRaw as Category[];
 
         if (cancelled) {
           return;
         }
 
-        const categoryMap = categoriesResponse.reduce<CategoryMap>((acc, category) => {
+        const categoryMap = categoriesResponse.reduce<CategoryMap>((acc, category: Category) => {
           acc[category.id] = category.title;
           return acc;
-        }, {});
+        }, {} as CategoryMap);
 
         setBooks(booksResponse);
         setCategories(categoryMap);

@@ -1,5 +1,6 @@
 import type { Book } from "@/entities/book/types";
 import type { ProposalForVoting } from "@/entities/proposal/types";
+import type { GlobalCategory } from "@/shared/lib/globalCategories";
 
 import { BOOK_SECTION, PUBLISH_SECTION, VOTE_SECTION } from "./constants";
 
@@ -14,7 +15,7 @@ export type PublishFormState = {
   title: string;
   author: string;
   description: string;
-  globalCategory: string;
+  globalCategory: GlobalCategory | "";
   category: string;
   price: string;
   isFree: boolean;
