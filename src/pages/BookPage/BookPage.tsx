@@ -25,14 +25,17 @@ import { buildFileDownloadUrl } from "@/shared/api/storage";
 import { getTelegramUserId } from "@/shared/lib/telegram";
 import { BookPageSkeleton } from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
+import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 
 export default function BookPage(): JSX.Element {
   const { id } = useParams<{ id: ID }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { launchParams, theme } = useTMA();
-  const { t } = useTranslation();
+  const { launchParams } = useTMA();
+    const theme = useTheme();
+
+    const { t } = useTranslation();
   const reviewsRef = useRef<HTMLDivElement | null>(null);
   const loaderTimeoutRef = useRef<number | null>(null);
   const [book, setBook] = useState<Book | null>(null);
