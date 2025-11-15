@@ -120,6 +120,9 @@ export class Book {
   @Column({ name: 'rating_votes', type: 'integer', default: 0 })
   ratingVotes!: number;
 
+  @Column({ name: 'middle_rate', type: 'real', default: 0 })
+  middleRate!: number;
+
   @Column({ name: 'reviews_count', type: 'integer', default: 0 })
   reviewsCount!: number;
 

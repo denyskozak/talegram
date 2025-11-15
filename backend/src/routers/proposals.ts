@@ -251,6 +251,7 @@ export const proposalsRouter = createRouter({
           priceStars: Number.isFinite(proposal.price) ? Math.max(0, proposal.price) : 0,
           ratingAverage: 0,
           ratingVotes: 0,
+          middleRate: 0,
           reviewsCount: 0,
           publishedAt: new Date(),
           globalCategory: proposal.globalCategory ?? null,

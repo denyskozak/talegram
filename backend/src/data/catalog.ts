@@ -113,6 +113,8 @@ function normalizeGlobalCategory(value: unknown): string | null {
 }
 
 async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
+  const ratingAverage = entity.middleRate ?? entity.ratingAverage ?? 0;
+  const ratingVotes = entity.ratingVotes ?? 0;
   return {
     id: entity.id,
     title: entity.title,
@@ -122,8 +124,8 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     description: entity.description,
     priceStars: entity.priceStars ?? 0,
     rating: {
-      average: entity.ratingAverage ?? 0,
-      votes: entity.ratingVotes ?? 0,
+      average: ratingAverage,
+      votes: ratingVotes,
     },
     tags: ensureArray(entity.tags),
     publishedAt: getPublishedAt(entity),
@@ -146,7 +148,7 @@ function sortEntities(entities: BookEntity[], sort: BookSort): BookEntity[] {
     entity,
     reviewsCount: entity.reviewsCount ?? 0,
     rating: {
-      average: entity.ratingAverage ?? 0,
+      average: entity.middleRate ?? entity.ratingAverage ?? 0,
       votes: entity.ratingVotes ?? 0,
     },
     publishedAt: getPublishedAt(entity),
@@ -323,6 +325,30 @@ async function incrementReviewCount(bookId: ID): Promise<void> {
   await repository.increment({ id: bookId }, 'reviewsCount', 1);
 }
 
+async function updateBookRatingStats(bookId: ID, rating: number): Promise<void> {
+  const repository = await getBookRepository();
+
+  await repository.manager.transaction(async (entityManager) => {
+    const bookRepository = entityManager.getRepository(BookEntity);
+    const bookEntity = await bookRepository.findOne({ where: { id: bookId } });
+    if (!bookEntity) {
+      return;
+    }
+
+    const currentVotes = bookEntity.ratingVotes ?? 0;
+    const currentAverage = bookEntity.middleRate ?? bookEntity.ratingAverage ?? 0;
+    const nextVotes = currentVotes + 1;
+    const rawAverage = nextVotes === 0 ? 0 : (currentAverage * currentVotes + rating) / nextVotes;
+    const roundedAverage = Math.round(rawAverage * 10) / 10;
+
+    bookEntity.ratingVotes = nextVotes;
+    bookEntity.ratingAverage = roundedAverage;
+    bookEntity.middleRate = roundedAverage;
+
+    await bookRepository.save(bookEntity);
+  });
+}
+
 export async function createReview(
   bookId: ID,
   params: { authorName: string; rating: number; text: string },
@@ -344,6 +370,7 @@ export async function createReview(
 
   reviews.unshift(review);
   await incrementReviewCount(bookId);
+  await updateBookRatingStats(bookId, normalizedRating);
 
   return review;
 }

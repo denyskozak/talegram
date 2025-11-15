@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { catalogApi } from "@/entities/book/api";
 import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
-import type { Book, ID } from "@/entities/book/types";
+import type { Book, ID, Review } from "@/entities/book/types";
 import { downloadFile } from "@telegram-apps/sdk-react";
 import { copyTextToClipboard } from "@telegram-apps/sdk";
 import { paymentsApi } from "@/entities/payment/api";
@@ -174,8 +174,28 @@ export default function BookPage(): JSX.Element {
     navigate(`/reader/${encodeURIComponent(book.id)}`);
   }, [book, hasFullAccess, navigate, showToast, t]);
 
-  const handleReviewCreated = useCallback(() => {
-    setBook((prev) => (prev ? { ...prev, reviewsCount: prev.reviewsCount + 1 } : prev));
+  const handleReviewCreated = useCallback((review: Review) => {
+    setBook((prev) => {
+      if (!prev) {
+        return prev;
+      }
+
+      const currentVotes = prev.rating.votes ?? 0;
+      const currentAverage = prev.rating.average ?? 0;
+      const nextVotes = currentVotes + 1;
+      const nextAverage = nextVotes === 0
+        ? 0
+        : Math.round(((currentAverage * currentVotes + review.rating) / nextVotes) * 10) / 10;
+
+      return {
+        ...prev,
+        reviewsCount: prev.reviewsCount + 1,
+        rating: {
+          average: nextAverage,
+          votes: nextVotes,
+        },
+      };
+    });
   }, []);
 
   const handleDownload = useCallback(async () => {
