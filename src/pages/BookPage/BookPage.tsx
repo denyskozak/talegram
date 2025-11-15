@@ -579,38 +579,6 @@ export default function BookPage(): JSX.Element {
                     </Button>
                   </div>
                     {isDownloading || isLoading ?  <QuoteCarouselNotice theme={theme} t={t} /> : null}
-                  {purchaseDetails && (
-                    <Card style={{ padding: 16, borderRadius: 20, display: "flex", flexDirection: "column", gap: 12 }}>
-                      <Title level="3" weight="2">
-                        {t("book.purchase.statusTitle")}
-                      </Title>
-                      <div style={{ color: "var(--app-subtitle-color)" }}>
-                        {t("book.purchase.downloadDescription")}
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                        {purchaseDetails.walrusFileId && (
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{t("book.purchase.fileLabel")}</div>
-                            <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusFileId}</code>
-                          </div>
-                        )}
-                        {purchaseDetails.walrusBlobId && (
-                          <div>
-                            <div style={{ fontWeight: 600 }}>{t("book.purchase.blobLabel")}</div>
-                            <code style={{ wordBreak: "break-all" }}>{purchaseDetails.walrusBlobId}</code>
-                          </div>
-                        )}
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.invoiceIdLabel")}</div>
-                          <code style={{ wordBreak: "break-all" }}>{purchaseDetails.paymentId}</code>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                          <div style={{ fontWeight: 600 }}>{t("book.purchase.purchasedAtLabel")}</div>
-                          <span>{new Date(purchaseDetails.purchasedAt).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </Card>
-                  )}
                 </>
               ) : (
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
