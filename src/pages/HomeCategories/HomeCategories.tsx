@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
-import {Banner, SegmentedControl, Text, Title} from "@telegram-apps/telegram-ui";
+import {Banner, Card, Input, SegmentedControl, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {CategoryTile} from "@/entities/category/components/CategoryTile";
@@ -23,7 +23,7 @@ import {GLOBAL_CATEGORIES, type GlobalCategory} from "@/shared/lib/globalCategor
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
     const {t} = useTranslation();
-    const [search] = useState("");
+    const [search, setSearch] = useState("");
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -123,15 +123,17 @@ export default function HomeCategories(): JSX.Element {
                     ))}
                 </SegmentedControl>
             </div>
-            {/*<Input*/}
-            {/*    type="search"*/}
-            {/*    className="input-wrapper"*/}
-            {/*    value={search}*/}
-            {/*    onChange={(event) => setSearch(event.target.value)}*/}
-            {/*    placeholder={t("homeCategories.searchPlaceholder")}*/}
-            {/*    aria-label={t("homeCategories.searchPlaceholder")}*/}
-            {/*    style={{marginBottom: 16}}*/}
-            {/*/>*/}
+            <Card  style={{marginBottom: 16, width: '100%'}}>
+            <Input
+                type="search"
+                className="input-wrapper"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t("homeCategories.searchPlaceholder")}
+                aria-label={t("homeCategories.searchPlaceholder")}
+
+            />
+            </Card>
             {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
                                    onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
             {isLoading && displayedCategories.length === 0 ? (

@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
 import { useMemo } from "react";
 
-import { Chip, Input, SegmentedControl } from "@telegram-apps/telegram-ui";
+import {Card, Chip, Input, SegmentedControl} from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import type { BookSort } from "@/shared/lib/bookSort";
@@ -43,14 +43,15 @@ export function FiltersBar({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <Input
-          className="input-wrapper"
-        type="search"
-        value={search}
-        onChange={handleSearch}
-        placeholder={t("filters.searchPlaceholder")}
-        aria-label={t("filters.searchPlaceholder")}
-      />
+        <Card>
+            <Input
+                type="search"
+                value={search}
+                onChange={handleSearch}
+                placeholder={t("filters.searchPlaceholder")}
+                aria-label={t("filters.searchPlaceholder")}
+            />
+        </Card>
       <SegmentedControl>
         {sortOptions.map((option) => (
           <SegmentedControl.Item
