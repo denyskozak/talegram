@@ -6,7 +6,7 @@ type BookFormData = {
   id: string;
   title: string;
   authors: string[];
-  categories: string[];
+  categories: string;
   coverUrl: string;
   description: string;
   priceStars: number;
@@ -32,7 +32,7 @@ type DraftState = {
   id: string;
   title: string;
   authors: string;
-  selectedCategories: Set<string>;
+  selectedCategory: string;
   coverUrl: string;
   description: string;
   priceStars: string;
@@ -48,7 +48,7 @@ function toDraft(values: BookFormData): DraftState {
     id: values.id,
     title: values.title,
     authors: values.authors.join(', '),
-    selectedCategories: new Set(values.categories),
+    selectedCategory: values.categories ?? '',
     coverUrl: values.coverUrl,
     description: values.description,
     priceStars: values.priceStars.toString(10),
@@ -101,16 +101,10 @@ export function BookForm({
     [categories],
   );
 
-  const toggleCategory = (categoryId: string) => {
+  const handleCategoryChange = (categoryId: string) => {
     setDraft((current) => {
-      const next = new Set(current.selectedCategories);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-
-      return { ...current, selectedCategories: next };
+      const next = current.selectedCategory === categoryId ? '' : categoryId;
+      return { ...current, selectedCategory: next };
     });
   };
 
@@ -120,7 +114,7 @@ export function BookForm({
     const id = draft.id.trim();
     const title = draft.title.trim();
     const authors = normalizeList(draft.authors);
-    const categoriesList = Array.from(draft.selectedCategories);
+    const categoryId = draft.selectedCategory.trim();
     const coverUrl = draft.coverUrl.trim();
     const description = draft.description.trim();
     const tags = normalizeList(draft.tags);
@@ -144,8 +138,8 @@ export function BookForm({
       return;
     }
 
-    if (categoriesList.length === 0) {
-      setSubmitError('Select at least one category.');
+    if (!categoryId) {
+      setSubmitError('Select a category.');
       return;
     }
 
@@ -167,7 +161,7 @@ export function BookForm({
       id,
       title,
       authors,
-      categories: categoriesList,
+      categories: categoryId,
       coverUrl,
       description,
       priceStars: Math.round(priceStars),
@@ -243,13 +237,13 @@ export function BookForm({
         <legend>Categories</legend>
         <div className="book-form__chips">
           {categoryOptions.map((category) => {
-            const checked = draft.selectedCategories.has(category.id);
+            const checked = draft.selectedCategory === category.id;
             return (
               <label key={category.id} className={checked ? 'chip chip--active' : 'chip'}>
                 <input
                   type="checkbox"
                   checked={checked}
-                  onChange={() => toggleCategory(category.id)}
+                  onChange={() => handleCategoryChange(category.id)}
                 />
                 {category.title}
               </label>

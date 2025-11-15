@@ -26,6 +26,7 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
   const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [isReaderLoading, setIsReaderLoading] = useState(false);
 
   const resetFile = useCallback(() => {
     currentFileIdRef.current = null;
@@ -93,14 +94,19 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
         return true;
       }
 
-      const url = await ensureBookFileUrl(fileId, { mimeType: params?.mimeType });
-      if (!url) {
-        return false;
-      }
+      setIsReaderLoading(true);
+      try {
+        const url = await ensureBookFileUrl(fileId, { mimeType: params?.mimeType });
+        if (!url) {
+          return false;
+        }
 
-      setIsPreviewMode(false);
-      setIsReading(true);
-      return true;
+        setIsPreviewMode(false);
+        setIsReading(true);
+        return true;
+      } finally {
+        setIsReaderLoading(false);
+      }
     },
     [ensureBookFileUrl],
   );
@@ -118,5 +124,6 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
     isReading,
     isPreviewMode,
     resetFile,
+    isReaderLoading,
   } as const;
 }

@@ -58,7 +58,7 @@ export function BookListPage(): JSX.Element {
   const rows = useMemo(() => {
     return books.map((book) => ({
       ...book,
-      categoryLabels: book.categories.map((id) => categories[id] ?? id).join(', '),
+      categoryLabels: book.categories ? categories[book.categories] ?? book.categories : '—',
       authorLabels: book.authors.join(', '),
       tagLabels: book.tags.join(', '),
     }));

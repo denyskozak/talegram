@@ -7,7 +7,7 @@ type TestBook = {
   id: string;
   title: string;
   authors: string[];
-  categories: string[];
+  categories: string | null;
   coverUrl: string;
   description: string;
   rating: { average: number; votes: number };
@@ -21,7 +21,7 @@ const books: TestBook[] = [
     id: "a",
     title: "A",
     authors: ["Author"],
-    categories: ["1"],
+    categories: "1",
     coverUrl: "",
     description: "",
     rating: { average: 4.5, votes: 100 },
@@ -33,7 +33,7 @@ const books: TestBook[] = [
     id: "b",
     title: "B",
     authors: ["Author"],
-    categories: ["1"],
+    categories: "1",
     coverUrl: "",
     description: "",
     rating: { average: 4.8, votes: 50 },
@@ -45,7 +45,7 @@ const books: TestBook[] = [
     id: "c",
     title: "C",
     authors: ["Author"],
-    categories: ["1"],
+    categories: "1",
     coverUrl: "",
     description: "",
     rating: { average: 4.8, votes: 90 },

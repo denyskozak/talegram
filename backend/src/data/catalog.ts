@@ -45,6 +45,16 @@ function ensureArray(value: string[] | null | undefined): string[] {
   return Array.isArray(value) ? value : [];
 }
 
+function getCategoryId(entity: BookEntity): string | null {
+  const raw = entity.categories;
+  if (typeof raw !== 'string') {
+    return null;
+  }
+
+  const normalized = raw.trim();
+  return normalized.length > 0 ? normalized : null;
+}
+
 async function getBookRepository(): Promise<Repository<BookEntity>> {
   await initializeDataSource();
   return appDataSource.getRepository(BookEntity);
@@ -107,7 +117,7 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     id: entity.id,
     title: entity.title,
     authors: entity.author ? [entity.author] : [],
-    categories: ensureArray(entity.categories),
+    categories: getCategoryId(entity),
     coverUrl: '',
     description: entity.description,
     priceStars: entity.priceStars ?? 0,
@@ -127,6 +137,7 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     fileName: entity.fileName ?? null,
     fileEncryptionIv: entity.fileEncryptionIv ?? null,
     fileEncryptionTag: entity.fileEncryptionTag ?? null,
+    globalCategory: entity.globalCategory ?? entity.proposal?.globalCategory ?? null,
   } satisfies CatalogBook;
 }
 
@@ -150,21 +161,26 @@ export async function listCategories(params: {
   globalCategory?: string;
 } = {}): Promise<Category[]> {
   const repository = await getBookRepository();
-  const entities = await repository.find({ relations: { proposal: true } });
-
   const normalizedGlobalCategory = normalizeGlobalCategory(params.globalCategory);
-  const filteredByGlobalCategory = normalizedGlobalCategory
-    ? entities.filter((entity) =>
-        normalizeGlobalCategory(entity.proposal?.globalCategory) === normalizedGlobalCategory,
-      )
-    : entities;
+  const queryBuilder = repository.createQueryBuilder('book').leftJoin('book.proposal', 'proposal');
+
+  if (normalizedGlobalCategory) {
+    queryBuilder.andWhere(
+      'LOWER(book.global_category) = :globalCategory OR (book.global_category IS NULL AND LOWER(proposal.global_category) = :globalCategory)',
+      { globalCategory: normalizedGlobalCategory },
+    );
+  }
+
+  const filteredByGlobalCategory = await queryBuilder.getMany();
 
   const counts = new Map<string, number>();
   for (const entity of filteredByGlobalCategory) {
-    const categories = ensureArray(entity.categories);
-    for (const categoryId of categories) {
-      counts.set(categoryId, (counts.get(categoryId) ?? 0) + 1);
+    const categoryId = getCategoryId(entity);
+    if (!categoryId) {
+      continue;
     }
+
+    counts.set(categoryId, (counts.get(categoryId) ?? 0) + 1);
   }
 
   const categories: Category[] = Array.from(counts.entries())
@@ -229,8 +245,8 @@ export async function listBooks(params: {
   const entities = await repository.find();
 
   const filtered = entities.filter((entity) => {
-    const categories = ensureArray(entity.categories);
-    const categoryMatch = params.categoryId ? categories.includes(params.categoryId) : true;
+    const categoryId = getCategoryId(entity);
+    const categoryMatch = params.categoryId ? categoryId === params.categoryId : true;
     return categoryMatch && matchesSearch(entity, params.search) && matchesTags(entity, params.tags);
   });
 
@@ -269,8 +285,8 @@ export async function listCategoryTags(categoryId: ID, limit = 9): Promise<strin
   const frequency = new Map<string, number>();
 
   for (const entity of entities) {
-    const categories = ensureArray(entity.categories);
-    if (!categories.includes(categoryId)) {
+    const entityCategoryId = getCategoryId(entity);
+    if (entityCategoryId !== categoryId) {
       continue;
     }
 
