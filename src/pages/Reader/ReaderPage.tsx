@@ -21,5 +21,5 @@ export default function ReaderPage(): JSX.Element {
     );
     const downloadUrl = buildBookFileDownloadUrl(bookId || '', 'book', {telegramUserId: telegramUserId});
 
-    return <ReadingOverlay fileUrl={downloadUrl}/>;
+    return <ReadingOverlay fileUrl={downloadUrl + '.pub'}/>;
 }
