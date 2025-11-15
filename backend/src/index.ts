@@ -34,6 +34,7 @@ const trpcHandler = createHTTPHandler({
 const ALLOWED_ORIGINS = new Set<string>([
     'https://192.168.1.80:5173',
     'https://bridgette-nonfertile-nonimmanently.ngrok-free.dev',
+    'https://talegramfrontend.gastroand.me',
     // если фронт иногда открыт по http в локалке, добавь:
     // 'http://192.168.1.80:5173',
 ]);
