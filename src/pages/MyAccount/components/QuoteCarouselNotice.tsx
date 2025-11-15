@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Text } from "@telegram-apps/telegram-ui";
 import type { TFunction } from "i18next";
 
@@ -26,6 +26,17 @@ export function QuoteCarouselNotice({
   theme,
   t,
 }: QuoteCarouselNoticeProps): JSX.Element | null {
+  const shuffleArray = useCallback(<T,>(items: T[]): T[] => {
+    const copy = [...items];
+    for (let index = copy.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      const temp = copy[index];
+      copy[index] = copy[swapIndex];
+      copy[swapIndex] = temp;
+    }
+    return copy;
+  }, []);
+
   const sections = useMemo(() => {
     const translatedSections = t("account.publish.form.quoteCarousel.sections", {
       returnObjects: true,
@@ -35,8 +46,13 @@ export function QuoteCarouselNotice({
       return [] as QuoteSection[];
     }
 
-    return translatedSections as QuoteSection[];
-  }, [t]);
+    const normalized = translatedSections as QuoteSection[];
+
+    return shuffleArray(normalized).map((section) => ({
+      ...section,
+      quotes: shuffleArray(section.quotes ?? []),
+    }));
+  }, [shuffleArray, t]);
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [currentQuoteIndex, setCurrentQuoteIndex] = useState(0);

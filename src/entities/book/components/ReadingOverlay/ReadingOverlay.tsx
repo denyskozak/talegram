@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { Book } from "@/entities/book/types";
 import { useTMA } from "@/app/providers/TMAProvider";
 import type { ThemeParams } from "@telegram-apps/sdk";
 
@@ -93,12 +92,10 @@ function getViewerPalette(theme?: ThemeParams | null): ViewerPalette {
 }
 
 type ReadingOverlayProps = {
-  book: Book;
-  onClose: () => void;
-  preview?: boolean;
+  fileUrl: string;
 };
 
-export function ReadingOverlay({ book }: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({ fileUrl }: ReadingOverlayProps): JSX.Element {
   const { t } = useTranslation();
   const { theme } = useTMA();
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
@@ -194,12 +191,12 @@ export function ReadingOverlay({ book }: ReadingOverlayProps): JSX.Element {
       {/*  </Button>*/}
       {/*</header>*/}
         <Viewer
-            fileUrl={book.bookFileURL ?? ""}
-            plugins={[defaultLayoutPluginInstance, zoomPluginInstance]}
-            theme={isDarkTheme ? "dark" : "light"}
-            defaultScale={SpecialZoomLevel.PageFit}
-            renderLoader={renderViewerLoader}
-            renderError={renderViewerError}
+          fileUrl={fileUrl}
+          plugins={[defaultLayoutPluginInstance, zoomPluginInstance]}
+          theme={isDarkTheme ? "dark" : "light"}
+          defaultScale={SpecialZoomLevel.PageFit}
+          renderLoader={renderViewerLoader}
+          renderError={renderViewerError}
         />
     </div>
   );

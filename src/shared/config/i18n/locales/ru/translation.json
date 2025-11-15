@@ -133,6 +133,7 @@
       "confirmFailed": "Не удалось подтвердить оплату",
       "paymentCancelled": "Оплата отменена",
       "paymentFailed": "Оплата не прошла",
+      "readAccessRequired": "Купите книгу, чтобы прочитать её.",
       "downloadFailed": "Не удалось загрузить файл книги. Попробуйте позже."
     },
     "purchase": {

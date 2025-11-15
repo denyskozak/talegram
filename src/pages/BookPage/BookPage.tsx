@@ -21,9 +21,8 @@ import { useScrollToTop } from "@/shared/hooks/useScrollToTop";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useToast } from "@/shared/ui/ToastProvider";
-import { useBookReader } from "@/entities/book/hooks/useBookReader";
-import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
 import { buildFileDownloadUrl } from "@/shared/api/storage";
+import { getTelegramUserId } from "@/shared/lib/telegram";
 import { BookPageSkeleton } from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 
@@ -49,23 +48,10 @@ export default function BookPage(): JSX.Element {
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [isConfirmingPurchase, setIsConfirmingPurchase] = useState(false);
   const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
-    const telegramUserId = useMemo(() => {
-        const user = launchParams?.tgWebAppData?.user;
-        const rawId = user?.id;
-
-
-        return String(rawId);
-    }, [launchParams]);
-  const {
-    bookFileUrl,
-    ensureBookFileUrl,
-    openReader,
-    closeReader,
-    isReading,
-    isPreviewMode,
-    resetFile,
-    isReaderLoading,
-  } = useBookReader({ mimeType: book?.mimeType, telegramUserId });
+  const telegramUserId = useMemo(
+    () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
+    [launchParams],
+  );
   const autoReadTriggeredRef = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -134,24 +120,16 @@ export default function BookPage(): JSX.Element {
   }, []);
 
   const handlePreview = useCallback(() => {
+    showToast(t("book.toast.readAccessRequired"));
+  }, [showToast, t]);
+
+  const handleRead = useCallback(() => {
     if (!book) {
-      return;
-    }
-
-    void openReader({ preview: true });
-  }, [book, openReader]);
-
-  const handleRead = useCallback(async () => {
-    if (!book) {
-      return;
-    }
-
-    if (isReaderLoading) {
       return;
     }
 
     if (!hasFullAccess) {
-      void openReader({ preview: true });
+      showToast(t("book.toast.readAccessRequired"));
       return;
     }
 
@@ -166,19 +144,8 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
-    const success = await openReader({
-      fileId,
-      mimeType: book.mimeType,
-    });
-    if (!success) {
-      showToast(t("book.toast.downloadFailed"));
-      resetFile();
-    }
-  }, [book, hasFullAccess, isReaderLoading, openReader, purchaseDetails, resetFile, showToast, t]);
-
-  const handleCloseReader = useCallback(() => {
-    closeReader();
-  }, [closeReader]);
+    navigate(`/reader/${encodeURIComponent(fileId)}`);
+  }, [book, hasFullAccess, navigate, purchaseDetails, showToast, t]);
 
   const handleReviewCreated = useCallback(() => {
     setBook((prev) => (prev ? { ...prev, reviewsCount: prev.reviewsCount + 1 } : prev));
@@ -268,8 +235,6 @@ export default function BookPage(): JSX.Element {
       setPurchaseModalOpen(false);
       setActiveAction(null);
       setInvoice(null);
-      closeReader();
-      resetFile();
       invoiceStatusRef.current = 'paid';
       showToast(t("book.toast.accessGranted"));
       try {
@@ -285,7 +250,7 @@ export default function BookPage(): JSX.Element {
       setIsConfirmingPurchase(false);
       setIsActionLoading(false);
     }
-  }, [book, closeReader, invoice, isConfirmingPurchase, resetFile, showToast, t, telegramUserId]);
+  }, [book, invoice, isConfirmingPurchase, showToast, t, telegramUserId]);
 
   const handleModalOpenChange = useCallback(
     (open: boolean) => {
@@ -340,17 +305,9 @@ export default function BookPage(): JSX.Element {
     setIsActionLoading(false);
     setInvoice(null);
     setIsConfirmingPurchase(false);
-    closeReader();
-    resetFile();
     invoiceStatusRef.current = null;
     autoReadTriggeredRef.current = false;
-  }, [closeReader, id, resetFile]);
-
-  useEffect(() => {
-    if (!hasFullAccess && isReading && !isPreviewMode) {
-      closeReader();
-    }
-  }, [closeReader, hasFullAccess, isPreviewMode, isReading]);
+  }, [id]);
 
   useEffect(() => {
     if (!invoice) {
@@ -424,22 +381,8 @@ export default function BookPage(): JSX.Element {
     }
 
     autoReadTriggeredRef.current = true;
-    void handleRead();
+    handleRead();
   }, [book, handleRead, searchParams]);
-
-  useEffect(() => {
-    const fileId =
-      purchaseDetails?.walrusFileId ??
-      (isFreeBook && typeof book?.walrusFileId === "string" && book.walrusFileId.length > 0
-        ? book.walrusFileId
-        : null);
-    if (!fileId) {
-      resetFile();
-      return;
-    }
-
-    void ensureBookFileUrl(fileId, { mimeType: book?.mimeType });
-  }, [book?.mimeType, book?.walrusFileId, ensureBookFileUrl, isFreeBook, purchaseDetails?.walrusFileId, resetFile]);
 
   if (!id) {
     return (
@@ -545,12 +488,7 @@ export default function BookPage(): JSX.Element {
               {hasFullAccess ? (
                 <>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <Button
-                      size="l"
-                      onClick={() => void handleRead()}
-                      loading={isReaderLoading}
-                      disabled={isReaderLoading}
-                    >
+                    <Button size="l" onClick={handleRead}>
                       {t("book.actions.read")}
                     </Button>
                     <Button
@@ -558,7 +496,7 @@ export default function BookPage(): JSX.Element {
                       mode="outline"
                       onClick={() => void handleDownload()}
                       loading={isDownloading}
-                      disabled={isDownloading || isReaderLoading}
+                      disabled={isDownloading}
                     >
                       {t("book.actions.download")}
                     </Button>
@@ -710,13 +648,6 @@ export default function BookPage(): JSX.Element {
           </Button>
         </div>
       </Modal>
-      {book && isReading && (
-        <ReadingOverlay
-          book={{ ...book, bookFileURL: bookFileUrl ?? undefined }}
-          onClose={handleCloseReader}
-          preview={isPreviewMode}
-        />
-      )}
     </>
   );
 }

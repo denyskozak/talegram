@@ -139,6 +139,7 @@
       "confirmFailed": "Could not confirm the payment",
       "paymentCancelled": "Payment was cancelled",
       "paymentFailed": "Payment failed",
+      "readAccessRequired": "Purchase the book to read it.",
       "downloadFailed": "Could not load the book file. Try again later."
     },
     "purchase": {

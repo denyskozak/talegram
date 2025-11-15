@@ -19,8 +19,6 @@ export type MyBooksSectionProps = {
   onRead: (bookId: string) => void;
   onDownload: (bookId: string) => void;
   downloadingBookId: string | null;
-  isReaderLoading: boolean;
-  activeBookId: string | null;
   filter: MyBooksFilter;
   onFilterChange: (value: MyBooksFilter) => void;
   onToggleLike: (bookId: string) => void;
@@ -34,8 +32,6 @@ type MyBookCardProps = {
   onDownload: (bookId: string) => void;
   downloadingBookId: string | null;
   onToggleLike: (bookId: string) => void;
-  isReaderLoading: boolean;
-  activeBookId: string | null;
 };
 
 function formatPurchaseDate(value: string): string {
@@ -55,8 +51,6 @@ function MyBookCard({
   onDownload,
   downloadingBookId,
   onToggleLike,
-  isReaderLoading,
-  activeBookId,
 }: MyBookCardProps): JSX.Element {
   const { book, purchase } = item;
   const walrusCoverUrl = useWalrusCover(
@@ -75,9 +69,6 @@ function MyBookCard({
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);
   const isDownloading = downloadingBookId === book.id;
-  const isReadingActive = activeBookId === book.id;
-  const isReadLoading = isReaderLoading && isReadingActive;
-
   return (
     <Card style={{ padding: 16, position: "relative" }}>
       <button
@@ -164,8 +155,6 @@ function MyBookCard({
               type="button"
               size="l"
               onClick={() => onRead(book.id)}
-              loading={isReadLoading}
-              disabled={isReaderLoading}
             >
               {t("account.myBooks.actions.read")}
             </Button>
@@ -196,8 +185,6 @@ export function MyBooksSection({
   onRead,
   onDownload,
   downloadingBookId,
-  isReaderLoading,
-  activeBookId,
   filter,
   onFilterChange,
   onToggleLike,
@@ -252,10 +239,8 @@ export function MyBooksSection({
             onRead={onRead}
             onDownload={onDownload}
             downloadingBookId={downloadingBookId}
-            onToggleLike={onToggleLike}
-            isReaderLoading={isReaderLoading}
-            activeBookId={activeBookId}
-          />
+              onToggleLike={onToggleLike}
+            />
         ))
       )}
     </section>
