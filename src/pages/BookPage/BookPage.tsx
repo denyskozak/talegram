@@ -509,7 +509,7 @@ export default function BookPage(): JSX.Element {
                   onClick={handleToggleLike}
                   aria-pressed={isLiked}
                 >
-                  <span aria-hidden="true">{isLiked ? "❤️" : "🤍"}</span>
+                  <span aria-hidden="true">{isLiked ? "❤️" : "💙"}</span>
                 </Button>
               </div>
             </div>
