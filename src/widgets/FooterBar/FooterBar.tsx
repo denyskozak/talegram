@@ -2,15 +2,12 @@ import { Text } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
-import { useTheme, useThemeMode } from "@/app/providers/ThemeProvider";
+import { useTheme } from "@/app/providers/ThemeProvider";
 import { LanguageToggle } from "@/shared/ui/LanguageToggle";
 
-export function FooterBar(): JSX.Element {
+export function FooterBar(): ReactNode {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { mode, toggle } = useThemeMode();
-  const nextMode = mode === "dark" ? "light" : "dark";
-  const themeIcon = nextMode === "dark" ? "🌙" : "☀️";
 
   return (
     <footer

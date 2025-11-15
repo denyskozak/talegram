@@ -1,5 +1,5 @@
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
-import type { AppRouter } from "../../../backend/src/index";
+import type { AppRouter } from "../../../backend/src";
 
 const DEFAULT_BACKEND_URL = "http://localhost:3000";
 

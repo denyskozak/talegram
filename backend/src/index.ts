@@ -97,7 +97,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    trpcHandler(req, res).catch((error) => console.error(error));
+    trpcHandler(req, res);
 });
 
 server.listen(port, () => {
