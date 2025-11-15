@@ -25,6 +25,5 @@ export default function ReaderPage(): JSX.Element {
 
     const downloadUrl = buildFileDownloadUrl(fileId || '', {telegramUserId: telegramUserId});
 
-
     return <ReadingOverlay fileUrl={downloadUrl}/>;
 }
