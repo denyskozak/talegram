@@ -78,11 +78,6 @@ export function buildBookFileDownloadUrl(
   return url.toString();
 }
 
-type BuildDownloadUrlOptions = {
-  telegramUserId?: string | null;
-};
-
-
 function parseFileNameFromContentDisposition(header: string | null): string | null {
   if (!header) {
     return null;

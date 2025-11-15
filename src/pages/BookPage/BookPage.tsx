@@ -12,7 +12,6 @@ import {copyTextToClipboard} from "@telegram-apps/sdk";
 import {paymentsApi} from "@/entities/payment/api";
 import type {Invoice} from "@/entities/payment/types";
 import {purchasesApi} from "@/entities/purchase/api";
-import type {PurchaseDetails} from "@/entities/purchase/types";
 import {BookRating} from "@/entities/book/components/BookRating";
 import {useTMA} from "@/app/providers/TMAProvider";
 import {SimilarCarousel} from "@/widgets/SimilarCarousel/SimilarCarousel";
@@ -50,7 +49,6 @@ export default function BookPage(): JSX.Element {
     const [error, setError] = useState<string | null>(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [isPurchased, setIsPurchased] = useState(false);
-    const [purchaseDetails, setPurchaseDetails] = useState<PurchaseDetails | null>(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [activeAction, setActiveAction] = useState<"buy" | "subscribe" | null>(null);
     const [isPurchaseModalOpen, setPurchaseModalOpen] = useState(false);
@@ -102,14 +100,12 @@ export default function BookPage(): JSX.Element {
     const refreshPurchaseStatus = useCallback(async () => {
         if (!id || !telegramUserId) {
             setIsPurchased(false);
-            setPurchaseDetails(null);
             return;
         }
 
         try {
             const status = await purchasesApi.getStatus({bookId: id, telegramUserId});
             setIsPurchased(status.purchased);
-            setPurchaseDetails(status.details);
         } catch (err) {
             console.error(err);
         }
@@ -273,14 +269,7 @@ export default function BookPage(): JSX.Element {
                 throw new Error("Missing telegram user id");
             }
 
-            const {purchase} = await purchasesApi.confirm({
-                bookId: book.id,
-                paymentId: invoice.paymentId,
-                telegramUserId,
-            });
 
-            const {bookId: _bookId, ...details} = purchase;
-            setPurchaseDetails(details);
             setIsPurchased(true);
             setPurchaseModalOpen(false);
             setActiveAction(null);
@@ -349,7 +338,6 @@ export default function BookPage(): JSX.Element {
         }
 
         setIsPurchased(false);
-        setPurchaseDetails(null);
         setActiveAction(null);
         setPurchaseModalOpen(false);
         setIsActionLoading(false);
