@@ -31,7 +31,7 @@ export default function BookPage(): JSX.Element {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { launchParams } = useTMA();
+  const { launchParams, theme } = useTMA();
   const { t } = useTranslation();
   const reviewsRef = useRef<HTMLDivElement | null>(null);
   const loaderTimeoutRef = useRef<number | null>(null);

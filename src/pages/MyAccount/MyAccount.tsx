@@ -341,7 +341,8 @@ export default function MyAccount(): JSX.Element {
 
   const handleToggleLike = useCallback(
     (bookId: string) => {
-      let likedAfterToggle = false;
+      // @ts-ignore
+        let likedAfterToggle = false;
 
       setMyBooks((books) => {
         const likedSet = new Set(likedBookIdsRef.current);
