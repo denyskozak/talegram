@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { fetchDecryptedFile } from "@/shared/api/storage";
+import { fetchBookFile } from "@/shared/api/storage";
 
 type EnsureBookFileUrlOptions = {
   mimeType?: string | null;
@@ -10,7 +10,7 @@ type OpenReaderOptions =
   | { preview: true }
   | {
       preview?: false;
-      fileId?: string | null;
+      bookId?: string | null;
       mimeType?: string | null;
     };
 
@@ -21,7 +21,7 @@ type UseBookReaderOptions = {
 
 export function useBookReader(options: UseBookReaderOptions = {}) {
   const { mimeType: defaultMimeType, telegramUserId } = options;
-  const currentFileIdRef = useRef<string | null>(null);
+  const currentBookIdRef = useRef<string | null>(null);
   const fileUrlRef = useRef<string | null>(null);
   const [bookFileUrl, setBookFileUrl] = useState<string | null>(null);
   const [isReading, setIsReading] = useState(false);
@@ -29,7 +29,7 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
   const [isReaderLoading, setIsReaderLoading] = useState(false);
 
   const resetFile = useCallback(() => {
-    currentFileIdRef.current = null;
+    currentBookIdRef.current = null;
     if (fileUrlRef.current) {
       URL.revokeObjectURL(fileUrlRef.current);
       fileUrlRef.current = null;
@@ -44,19 +44,19 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
   }, [resetFile]);
 
   const ensureBookFileUrl = useCallback(
-    async (fileId: string, override: EnsureBookFileUrlOptions = {}): Promise<string | null> => {
-      if (!fileId) {
+    async (bookId: string, override: EnsureBookFileUrlOptions = {}): Promise<string | null> => {
+      if (!bookId) {
         return null;
       }
 
-      if (currentFileIdRef.current === fileId && fileUrlRef.current) {
+      if (currentBookIdRef.current === bookId && fileUrlRef.current) {
         const cachedUrl = fileUrlRef.current;
         setBookFileUrl(cachedUrl);
         return cachedUrl;
       }
 
       try {
-        const file = await fetchDecryptedFile(fileId, { telegramUserId });
+        const file = await fetchBookFile(bookId, "book", { telegramUserId });
         if (fileUrlRef.current) {
           URL.revokeObjectURL(fileUrlRef.current);
         }
@@ -66,7 +66,7 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
 
         const objectUrl = URL.createObjectURL(new Blob([file.data], { type: resolvedMimeType }));
 
-        currentFileIdRef.current = fileId;
+        currentBookIdRef.current = bookId;
         fileUrlRef.current = objectUrl;
         setBookFileUrl(objectUrl);
         return objectUrl;
@@ -87,8 +87,8 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
         return true;
       }
 
-      const fileId = params?.fileId;
-      if (!fileId) {
+      const bookId = params?.bookId;
+      if (!bookId) {
         setIsPreviewMode(true);
         setIsReading(true);
         return true;
@@ -96,7 +96,7 @@ export function useBookReader(options: UseBookReaderOptions = {}) {
 
       setIsReaderLoading(true);
       try {
-        const url = await ensureBookFileUrl(fileId, { mimeType: params?.mimeType });
+        const url = await ensureBookFileUrl(bookId, { mimeType: params?.mimeType });
         if (!url) {
           return false;
         }

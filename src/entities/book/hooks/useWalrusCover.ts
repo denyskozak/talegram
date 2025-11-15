@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
-import { fetchDecryptedFile } from "@/shared/api/storage";
+import { fetchBookFile } from "@/shared/api/storage";
 
-export function useWalrusCover(
-  fileId?: string | null,
-  mimeType?: string | null,
-): string | null {
+type UseWalrusCoverParams = {
+  bookId?: string | null;
+  mimeType?: string | null;
+  enabled?: boolean;
+};
+
+export function useWalrusCover(params: UseWalrusCoverParams): string | null {
+  const { bookId, mimeType, enabled = true } = params;
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
 
@@ -13,7 +17,7 @@ export function useWalrusCover(
     let isCancelled = false;
 
     const load = async () => {
-      if (!fileId) {
+      if (!enabled || !bookId) {
         if (urlRef.current) {
           URL.revokeObjectURL(urlRef.current);
           urlRef.current = null;
@@ -23,7 +27,7 @@ export function useWalrusCover(
       }
 
       try {
-        const file = await fetchDecryptedFile(fileId);
+        const file = await fetchBookFile(bookId, "cover");
         if (isCancelled) {
           return;
         }
@@ -50,7 +54,7 @@ export function useWalrusCover(
     return () => {
       isCancelled = true;
     };
-  }, [fileId, mimeType]);
+  }, [bookId, enabled, mimeType]);
 
   useEffect(
     () => () => {

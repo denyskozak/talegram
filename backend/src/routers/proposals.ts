@@ -7,7 +7,7 @@ import { ProposalVote } from '../entities/ProposalVote.js';
 import { createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { normalizeCategoryId } from '../utils/categories.js';
-import { fetchWalrusFilesBase64 } from '../utils/walrus-files.js';
+import { fetchWalrusFilesBase64, warmWalrusFileCache } from '../utils/walrus-files.js';
 
 import {
   assertAllowedTelegramVoter,
@@ -264,6 +264,13 @@ export const proposalsRouter = createRouter({
             message: "Failed to move approved proposal to books table",
           });
         }
+
+        await Promise.all([
+          warmWalrusFileCache(persistedBook.walrusFileId),
+          warmWalrusFileCache(persistedBook.walrusBlobId),
+          warmWalrusFileCache(persistedBook.coverWalrusFileId),
+          warmWalrusFileCache(persistedBook.coverWalrusBlobId),
+        ]);
 
         await voteRepository.delete({ proposalId: input.proposalId });
 

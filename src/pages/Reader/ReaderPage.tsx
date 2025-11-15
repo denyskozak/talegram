@@ -4,22 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { ReadingOverlay } from "@/entities/book/components/ReadingOverlay";
-import { fetchDecryptedFile } from "@/shared/api/storage";
+import { fetchBookFile } from "@/shared/api/storage";
 import { useTMA } from "@/app/providers/TMAProvider";
 import { getTelegramUserId } from "@/shared/lib/telegram";
 
 type ReaderRouteParams = {
-  fileId?: string;
+  bookId?: string;
 };
 
-type ReaderErrorCode = "missing-file-id" | "load-failed" | null;
+type ReaderErrorCode = "missing-book-id" | "load-failed" | null;
 
 const DEFAULT_MIME_TYPE = "application/pdf";
 
 export default function ReaderPage(): JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { fileId } = useParams<ReaderRouteParams>();
+  const { bookId } = useParams<ReaderRouteParams>();
   const { launchParams } = useTMA();
   const telegramUserId = useMemo(
     () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -48,9 +48,9 @@ export default function ReaderPage(): JSX.Element {
 
     setFileUrl(null);
 
-    if (!fileId || fileId.trim().length === 0) {
+    if (!bookId || bookId.trim().length === 0) {
       setIsLoading(false);
-      setErrorCode("missing-file-id");
+      setErrorCode("missing-book-id");
       return;
     }
 
@@ -62,7 +62,7 @@ export default function ReaderPage(): JSX.Element {
 
     const loadFile = async () => {
       try {
-        const file = await fetchDecryptedFile(fileId, {
+        const file = await fetchBookFile(bookId, "book", {
           telegramUserId,
           signal: controller.signal,
         });
@@ -100,7 +100,7 @@ export default function ReaderPage(): JSX.Element {
       isActive = false;
       controller.abort();
     };
-  }, [fileId, telegramUserId, reloadToken]);
+  }, [bookId, telegramUserId, reloadToken]);
 
   const handleRetry = useCallback(() => {
     setReloadToken((value) => value + 1);

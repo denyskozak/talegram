@@ -39,7 +39,7 @@ import { isGlobalCategory } from "@/shared/lib/globalCategories";
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
 import { downloadFile } from "@telegram-apps/sdk-react";
-import { buildFileDownloadUrl } from "@/shared/api/storage";
+import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 import {
   isBookLiked,
   loadLikedBookIds,
@@ -241,14 +241,17 @@ export default function MyAccount(): JSX.Element {
         return;
       }
 
-      const fileId = item.purchase.walrusFileId ?? item.book.walrusFileId ?? null;
+      const hasStorage = Boolean(
+        (typeof item.book.walrusFileId === "string" && item.book.walrusFileId.length > 0) ||
+          (typeof item.book.walrusBlobId === "string" && item.book.walrusBlobId.length > 0),
+      );
 
-      if (!fileId) {
+      if (!hasStorage) {
         showToast(t("account.myBooks.toast.missingFile"));
         return;
       }
 
-      navigate(`/reader/${encodeURIComponent(fileId)}`);
+      navigate(`/reader/${encodeURIComponent(item.book.id)}`);
     },
     [myBooks, navigate, showToast, t],
   );
@@ -260,10 +263,12 @@ export default function MyAccount(): JSX.Element {
         return;
       }
 
-      const fileId =
-        item.purchase.walrusFileId ?? item.book.walrusFileId ?? null;
+      const hasStorage = Boolean(
+        (typeof item.book.walrusFileId === "string" && item.book.walrusFileId.length > 0) ||
+          (typeof item.book.walrusBlobId === "string" && item.book.walrusBlobId.length > 0),
+      );
 
-      if (!fileId) {
+      if (!hasStorage) {
         showToast(t("account.myBooks.toast.missingFile"));
         return;
       }
@@ -271,7 +276,7 @@ export default function MyAccount(): JSX.Element {
       setDownloadingBookId(bookId);
       try {
         const fileName = item.book.fileName ?? `${item.book.title}.pdf`;
-        const downloadUrl = buildFileDownloadUrl(fileId, { telegramUserId });
+        const downloadUrl = buildBookFileDownloadUrl(bookId, "book", { telegramUserId });
         if (downloadFile.isAvailable()) {
           await downloadFile(downloadUrl, fileName);
         } else {
