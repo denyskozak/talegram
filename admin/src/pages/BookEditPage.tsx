@@ -9,7 +9,7 @@ function toFormData(book: Book): BookFormData {
     id: book.id,
     title: book.title,
     authors: [...book.authors],
-    categories: [...book.categories],
+    categories: book.categories ?? '',
     coverUrl: book.coverUrl,
     description: book.description,
     priceStars: book.priceStars,

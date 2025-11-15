@@ -92,12 +92,12 @@ export default function MyAccount(): JSX.Element {
   const [myBooksFilter, setMyBooksFilter] = useState<MyBooksFilter>("purchased");
   const {
     bookFileUrl,
-    ensureBookFileUrl,
     openReader,
     closeReader,
     isReading,
     isPreviewMode,
     resetFile,
+    isReaderLoading,
   } = useBookReader({ mimeType: activeBook?.book.mimeType, telegramUserId });
   const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
     () => new Set<string>(),
@@ -306,6 +306,10 @@ export default function MyAccount(): JSX.Element {
 
   const handleReadBook = useCallback(
     async (bookId: string) => {
+      if (isReaderLoading) {
+        return;
+      }
+
       const item = myBooks.find((entry) => entry.book.id === bookId);
       if (!item) {
         return;
@@ -327,7 +331,7 @@ export default function MyAccount(): JSX.Element {
         resetFile();
       }
     },
-    [myBooks, openReader, resetFile, showToast, t],
+    [isReaderLoading, myBooks, openReader, resetFile, showToast, t],
   );
 
   const handleDownloadBook = useCallback(
@@ -583,6 +587,8 @@ export default function MyAccount(): JSX.Element {
           onRead={handleReadBook}
           onDownload={handleDownloadBook}
           downloadingBookId={downloadingBookId}
+          isReaderLoading={isReaderLoading}
+          activeBookId={activeBook?.book.id ?? null}
           filter={myBooksFilter}
           onFilterChange={(value) => setMyBooksFilter(value)}
           onToggleLike={handleToggleLike}

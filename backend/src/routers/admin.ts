@@ -38,7 +38,7 @@ const baseBookSchema = z.object({
   id: z.string().trim().min(1),
   title: z.string().trim().min(1),
   authors: z.array(z.string().trim().min(1)).min(1),
-  categories: z.array(z.string().trim().min(1)).min(1),
+  categories: z.string().trim().min(1),
   coverUrl: z.string().trim().url(),
   description: z.string().trim().min(1),
   priceStars: z.number().int().min(0).max(10),

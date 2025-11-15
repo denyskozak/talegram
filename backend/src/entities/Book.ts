@@ -97,13 +97,8 @@ export class Book {
   @Column({ name: 'proposal_id', type: 'text', nullable: true })
   proposalId!: string | null;
 
-  @Column({
-    name: 'categories',
-    type: 'text',
-    transformer: stringArrayTransformer,
-    default: '[]',
-  })
-  categories!: string[];
+  @Column({ name: 'categories', type: 'text', nullable: true })
+  categories!: string | null;
 
   @Column({
     name: 'tags',
@@ -112,6 +107,9 @@ export class Book {
     default: '[]',
   })
   tags!: string[];
+
+  @Column({ name: 'global_category', type: 'text', nullable: true })
+  globalCategory!: string | null;
 
   @Column({ name: 'price_stars', type: 'integer', default: 0 })
   priceStars!: number;

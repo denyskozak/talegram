@@ -12,7 +12,7 @@ export type Book = {
   id: ID;
   title: string;
   authors: string[];
-  categories: ID[];
+  categories: ID | null;
   coverUrl: string;
   description: string;
   priceStars: number;
@@ -32,6 +32,7 @@ export type Book = {
   fileName?: string | null;
   fileEncryptionIv?: string | null;
   fileEncryptionTag?: string | null;
+  globalCategory?: string | null;
 };
 
 export type Review = {

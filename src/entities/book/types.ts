@@ -6,7 +6,7 @@ export type Book = {
   id: ID;
   title: string;
   authors: string[];
-  categories: ID[];
+  categories: ID | null;
   coverUrl: string;
   coverImageData?: string | null;
   description: string;
@@ -26,6 +26,7 @@ export type Book = {
   mimeType?: string | null;
   fileName?: string | null;
   bookFileURL?: string | null;
+  globalCategory?: string | null;
 };
 
 export type Review = {

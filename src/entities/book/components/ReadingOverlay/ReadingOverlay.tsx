@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
+import { useCallback, useMemo } from "react";
 import { Button, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
@@ -9,8 +8,10 @@ import type { ThemeParams } from "@telegram-apps/sdk";
 
 import { SpecialZoomLevel, Viewer } from "@react-pdf-viewer/core";
 import { defaultLayoutPlugin } from "@react-pdf-viewer/default-layout";
+import { zoomPlugin } from "@react-pdf-viewer/zoom";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+import "@react-pdf-viewer/zoom/lib/styles/index.css";
 // import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "./ReadingOverlay.css";
 
@@ -101,7 +102,9 @@ export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Elem
   const { t } = useTranslation();
   const { theme } = useTMA();
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
-  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
+  const zoomPluginInstance = useMemo(() => zoomPlugin(), []);
+  const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
 
   const luminance = useMemo(() => getLuminance(theme?.bg_color), [theme]);
   const isDarkTheme = luminance !== null ? luminance < 0.35 : false;
@@ -163,6 +166,22 @@ export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Elem
           </Title>
           <span style={{ fontSize: 16, opacity: 0.7 }}>{book.authors.join(", ")}</span>
         </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+            justifyContent: "flex-end",
+          }}
+        >
+          <span style={{ fontSize: 14, opacity: 0.7 }}>{t("book.reader.fontLabel")}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <ZoomOutButton />
+            <ZoomPopover />
+            <ZoomInButton />
+          </div>
+        </div>
         <Button
           size="s"
           mode="outline"
@@ -175,7 +194,7 @@ export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Elem
       </header>
         <Viewer
             fileUrl={book.bookFileURL ?? ""}
-            plugins={[defaultLayoutPluginInstance]}
+            plugins={[defaultLayoutPluginInstance, zoomPluginInstance]}
             theme={isDarkTheme ? "dark" : "light"}
             defaultScale={SpecialZoomLevel.PageFit}
             renderLoader={renderViewerLoader}

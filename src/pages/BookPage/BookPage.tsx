@@ -63,6 +63,7 @@ export default function BookPage(): JSX.Element {
     isReading,
     isPreviewMode,
     resetFile,
+    isReaderLoading,
   } = useBookReader({ mimeType: book?.mimeType, telegramUserId });
   const autoReadTriggeredRef = useRef(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -84,11 +85,15 @@ export default function BookPage(): JSX.Element {
       setError(null);
       const item = await catalogApi.getBook(id, { telegramUserId });
       setBook(item);
-      const similarBooksResponse = await catalogApi.listBooks({
-        categoryId: item.categories[0],
-        limit: 12,
-      });
-      setSimilar(similarBooksResponse.items.filter((entry) => entry.id !== item.id).slice(0, 6));
+      if (item.categories) {
+        const similarBooksResponse = await catalogApi.listBooks({
+          categoryId: item.categories,
+          limit: 12,
+        });
+        setSimilar(similarBooksResponse.items.filter((entry) => entry.id !== item.id).slice(0, 6));
+      } else {
+        setSimilar([]);
+      }
     } catch (err) {
       console.error(err);
       setError(t("errors.loadBook"));
@@ -140,6 +145,10 @@ export default function BookPage(): JSX.Element {
       return;
     }
 
+    if (isReaderLoading) {
+      return;
+    }
+
     if (!hasFullAccess) {
       void openReader({ preview: true });
       return;
@@ -164,7 +173,7 @@ export default function BookPage(): JSX.Element {
       showToast(t("book.toast.downloadFailed"));
       resetFile();
     }
-  }, [book, hasFullAccess, openReader, purchaseDetails, resetFile, showToast, t]);
+  }, [book, hasFullAccess, isReaderLoading, openReader, purchaseDetails, resetFile, showToast, t]);
 
   const handleCloseReader = useCallback(() => {
     closeReader();
@@ -531,7 +540,12 @@ export default function BookPage(): JSX.Element {
               {hasFullAccess ? (
                 <>
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                    <Button size="l" onClick={() => void handleRead()}>
+                    <Button
+                      size="l"
+                      onClick={() => void handleRead()}
+                      loading={isReaderLoading}
+                      disabled={isReaderLoading}
+                    >
                       {t("book.actions.read")}
                     </Button>
                     <Button
@@ -539,7 +553,7 @@ export default function BookPage(): JSX.Element {
                       mode="outline"
                       onClick={() => void handleDownload()}
                       loading={isDownloading}
-                      disabled={isDownloading}
+                      disabled={isDownloading || isReaderLoading}
                     >
                       {t("book.actions.download")}
                     </Button>

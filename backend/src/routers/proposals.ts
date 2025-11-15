@@ -246,13 +246,14 @@ export const proposalsRouter = createRouter({
           fileEncryptionIv: proposal.fileEncryptionIv,
           fileEncryptionTag: proposal.fileEncryptionTag,
           proposalId: proposal.id,
-          categories: [categoryId],
+          categories: categoryId,
           tags,
           priceStars: Number.isFinite(proposal.price) ? Math.max(0, proposal.price) : 0,
           ratingAverage: 0,
           ratingVotes: 0,
           reviewsCount: 0,
           publishedAt: new Date(),
+          globalCategory: proposal.globalCategory ?? null,
         });
         const savedBook = await bookRepository.save(book);
 

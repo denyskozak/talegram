@@ -8,7 +8,7 @@ const EMPTY_BOOK: BookFormData = {
   id: '',
   title: '',
   authors: [],
-  categories: [],
+  categories: '',
   coverUrl: '',
   description: '',
   priceStars: 5,
