@@ -1,6 +1,5 @@
 import type { Category } from "./types";
 import type { BookSort } from "@/shared/lib/bookSort";
-import { TOTAL_BOOKS_COUNT } from "@/entities/book/constants";
 
 type SpecialCategoryBase = {
   id: "most-read" | "top-rated";

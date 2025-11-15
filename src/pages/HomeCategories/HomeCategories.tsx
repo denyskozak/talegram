@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
-import {Banner, Input, SegmentedControl, Text, Title} from "@telegram-apps/telegram-ui";
+import {Banner, SegmentedControl, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {CategoryTile} from "@/entities/category/components/CategoryTile";
@@ -23,7 +23,7 @@ import {GLOBAL_CATEGORIES, type GlobalCategory} from "@/shared/lib/globalCategor
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
     const {t} = useTranslation();
-    const [search, setSearch] = useState("");
+    const [search] = useState("");
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
