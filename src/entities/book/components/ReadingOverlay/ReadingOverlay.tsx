@@ -16,7 +16,7 @@ export function ReadingOverlay({ fileUrl }: ReadingOverlayProps): JSX.Element {
 
 
     return (
-      <div style={{ height: '100vh' }}>
+      <div style={{ height: '90vh' }}>
           <ReactReader
               url={fileUrl}
               location={location}

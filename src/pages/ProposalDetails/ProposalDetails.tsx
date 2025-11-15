@@ -12,8 +12,9 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import {buildFileDownloadUrl} from "@/shared/api/storage";
-import { downloadFile } from "@telegram-apps/sdk-react";
+import {buildBookFileDownloadUrl} from "@/shared/api/storage";
+import {downloadFile} from "@telegram-apps/sdk-react";
+import {handleBookCoverError} from "@/entities/book/lib.ts";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -152,7 +153,7 @@ export default function ProposalDetails(): JSX.Element {
         setIsDownloading(true);
         try {
             const resolvedFileName = proposal.fileName ?? `${proposal.title}.epub`;
-            const downloadUrl = buildFileDownloadUrl(proposal.walrusFileId, { telegramUserId });
+            const downloadUrl = buildBookFileDownloadUrl(proposal.walrusFileId, 'book', {telegramUserId});
 
             try {
                 if (downloadFile.isAvailable()) {
@@ -265,12 +266,17 @@ export default function ProposalDetails(): JSX.Element {
                             {proposal.title}
                         </Title>
                         {coverImageURL ? (
+                            <Card style={{borderRadius: 24, margin: "0 auto", overflow: "hidden", width: "80vw"}}>
+                                <div style={{position: "relative", aspectRatio: "10 / 12"}}>
 
-                            <img
-                                src={coverImageURL}
-                                alt={t("account.voting.coverAlt", {title: proposal.title})}
-                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                            />
+
+                                    <img
+                                        src={coverImageURL}
+                                        alt={t("account.voting.coverAlt", {title: proposal.title})}
+                                        style={{width: "100%", height: "100%", objectFit: "cover"}}
+                                    />
+                                </div>
+                            </Card>
                         ) : null}
                         <Text style={{color: theme.subtitle}}>{proposal.author}</Text>
                     </header>
@@ -355,7 +361,8 @@ export default function ProposalDetails(): JSX.Element {
                                         ))}
                                     </div>
                                 ) : (
-                                    <Text style={{color: theme.subtitle}}>{t("account.proposalDetails.noHashtags")}</Text>
+                                    <Text
+                                        style={{color: theme.subtitle}}>{t("account.proposalDetails.noHashtags")}</Text>
                                 )}
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
