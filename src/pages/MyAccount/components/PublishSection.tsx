@@ -6,6 +6,7 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";
+import { QuoteCarouselNotice } from "./QuoteCarouselNotice";
 
 const GLOBAL_CATEGORY_OPTIONS = ["book", "article", "comics"] as const;
 
@@ -423,7 +424,11 @@ export function PublishSection({
             {t("account.publish.form.submit")}
           </Button>
         </form>
-        <Text style={{ color: theme.hint }}>{t("account.publish.form.notice")}</Text>
+        {isSubmitting ? (
+          <QuoteCarouselNotice theme={theme} t={t} />
+        ) : (
+          <Text style={{ color: theme.hint }}>{t("account.publish.form.notice")}</Text>
+        )}
       </Card>
     </section>
   );
