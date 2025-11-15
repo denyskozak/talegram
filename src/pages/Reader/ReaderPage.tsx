@@ -20,6 +20,6 @@ export default function ReaderPage(): JSX.Element {
         [launchParams],
     );
     const downloadUrl = buildBookFileDownloadUrl(bookId || '', 'book', {telegramUserId: telegramUserId});
-
+    console.log("downloadUrl: ", downloadUrl);
     return <ReadingOverlay fileUrl={downloadUrl + '.pub'}/>;
 }
