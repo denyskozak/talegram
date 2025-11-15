@@ -102,8 +102,8 @@ export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Elem
   const { t } = useTranslation();
   const { theme } = useTMA();
   const palette = useMemo(() => getViewerPalette(theme), [theme]);
-  const defaultLayoutPluginInstance = useMemo(() => defaultLayoutPlugin(), []);
-  const zoomPluginInstance = useMemo(() => zoomPlugin(), []);
+  const defaultLayoutPluginInstance = defaultLayoutPlugin();
+  const zoomPluginInstance = zoomPlugin();
   const { ZoomInButton, ZoomOutButton, ZoomPopover } = zoomPluginInstance;
 
   const luminance = useMemo(() => getLuminance(theme?.bg_color), [theme]);
@@ -148,50 +148,50 @@ export function ReadingOverlay({ book, onClose }: ReadingOverlayProps): JSX.Elem
         overflow: "hidden",
       }}
     >
-      <header
-        style={{
-          padding: "20px 20px 12px",
-          display: "flex",
-          flexWrap: "wrap",
-          marginTop: "70px",
-          gap: 12,
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderBottom: `1px solid ${palette.border}`,
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 200 }}>
-          <Title level="2" weight="2" style={{ margin: 0, color: "inherit" }}>
-            {book.title}
-          </Title>
-          <span style={{ fontSize: 16, opacity: 0.7 }}>{book.authors.join(", ")}</span>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            flexWrap: "wrap",
-            justifyContent: "flex-end",
-          }}
-        >
-          <span style={{ fontSize: 14, opacity: 0.7 }}>{t("book.reader.fontLabel")}</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-            <ZoomOutButton />
-            <ZoomPopover />
-            <ZoomInButton />
-          </div>
-        </div>
-        <Button
-          size="s"
-          mode="outline"
-          onClick={onClose}
-          aria-label={t("book.reader.close")}
-          style={{ whiteSpace: "nowrap" }}
-        >
-          {t("book.reader.close")}
-        </Button>
-      </header>
+      {/*<header*/}
+      {/*  style={{*/}
+      {/*    padding: "20px 20px 12px",*/}
+      {/*    display: "flex",*/}
+      {/*    flexWrap: "wrap",*/}
+      {/*    marginTop: "70px",*/}
+      {/*    gap: 12,*/}
+      {/*    justifyContent: "space-between",*/}
+      {/*    alignItems: "center",*/}
+      {/*    borderBottom: `1px solid ${palette.border}`,*/}
+      {/*  }}*/}
+      {/*>*/}
+      {/*  <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 200 }}>*/}
+      {/*    <Title level="2" weight="2" style={{ margin: 0, color: "inherit" }}>*/}
+      {/*      {book.title}*/}
+      {/*    </Title>*/}
+      {/*    <span style={{ fontSize: 16, opacity: 0.7 }}>{book.authors.join(", ")}</span>*/}
+      {/*  </div>*/}
+      {/*  <div*/}
+      {/*    style={{*/}
+      {/*      display: "flex",*/}
+      {/*      alignItems: "center",*/}
+      {/*      gap: 8,*/}
+      {/*      flexWrap: "wrap",*/}
+      {/*      justifyContent: "flex-end",*/}
+      {/*    }}*/}
+      {/*  >*/}
+      {/*    <span style={{ fontSize: 14, opacity: 0.7 }}>{t("book.reader.fontLabel")}</span>*/}
+      {/*    <div style={{ display: "flex", alignItems: "center", gap: 4 }}>*/}
+      {/*      <ZoomOutButton />*/}
+      {/*      <ZoomPopover />*/}
+      {/*      <ZoomInButton />*/}
+      {/*    </div>*/}
+      {/*  </div>*/}
+      {/*  <Button*/}
+      {/*    size="s"*/}
+      {/*    mode="outline"*/}
+      {/*    onClick={onClose}*/}
+      {/*    aria-label={t("book.reader.close")}*/}
+      {/*    style={{ whiteSpace: "nowrap" }}*/}
+      {/*  >*/}
+      {/*    {t("book.reader.close")}*/}
+      {/*  </Button>*/}
+      {/*</header>*/}
         <Viewer
             fileUrl={book.bookFileURL ?? ""}
             plugins={[defaultLayoutPluginInstance, zoomPluginInstance]}

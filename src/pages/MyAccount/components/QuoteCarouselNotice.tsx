@@ -19,8 +19,8 @@ type QuoteCarouselNoticeProps = {
   t: TFunction<"translation">;
 };
 
-const DISPLAY_DURATION_MS = 6000;
-const FADE_DURATION_MS = 600;
+const DISPLAY_DURATION_MS = 15000;
+const FADE_DURATION_MS = 800;
 
 export function QuoteCarouselNotice({
   theme,
@@ -36,23 +36,6 @@ export function QuoteCarouselNotice({
     }
 
     return translatedSections as QuoteSection[];
-  }, [t]);
-
-  const labels = useMemo(() => {
-    const translatedLabels = t("account.publish.form.quoteCarousel.labels", {
-      returnObjects: true,
-    });
-
-    if (
-      typeof translatedLabels === "object" &&
-      translatedLabels !== null &&
-      "english" in translatedLabels &&
-      "russian" in translatedLabels
-    ) {
-      return translatedLabels as { english: string; russian: string };
-    }
-
-    return { english: "English", russian: "Русский" };
   }, [t]);
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
@@ -127,16 +110,12 @@ export function QuoteCarouselNotice({
           transition: `opacity ${FADE_DURATION_MS}ms ease-in-out`,
         }}
       >
-        <Text weight="2" style={{ color: theme.text }}>
-          {currentSection.title}
-        </Text>
+
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <Text style={{ color: theme.text }}>
-            <span style={{ color: theme.subtitle }}>{labels.english}:</span> {currentQuote.english}
+            <span style={{ color: theme.subtitle }}>{currentSection.title}:</span> {currentQuote.english}
           </Text>
-          <Text style={{ color: theme.text }}>
-            <span style={{ color: theme.subtitle }}>{labels.russian}:</span> {currentQuote.russian}
-          </Text>
+
         </div>
         <Text style={{ color: theme.subtitle, fontSize: 12 }}>
           {currentQuoteIndex + 1} / {currentSection.quotes.length}

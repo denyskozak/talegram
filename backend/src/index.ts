@@ -250,10 +250,13 @@ async function handleFileDownloadRequest(
         const fileName = determineDownloadFileName(resolved);
         const contentType = resolved.mimeType ?? 'application/octet-stream';
 
+        const cacheTime =  2 * 24 * 3600 * 1000; // 2d * 24h * 1h
         res.statusCode = 200;
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Length', resolved.buffer.byteLength.toString(10));
         res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
+        res.setHeader('Cache-Control', `public, max-age=${cacheTime}`); // кеш на 1 час
+        res.setHeader('Expires', new Date(Date.now() + cacheTime).toUTCString());
         res.end(resolved.buffer);
     } catch (error) {
         if (error instanceof FileNotFoundError) {

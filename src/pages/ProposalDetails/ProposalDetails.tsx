@@ -14,6 +14,7 @@ import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyA
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 import {buildFileDownloadUrl} from "@/shared/api/storage";
 import { downloadFile } from "@telegram-apps/sdk-react";
+import {handleBookCoverError} from "@/entities/book/lib.ts";
 
 function formatDate(value: string): string {
     const date = new Date(value);
@@ -265,18 +266,11 @@ export default function ProposalDetails(): JSX.Element {
                             {proposal.title}
                         </Title>
                         {coverImageURL ? (
+
                             <img
-                                style={{
-                                    width: "100%",
-                                    maxWidth: 480,
-                                    aspectRatio: "3 / 2",
-                                    objectFit: "cover",
-                                    borderRadius: 16,
-                                    boxShadow: "0 16px 32px rgba(0, 0, 0, 0.15)",
-                                    alignSelf: "center",
-                                }}
                                 src={coverImageURL}
                                 alt={t("account.voting.coverAlt", {title: proposal.title})}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
                             />
                         ) : null}
                         <Text style={{color: theme.subtitle}}>{proposal.author}</Text>

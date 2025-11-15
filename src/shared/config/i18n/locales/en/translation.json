@@ -296,13 +296,9 @@
         "submit": "Submit for review",
         "notice": "Upload to secure decentralized storage can take 10s+.",
         "quoteCarousel": {
-          "labels": {
-            "english": "English",
-            "russian": "Russian"
-          },
           "sections": [
             {
-              "title": "🟦 Plato — 5 verified quotes",
+              "title": "Plato",
               "quotes": [
                 {
                   "english": "\u201cThe beginning is the most important part of the work.\u201d",
@@ -327,7 +323,7 @@
               ]
             },
             {
-              "title": "🟩 Aristotle — 5 verified quotes",
+              "title": "Aristotle",
               "quotes": [
                 {
                   "english": "\u201cThe whole is greater than the sum of its parts.\u201d",
