@@ -6,6 +6,7 @@ import { issueAdminToken, validateAdminCredentials, verifyAdminToken } from '../
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { Author } from '../entities/Author.js';
 import { WalrusFileRecord } from '../entities/WalrusFileRecord.js';
+import { CommunityMember } from '../entities/CommunityMember.js';
 
 function extractBearerToken(rawHeader: string | string[] | undefined): string | null {
   if (!rawHeader) {
@@ -34,6 +35,23 @@ const ratingSchema = z.object({
   average: z.number().min(0).max(5),
   votes: z.number().int().min(0),
 });
+
+const communityMemberBaseSchema = z.object({
+  telegramUserId: z
+    .string()
+    .trim()
+    .min(1)
+    .max(64)
+    .transform((value) => value.trim()),
+  fullName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(256)
+    .transform((value) => value.trim()),
+});
+
+const communityMemberRankSchema = z.number().int().min(1).max(1000);
 
 const baseBookSchema = z.object({
   id: z.string().trim().min(1),
@@ -72,6 +90,25 @@ const updateBookInput = z.object({
 
 const deleteBookInput = z.object({
   id: z.string().trim().min(1),
+});
+
+const createCommunityMemberInput = communityMemberBaseSchema.extend({
+  rank: communityMemberRankSchema.optional().default(1),
+});
+
+const communityMemberUpdateFieldsSchema = communityMemberBaseSchema.extend({
+  rank: communityMemberRankSchema,
+});
+
+const updateCommunityMemberInput = z.object({
+  id: z.number().int().positive(),
+  patch: communityMemberUpdateFieldsSchema.partial().refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field must be provided to update a community member.',
+  }),
+});
+
+const deleteCommunityMemberInput = z.object({
+  id: z.number().int().positive(),
 });
 
 const ONE_MONTH_SECONDS = 30 * 24 * 60 * 60;
@@ -148,6 +185,99 @@ export const adminRouter = createRouter({
       code: 'NOT_IMPLEMENTED',
       message: 'Manual book management is disabled for the database-backed catalog.',
     });
+  }),
+  listCommunityMembers: adminProcedure.query(async () => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(CommunityMember);
+
+    const members = await repository.find({ order: { rank: 'ASC', id: 'ASC' } });
+
+    return members.map((member) => ({
+      id: member.id,
+      telegramUserId: member.telegramUserId,
+      fullName: member.fullName,
+      rank: member.rank,
+      createdAt: member.createdAt.toISOString(),
+      updatedAt: member.updatedAt.toISOString(),
+    }));
+  }),
+  createCommunityMember: adminProcedure.input(createCommunityMemberInput).mutation(async ({ input }) => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(CommunityMember);
+
+    try {
+      const toCreate = repository.create({
+        telegramUserId: input.telegramUserId,
+        fullName: input.fullName,
+        rank: input.rank ?? 1,
+      });
+      const saved = await repository.save(toCreate);
+
+      return {
+        id: saved.id,
+        telegramUserId: saved.telegramUserId,
+        fullName: saved.fullName,
+        rank: saved.rank,
+        createdAt: saved.createdAt.toISOString(),
+        updatedAt: saved.updatedAt.toISOString(),
+      } as const;
+    } catch (error) {
+      console.error('Failed to create community member', error);
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Unable to create community member. Please ensure the Telegram ID is unique.',
+      });
+    }
+  }),
+  updateCommunityMember: adminProcedure.input(updateCommunityMemberInput).mutation(async ({ input }) => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(CommunityMember);
+
+    const member = await repository.findOne({ where: { id: input.id } });
+    if (!member) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Community member not found' });
+    }
+
+    if (input.patch.telegramUserId !== undefined) {
+      member.telegramUserId = input.patch.telegramUserId;
+    }
+    if (input.patch.fullName !== undefined) {
+      member.fullName = input.patch.fullName;
+    }
+    if (input.patch.rank !== undefined) {
+      member.rank = input.patch.rank;
+    }
+
+    try {
+      const saved = await repository.save(member);
+      return {
+        id: saved.id,
+        telegramUserId: saved.telegramUserId,
+        fullName: saved.fullName,
+        rank: saved.rank,
+        createdAt: saved.createdAt.toISOString(),
+        updatedAt: saved.updatedAt.toISOString(),
+      } as const;
+    } catch (error) {
+      console.error('Failed to update community member', error);
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Unable to update community member. Please ensure the Telegram ID is unique.',
+      });
+    }
+  }),
+  deleteCommunityMember: adminProcedure.input(deleteCommunityMemberInput).mutation(async ({ input }) => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(CommunityMember);
+
+    const member = await repository.findOne({ where: { id: input.id } });
+    if (!member) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Community member not found' });
+    }
+
+    await repository.remove(member);
+
+    return { success: true } as const;
   }),
   refreshWalrusFiles: adminProcedure.mutation(async () => {
     await initializeDataSource();

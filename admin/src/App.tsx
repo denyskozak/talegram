@@ -7,6 +7,7 @@ import { BookEditPage } from './pages/BookEditPage.js';
 import { AuthorListPage } from './pages/AuthorListPage.js';
 import { SettingsPage } from './pages/SettingsPage.js';
 import { AdminLayout } from './components/AdminLayout.js';
+import { CommunityMembersPage } from './pages/CommunityMembersPage.js';
 
 function RequireAuth({ children }: { children: React.ReactNode }): JSX.Element {
   const { token } = useTrpc();
@@ -39,6 +40,9 @@ export default function App(): JSX.Element {
         </Route>
         <Route path="authors">
           <Route index element={<AuthorListPage />} />
+        </Route>
+        <Route path="community">
+          <Route index element={<CommunityMembersPage />} />
         </Route>
         <Route path="settings">
           <Route index element={<SettingsPage />} />
