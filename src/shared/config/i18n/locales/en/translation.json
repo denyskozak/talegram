@@ -50,7 +50,6 @@
       "title": "Alpha version",
       "description": "Most functions disabled."
     },
-    "globalCategoryLabel": "Global category",
     "emptyTitle": "Nothing found",
     "emptyDescription": "Try changing the query"
   },
@@ -433,7 +432,6 @@
         "description": "Description",
         "files": "Submitted files"
       },
-      "globalCategory": "Global category",
       "category": "Category",
       "price": "Price",
       "hashtags": "Hashtags",

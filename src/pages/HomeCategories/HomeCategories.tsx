@@ -109,7 +109,6 @@ export default function HomeCategories(): JSX.Element {
                 {t("homeCategories.title")}
             </Title>
             <div style={{display: "flex", flexDirection: "column", gap: 8, marginBottom: 16}}>
-                <Text weight="2">{t("homeCategories.globalCategoryLabel")}</Text>
                 <SegmentedControl
                 >
                     {GLOBAL_CATEGORIES.map((category) => (
