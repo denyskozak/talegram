@@ -33,7 +33,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "center" }}
     >
       <Card style={{ width: '100%', borderRadius: 20, overflow: "hidden" }}>
-        <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--app-section-color)" }}>
+        <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--tg-theme-secondary-bg-color, #f3f3f5)" }}>
           <img
             src={coverSrc}
             alt={t("book.coverAlt", { title: book.title })}
@@ -46,7 +46,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
           <Title weight="2" level="3">
             {book.title}
           </Title>
-          <Text style={{ color: "var(--app-subtitle-color)" }}>{book.authors.join(", ")}</Text>
+          <Text style={{ color: "var(--tg-theme-subtitle-text-color, #7f7f81)" }}>{book.authors.join(", ")}</Text>
           {book.rating.average > 0 && (
             <BookRating value={book.rating.average} votes={book.rating.votes} />
           )}

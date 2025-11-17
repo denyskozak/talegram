@@ -190,8 +190,8 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
                 style={{
                   padding: "12px",
                   borderRadius: 16,
-                  border: "1px solid var(--app-border-color, rgba(0,0,0,0.08))",
-                  background: "var(--tg-theme-bg-color, var(--app-bg-color))",
+                  border: "1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.08))",
+                  background: "var(--tg-theme-bg-color, #ffffff)",
                   color: "inherit",
                 }}
               >
@@ -213,8 +213,8 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
                 style={{
                   padding: 12,
                   borderRadius: 16,
-                  border: "1px solid var(--app-border-color, rgba(0,0,0,0.08))",
-                  background: "var(--tg-theme-bg-color, var(--app-bg-color))",
+                  border: "1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.08))",
+                  background: "var(--tg-theme-bg-color, #ffffff)",
                   resize: "vertical",
                   font: "inherit",
                 }}
@@ -251,14 +251,14 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
       {items.map((review) => (
         <Card key={review.id} style={{ padding: 16, borderRadius: 20 }}>
           <div style={{ display: "flex", gap: 12 }}>
-            <Avatar size={40} style={{ background: "var(--app-section-color)" }}>
+            <Avatar size={40} style={{ background: "var(--tg-theme-secondary-bg-color, #f3f3f5)" }}>
               {review.authorName.charAt(0).toUpperCase()}
             </Avatar>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
               <Title level="3" weight="2">
                 {review.authorName}
               </Title>
-              <Text style={{ color: "var(--app-subtitle-color)" }}>
+              <Text style={{ color: "var(--tg-theme-subtitle-text-color, #7f7f81)" }}>
                 {new Intl.DateTimeFormat(locale, {
                   day: "numeric",
                   month: "long",

@@ -17,7 +17,7 @@ export function SimilarCarousel({ books, onSelect }: SimilarCarouselProps): JSX.
 
   if (books.length === 0) {
     return (
-      <Text style={{ color: "var(--app-subtitle-color)", padding: "0 16px" }}>
+      <Text style={{ color: "var(--tg-theme-subtitle-text-color, #7f7f81)", padding: "0 16px" }}>
         {t("similar.empty")}
       </Text>
     );
@@ -56,7 +56,7 @@ function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): J
       aria-label={t("similar.aria", { title: book.title })}
     >
       <Card style={{ borderRadius: 18, overflow: "hidden" }}>
-        <div style={{ aspectRatio: "16 / 9", background: "var(--app-section-color)" }}>
+        <div style={{ aspectRatio: "16 / 9", background: "var(--tg-theme-secondary-bg-color, #f3f3f5)" }}>
           <img
             src={coverSrc}
             alt={t("images.bookCover", { title: book.title })}
@@ -69,7 +69,7 @@ function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): J
           <Title level="3" weight="2" style={{ fontSize: 16 }}>
             {book.title}
           </Title>
-          <Text style={{ color: "var(--app-subtitle-color)" }}>{book.authors.join(", ")}</Text>
+          <Text style={{ color: "var(--tg-theme-subtitle-text-color, #7f7f81)" }}>{book.authors.join(", ")}</Text>
         </div>
       </Card>
     </Tappable>

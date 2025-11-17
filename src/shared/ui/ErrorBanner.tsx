@@ -18,7 +18,7 @@ export function ErrorBanner({message, style = {}, onRetry, actionLabel}: ErrorBa
                 <Title level="3" weight="2">
                     {t("errors.genericTitle")}
                 </Title>
-                <Text style={{color: "var(--app-subtitle-color)"}}>{message}</Text>
+                <Text style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>{message}</Text>
             </div>
             {onRetry ? (
                 <Button mode="filled" size="s" onClick={onRetry}>
