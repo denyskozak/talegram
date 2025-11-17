@@ -57,12 +57,14 @@ export type PublishSectionProps = {
   isAuthorsLoading: boolean;
   fileInputRef: RefObject<HTMLInputElement>;
   coverInputRef: RefObject<HTMLInputElement>;
+  audiobookInputRef: RefObject<HTMLInputElement>;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onInputChange: (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   onFileSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   onCoverSelect: (event: ChangeEvent<HTMLInputElement>) => void;
+  onAudiobookSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   onHashtagAdd: (value: string) => void;
   onHashtagRemove: (tag: string) => void;
   onHashtagKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -77,10 +79,12 @@ export function PublishSection({
   isAuthorsLoading,
   fileInputRef,
   coverInputRef,
+  audiobookInputRef,
   onSubmit,
   onInputChange,
   onFileSelect,
   onCoverSelect,
+  onAudiobookSelect,
   onHashtagAdd,
   onHashtagRemove,
   onHashtagKeyDown,
@@ -373,6 +377,41 @@ export function PublishSection({
               </Button>
               <Text style={{ color: theme.subtitle }}>
                 {formState.coverFileName || t("account.publish.form.cover.placeholder")}
+              </Text>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <Text weight="2">{t("account.publish.form.audiobook.label")}</Text>
+              <Text style={{ color: theme.hint, fontSize: 12 }}>
+                {t("account.publish.form.audiobook.hint")}
+              </Text>
+            </div>
+            <input
+              ref={audiobookInputRef}
+              type="file"
+              accept="audio/*"
+              onChange={onAudiobookSelect}
+              disabled={isFormDisabled}
+              style={{ display: "none" }}
+            />
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <Button
+                type="button"
+                mode="outline"
+                size="s"
+                onClick={() => {
+                  if (isFormDisabled) {
+                    return;
+                  }
+                  audiobookInputRef.current?.click();
+                }}
+                disabled={isFormDisabled}
+              >
+                {t("account.publish.form.audiobook.cta")}
+              </Button>
+              <Text style={{ color: theme.subtitle }}>
+                {formState.audiobookFileName || t("account.publish.form.audiobook.placeholder")}
               </Text>
             </div>
           </div>

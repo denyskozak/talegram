@@ -14,6 +14,8 @@ export type BookProposal = {
     hashtags: string[];
     walrusBlobId: string;
     walrusFileId: string;
+    audiobookWalrusBlobId?: string | null;
+    audiobookWalrusFileId?: string | null;
     coverWalrusFileId: string | null;
     coverWalrusBlobId: string | null;
     coverMimeType?: string | null;
@@ -23,6 +25,9 @@ export type BookProposal = {
     mimeType?: string | null;
     fileName: string;
     fileSize?: number | null;
+    audiobookMimeType?: string | null;
+    audiobookFileName?: string | null;
+    audiobookFileSize?: number | null;
     status: ProposalStatus;
     isDeleted: boolean;
     reviewerNotes?: string | null;

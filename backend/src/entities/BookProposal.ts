@@ -80,6 +80,21 @@ export class BookProposal {
   @Column({ name: 'walrus_blob_id', type: 'text' })
   walrusBlobId!: string;
 
+  @Column({ name: 'audiobook_walrus_file_id', type: 'text', nullable: true })
+  audiobookWalrusFileId!: string | null;
+
+  @Column({ name: 'audiobook_walrus_blob_id', type: 'text', nullable: true })
+  audiobookWalrusBlobId!: string | null;
+
+  @Column({ name: 'audiobook_mime_type', type: 'text', nullable: true })
+  audiobookMimeType!: string | null;
+
+  @Column({ name: 'audiobook_file_name', type: 'text', nullable: true })
+  audiobookFileName!: string | null;
+
+  @Column({ name: 'audiobook_file_size', type: 'integer', nullable: true })
+  audiobookFileSize!: number | null;
+
   @Column({ name: 'cover_walrus_file_id', type: 'text', nullable: true })
   coverWalrusFileId!: string | null;
 
@@ -109,6 +124,12 @@ export class BookProposal {
 
   @Column({ name: 'file_encryption_tag', type: 'text', nullable: true })
   fileEncryptionTag!: string | null;
+
+  @Column({ name: 'audiobook_file_encryption_iv', type: 'text', nullable: true })
+  audiobookFileEncryptionIv!: string | null;
+
+  @Column({ name: 'audiobook_file_encryption_tag', type: 'text', nullable: true })
+  audiobookFileEncryptionTag!: string | null;
 
   @Column({ type: 'text', default: ProposalStatus.PENDING })
   status!: ProposalStatus;

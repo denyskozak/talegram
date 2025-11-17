@@ -96,6 +96,11 @@
     "similarSection": "Similar books",
     "similarEmptyTitle": "Nothing to recommend yet",
     "similarEmptyDescription": "We are working on recommendations",
+    "audiobook": {
+      "title": "Audiobook",
+      "locked": "Purchase the book to listen to the audiobook.",
+      "audioUnsupported": "Your browser does not support audio playback."
+    },
     "subscribeDescription": "A subscription opens access to new releases and this book.",
     "buyDescription": "You will get full access to the book after completing the purchase.",
     "modalTitle": {
@@ -292,6 +297,12 @@
           "cta": "Upload image",
           "placeholder": "No image selected"
         },
+        "audiobook": {
+          "label": "Audiobook (optional)",
+          "cta": "Upload audio",
+          "placeholder": "No audio selected",
+          "hint": "Attach MP3, WAV or M4A up to 25 MB."
+        },
         "file": {
           "label": "EPUB file",
           "cta": "Upload .epub",
@@ -428,9 +439,12 @@
       "updated": "Last updated {{value}}",
       "manuscript": "Manuscript",
       "cover": "Cover image",
+      "audiobook": "Audiobook",
       "download": "Download manuscript",
       "noDownload": "File stored on Walrus decentralized storage",
-      "noCover": "Cover file unavailable"
+      "noCover": "Cover file unavailable",
+      "noAudiobook": "No audiobook was attached.",
+      "audioUnsupported": "Your browser does not support audio playback."
     }
   },
   "contact": {

@@ -17,6 +17,7 @@ export type SubmitProposalPayload = {
   hashtags: string[];
   file: File;
   coverFile: File;
+  audiobookFile?: File | null;
 };
 
 export async function submitBookProposal(
@@ -33,6 +34,9 @@ export async function submitBookProposal(
   formData.append("hashtags", JSON.stringify(payload.hashtags));
   formData.append("file", payload.file, payload.file.name);
   formData.append("cover", payload.coverFile, payload.coverFile.name);
+  if (payload.audiobookFile) {
+    formData.append("audiobook", payload.audiobookFile, payload.audiobookFile.name);
+  }
 
   const response = await fetch(`${backendUrl}/proposals`, {
     method: "POST",

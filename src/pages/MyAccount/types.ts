@@ -25,6 +25,8 @@ export type PublishFormState = {
   file: File | null;
   coverFileName: string;
   coverFile: File | null;
+  audiobookFileName: string;
+  audiobookFile: File | null;
 };
 
 export type PublishResultState =

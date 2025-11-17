@@ -21,6 +21,8 @@ const createInitialFormState = (): PublishFormState => ({
   file: null,
   coverFileName: "",
   coverFile: null,
+  audiobookFileName: "",
+  audiobookFile: null,
 });
 
 export type UsePublishFormParams = {
@@ -32,11 +34,13 @@ export type UsePublishFormResult = {
   formState: PublishFormState;
   fileInputRef: RefObject<HTMLInputElement>;
   coverInputRef: RefObject<HTMLInputElement>;
+  audiobookInputRef: RefObject<HTMLInputElement>;
   handleInputChange: (
     event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => void;
   handleFileSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   handleCoverSelect: (event: ChangeEvent<HTMLInputElement>) => void;
+  handleAudiobookSelect: (event: ChangeEvent<HTMLInputElement>) => void;
   handleHashtagAdd: (value: string) => void;
   handleHashtagRemove: (tag: string) => void;
   handleHashtagKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -48,6 +52,7 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
   const [formState, setFormState] = useState<PublishFormState>(() => createInitialFormState());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const audiobookInputRef = useRef<HTMLInputElement>(null);
 
   const sanitizeHashtag = useCallback((rawValue: string): string | null => {
     if (typeof rawValue !== "string") {
@@ -194,6 +199,15 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
     }));
   }, []);
 
+  const handleAudiobookSelect = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    setFormState((prev) => ({
+      ...prev,
+      audiobookFileName: file ? file.name : "",
+      audiobookFile: file,
+    }));
+  }, []);
+
   const resetForm = useCallback(() => {
     setFormState(createInitialFormState());
     if (fileInputRef.current) {
@@ -202,15 +216,20 @@ export function usePublishForm({ showToast, t }: UsePublishFormParams): UsePubli
     if (coverInputRef.current) {
       coverInputRef.current.value = "";
     }
+    if (audiobookInputRef.current) {
+      audiobookInputRef.current.value = "";
+    }
   }, []);
 
   return {
     formState,
     fileInputRef,
     coverInputRef,
+    audiobookInputRef,
     handleInputChange,
     handleFileSelect,
     handleCoverSelect,
+    handleAudiobookSelect,
     handleHashtagAdd,
     handleHashtagRemove,
     handleHashtagKeyDown,

@@ -72,7 +72,13 @@ export const catalogRouter = createRouter({
           ? await fetchWalrusFilesBase64(coverWalrusFileIds)
           : new Map<string, string | null>();
       const items = result.items.map((book) => {
-        const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
+        const {
+          fileEncryptionIv,
+          fileEncryptionTag,
+          audiobookFileEncryptionIv,
+          audiobookFileEncryptionTag,
+          ...bookForClient
+        } = book;
         const coverImageData =
           book.coverWalrusFileId && coverDataById.has(book.coverWalrusFileId)
             ? coverDataById.get(book.coverWalrusFileId) ?? null
@@ -96,7 +102,13 @@ export const catalogRouter = createRouter({
       }
     }
 
-    const { fileEncryptionIv, fileEncryptionTag, ...bookForClient } = book;
+    const {
+      fileEncryptionIv,
+      fileEncryptionTag,
+      audiobookFileEncryptionIv,
+      audiobookFileEncryptionTag,
+      ...bookForClient
+    } = book;
 
     const coverImageData = book.coverWalrusFileId
       ? (await fetchWalrusFilesBase64([book.coverWalrusFileId])).get(book.coverWalrusFileId) ?? null

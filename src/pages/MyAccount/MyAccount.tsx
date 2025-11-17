@@ -60,9 +60,11 @@ export default function MyAccount(): JSX.Element {
     formState,
     fileInputRef,
     coverInputRef,
+    audiobookInputRef,
     handleInputChange,
     handleFileSelect,
     handleCoverSelect,
+    handleAudiobookSelect,
     handleHashtagAdd,
     handleHashtagRemove,
     handleHashtagKeyDown,
@@ -424,6 +426,7 @@ export default function MyAccount(): JSX.Element {
         hashtags: submissionHashtags,
         file: formState.file,
         coverFile: formState.coverFile,
+        audiobookFile: formState.audiobookFile,
       });
 
       const title = formState.title || t("account.publish.toastFallbackTitle");
@@ -496,12 +499,14 @@ export default function MyAccount(): JSX.Element {
           isSubmitting={isSubmitting}
           fileInputRef={fileInputRef}
           coverInputRef={coverInputRef}
+          audiobookInputRef={audiobookInputRef}
           canSubmit={canPublish}
           isAuthorsLoading={isAuthorsLoading}
           onSubmit={handleSubmit}
           onInputChange={handleInputChange}
           onFileSelect={handleFileSelect}
           onCoverSelect={handleCoverSelect}
+          onAudiobookSelect={handleAudiobookSelect}
           onHashtagAdd={handleHashtagAdd}
           onHashtagRemove={handleHashtagRemove}
           onHashtagKeyDown={handleHashtagKeyDown}
