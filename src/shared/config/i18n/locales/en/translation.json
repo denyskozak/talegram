@@ -222,6 +222,16 @@
   "account": {
     "title": "My account",
     "subtitle": "Manage your TON collectibles and share new stories.",
+    "wallet": {
+      "title": "Walrus treasury",
+      "description": "Storage fees on Sui are paid from this shared wallet.",
+      "addressLabel": "Public address",
+      "balancesLabel": "Balances",
+      "loading": "Loading balances…",
+      "error": "We couldn't load the wallet balances. Please try again later.",
+      "refreshHint": "Auto-refreshes every {{seconds}}s",
+      "refreshing": "Updating balances…"
+    },
     "menu": {
       "myBooks": "My books",
       "publish": "Publish a book",
