@@ -2,13 +2,23 @@ import type { Buffer } from 'node:buffer';
 import { TRPCError } from '@trpc/server';
 import { WalrusFile } from '@mysten/walrus';
 import { BookProposal } from '../../entities/BookProposal.js';
+import { WalrusFileRecord } from '../../entities/WalrusFileRecord.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
 import { getKeypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
 import { writeWalrusFiles } from '../../utils/walrus-files.js';
+import { normalizeTelegramUsername } from '../../utils/telegram.js';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+const WALRUS_STORAGE_EPOCHS = 3;
+const WALRUS_EPOCH_DURATION_SECONDS = 7 * 24 * 60 * 60;
+
+function getStartOfCurrentDayUnix(): number {
+  const now = new Date();
+  now.setUTCHours(0, 0, 0, 0);
+  return Math.floor(now.getTime() / 1000);
+}
 
 export type CreateProposalFileInput = {
   name: string;
@@ -28,6 +38,7 @@ export type CreateBookProposalParams = {
   file: CreateProposalFileInput;
   cover: CreateProposalFileInput;
   audiobook?: CreateProposalFileInput | null;
+  submittedByTelegramUsername: string;
 };
 
 const MAX_HASHTAGS = 8;
@@ -138,7 +149,7 @@ export async function createBookProposal(
 
   const uploadResults = await writeWalrusFiles({
     files: filesToUpload,
-    epochs: 3,
+    epochs: WALRUS_STORAGE_EPOCHS,
     deletable: true,
     signer: getKeypair(),
   });
@@ -162,6 +173,11 @@ export async function createBookProposal(
 
   await initializeDataSource();
   const bookProposalRepository = appDataSource.getRepository(BookProposal);
+  const walrusFileRepository = appDataSource.getRepository(WalrusFileRecord);
+  const normalizedUploaderUsername = normalizeTelegramUsername(params.submittedByTelegramUsername);
+  if (!normalizedUploaderUsername) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Telegram username is required' });
+  }
   const globalCategory = params.globalCategory.trim();
   if (globalCategory.length === 0) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Global category is required' });
@@ -177,6 +193,20 @@ export async function createBookProposal(
     : 0;
 
   const currency = 'stars';
+  const walrusExpiresDate =
+    getStartOfCurrentDayUnix() + WALRUS_STORAGE_EPOCHS * WALRUS_EPOCH_DURATION_SECONDS;
+  const walrusRecords = [uploadResult, coverUploadResult, audiobookUploadResult]
+    .filter((item): item is NonNullable<typeof item> => Boolean(item && item.id))
+    .map((item) =>
+      walrusFileRepository.create({
+        warlusFileId: item.id,
+        expiresDate: walrusExpiresDate,
+      }),
+    );
+
+  if (walrusRecords.length > 0) {
+    await walrusFileRepository.save(walrusRecords);
+  }
 
   const proposal = bookProposalRepository.create({
     title: params.title,
@@ -206,6 +236,7 @@ export async function createBookProposal(
     fileEncryptionTag: authTag.toString('base64'),
     audiobookFileEncryptionIv: audiobookEncryption?.iv.toString('base64') ?? null,
     audiobookFileEncryptionTag: audiobookEncryption?.authTag.toString('base64') ?? null,
+    submittedByTelegramUsername: normalizedUploaderUsername,
   });
 
   return bookProposalRepository.save(proposal);
