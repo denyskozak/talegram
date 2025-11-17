@@ -131,6 +131,9 @@ export class BookProposal {
   @Column({ name: 'audiobook_file_encryption_tag', type: 'text', nullable: true })
   audiobookFileEncryptionTag!: string | null;
 
+  @Column({ name: 'submitted_by_telegram_username', type: 'text', nullable: true })
+  submittedByTelegramUsername!: string | null;
+
   @Column({ type: 'text', default: ProposalStatus.PENDING })
   status!: ProposalStatus;
 

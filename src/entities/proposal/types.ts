@@ -11,6 +11,7 @@ export type BookProposal = {
     category: string;
     price: number;
     currency: string;
+    submittedByTelegramUsername?: string | null;
     hashtags: string[];
     walrusBlobId: string;
     walrusFileId: string;

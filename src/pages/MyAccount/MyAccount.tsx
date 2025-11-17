@@ -370,6 +370,11 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
+    if (!telegramUsername) {
+      showToast(t("account.publish.toastRestricted"));
+      return;
+    }
+
     if (!canPublish) {
       showToast(t("account.publish.toastRestricted"));
       return;
@@ -427,6 +432,7 @@ export default function MyAccount(): JSX.Element {
         file: formState.file,
         coverFile: formState.coverFile,
         audiobookFile: formState.audiobookFile,
+        telegramUsername,
       });
 
       const title = formState.title || t("account.publish.toastFallbackTitle");

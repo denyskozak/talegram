@@ -7,10 +7,23 @@ type Feedback =
   | { type: 'error'; message: string }
   | null;
 
+type WalrusRefreshResult = {
+  count: number;
+  checkedAt: string;
+  expiringFiles: Array<{
+    warlusFileId: string;
+    expiresDate: number;
+    expiresInSeconds: number;
+  }>;
+};
+
 export function SettingsPage(): JSX.Element {
-  const { backendUrl, setBackendUrl, defaultBackendUrl, token, setToken } = useTrpc();
+  const { backendUrl, setBackendUrl, defaultBackendUrl, token, setToken, client } = useTrpc();
   const [inputValue, setInputValue] = useState(backendUrl);
   const [feedback, setFeedback] = useState<Feedback>(null);
+  const [walrusResult, setWalrusResult] = useState<WalrusRefreshResult | null>(null);
+  const [walrusStatus, setWalrusStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [walrusError, setWalrusError] = useState<string | null>(null);
 
   const isCustomBackendUrl = useMemo(() => backendUrl !== defaultBackendUrl, [backendUrl, defaultBackendUrl]);
 
@@ -38,6 +51,20 @@ export function SettingsPage(): JSX.Element {
   const handleClearSession = () => {
     setToken(null);
     setFeedback({ type: 'success', message: 'Admin session cleared. Please sign in again.' });
+  };
+
+  const handleRefreshWalrusFiles = async () => {
+    setWalrusStatus('loading');
+    setWalrusError(null);
+    try {
+      const result = (await client.admin.refreshWalrusFiles.mutate()) as WalrusRefreshResult;
+      setWalrusResult(result);
+      setWalrusStatus('success');
+    } catch (error) {
+      console.error('Failed to refresh Walrus files', error);
+      setWalrusError('Failed to check Walrus files. Please try again.');
+      setWalrusStatus('error');
+    }
   };
 
   return (
@@ -96,6 +123,48 @@ export function SettingsPage(): JSX.Element {
             Clear session
           </button>
         </div>
+      </section>
+
+      <section className="settings__card">
+        <h2>Walrus storage renewal</h2>
+        <p className="settings__description">
+          Scan Walrus files that will expire within the next month to plan renewals ahead of time.
+        </p>
+        <div className="settings__actions">
+          <button
+            type="button"
+            className="settings__primary"
+            onClick={handleRefreshWalrusFiles}
+            disabled={walrusStatus === 'loading'}
+          >
+            {walrusStatus === 'loading' ? 'Checking…' : 'Check expiring files'}
+          </button>
+        </div>
+        {walrusError ? (
+          <div className="settings__feedback settings__feedback--error">{walrusError}</div>
+        ) : null}
+        {walrusResult ? (
+          <div className="settings__walrus-result">
+            <p>
+              Last check: {new Date(walrusResult.checkedAt).toLocaleString()}.{' '}
+              {walrusResult.count === 0
+                ? 'All stored Walrus files are valid for more than a month.'
+                : `${walrusResult.count} file${walrusResult.count === 1 ? '' : 's'} require renewal soon.`}
+            </p>
+            {walrusResult.count > 0 ? (
+              <ul className="settings__walrus-list">
+                {walrusResult.expiringFiles.map((file) => (
+                  <li key={file.warlusFileId}>
+                    <span className="settings__walrus-file-id">{file.warlusFileId}</span>
+                    <span className="settings__walrus-expiry">
+                      Expires {new Date(file.expiresDate * 1000).toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
       </section>
     </div>
   );

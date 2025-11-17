@@ -5,6 +5,7 @@ import { createRouter, procedure } from '../trpc/trpc.js';
 import { issueAdminToken, validateAdminCredentials, verifyAdminToken } from '../services/adminAuth.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { Author } from '../entities/Author.js';
+import { WalrusFileRecord } from '../entities/WalrusFileRecord.js';
 
 function extractBearerToken(rawHeader: string | string[] | undefined): string | null {
   if (!rawHeader) {
@@ -72,6 +73,8 @@ const updateBookInput = z.object({
 const deleteBookInput = z.object({
   id: z.string().trim().min(1),
 });
+
+const ONE_MONTH_SECONDS = 30 * 24 * 60 * 60;
 
 export const adminRouter = createRouter({
   login: procedure.input(loginInput).mutation(({ input }) => {
@@ -145,6 +148,30 @@ export const adminRouter = createRouter({
       code: 'NOT_IMPLEMENTED',
       message: 'Manual book management is disabled for the database-backed catalog.',
     });
+  }),
+  refreshWalrusFiles: adminProcedure.mutation(async () => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(WalrusFileRecord);
+
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const thresholdSeconds = nowSeconds + ONE_MONTH_SECONDS;
+    const expiring = await repository
+      .createQueryBuilder('wf')
+      .where('wf.expiresDate <= :threshold', { threshold: thresholdSeconds })
+      .orderBy('wf.expiresDate', 'ASC')
+      .getMany();
+
+    const expiringFiles = expiring.map((record) => ({
+      warlusFileId: record.warlusFileId,
+      expiresDate: record.expiresDate,
+      expiresInSeconds: record.expiresDate - nowSeconds,
+    }));
+
+    return {
+      expiringFiles,
+      count: expiringFiles.length,
+      checkedAt: new Date(nowSeconds * 1000).toISOString(),
+    } as const;
   }),
 });
 

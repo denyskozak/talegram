@@ -164,11 +164,12 @@ async function handleCreateProposalRequest(
         const category = fields['category'];
         const priceRaw = fields['price'];
         const hashtagsRaw = fields['hashtags'];
+        const telegramUsername = fields['telegramUsername'];
         const file = files['file'];
         const cover = files['cover'];
         const audiobook = files['audiobook'];
 
-        if (!title || !author || !description || !globalCategory || !category) {
+        if (!title || !author || !description || !globalCategory || !category || !telegramUsername) {
             res.statusCode = 400;
             res.end('Missing required fields');
             return;
@@ -215,6 +216,7 @@ async function handleCreateProposalRequest(
             category,
             price: normalizedPrice,
             hashtags: parseHashtagsField(hashtagsRaw),
+            submittedByTelegramUsername: telegramUsername,
             file: {
                 name: file.filename,
                 mimeType: file.mimeType,
