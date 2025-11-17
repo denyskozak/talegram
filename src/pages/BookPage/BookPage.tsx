@@ -68,18 +68,7 @@ export default function BookPage(): JSX.Element {
 
     const isFreeBook = Boolean(book && book.priceStars === 0);
     const hasFullAccess = isPurchased || isFreeBook;
-    const audiobookUrl = useMemo(() => {
-        if (!book?.audiobookWalrusFileId) {
-            return null;
-        }
-
-        try {
-            return buildBookFileDownloadUrl(book.id, "audiobook", {telegramUserId});
-        } catch (error) {
-            console.error("Failed to build audiobook url", error);
-            return null;
-        }
-    }, [book?.audiobookWalrusFileId, book?.id, telegramUserId]);
+    const hasAudiobook = Boolean(book?.audiobookWalrusFileId);
 
 
     const loadBook = useCallback(async () => {
@@ -179,6 +168,24 @@ export default function BookPage(): JSX.Element {
         }
 
         navigate(`/reader/${encodeURIComponent(book.id)}`);
+    }, [book, hasFullAccess, navigate, showToast, t]);
+
+    const handleListen = useCallback(() => {
+        if (!book) {
+            return;
+        }
+
+        if (!book.audiobookWalrusFileId) {
+            showToast(t("book.audiobook.locked"));
+            return;
+        }
+
+        if (!hasFullAccess) {
+            showToast(t("book.toast.listenAccessRequired"));
+            return;
+        }
+
+        navigate(`/listen/${encodeURIComponent(book.id)}`);
     }, [book, hasFullAccess, navigate, showToast, t]);
 
     const handleReviewCreated = useCallback((review: Review) => {
@@ -581,6 +588,11 @@ export default function BookPage(): JSX.Element {
                                 >
                                     {t("book.actions.download")}
                                 </Button>
+                                {hasAudiobook ? (
+                                    <Button size="l" mode="outline" onClick={handleListen}>
+                                        {t("book.actions.listen")}
+                                    </Button>
+                                ) : null}
                             </div>
                             {isDownloading || isLoading ? <QuoteCarouselNotice theme={theme} t={t}/> : null}
                         </>
@@ -608,20 +620,19 @@ export default function BookPage(): JSX.Element {
                             </Button>
                         </div>
                     )}
-                    {book?.audiobookWalrusFileId ? (
+                    {hasAudiobook ? (
                         <Card style={{padding: 16, borderRadius: 20}}>
                             <Text weight="2" style={{marginBottom: 8}}>
                                 {t("book.audiobook.title")}
                             </Text>
-                            {hasFullAccess && audiobookUrl ? (
-                                <audio controls src={audiobookUrl} style={{width: "100%"}}>
-                                    {t("book.audiobook.audioUnsupported")}
-                                </audio>
-                            ) : (
-                                <Text style={{color: "var(--app-subtitle-color)"}}>
-                                    {t("book.audiobook.locked")}
-                                </Text>
-                            )}
+                            <Text style={{color: "var(--app-subtitle-color)", marginBottom: 8}}>
+                                {hasFullAccess
+                                    ? t("book.audiobook.listenPrompt")
+                                    : t("book.audiobook.locked")}
+                            </Text>
+                            <Button size="m" mode="outline" onClick={handleListen}>
+                                {t("book.actions.listen")}
+                            </Button>
                         </Card>
                     ) : null}
                     <Card style={{padding: 16, borderRadius: 20}}>

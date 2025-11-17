@@ -12,7 +12,7 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import {buildBookFileDownloadUrl} from "@/shared/api/storage";
+import {buildWalrusFileDownloadUrl} from "@/shared/api/storage";
 import {downloadFile} from "@telegram-apps/sdk-react";
 
 function formatDate(value: string): string {
@@ -168,18 +168,21 @@ export default function ProposalDetails(): JSX.Element {
         }
     }, [proposal, showToast, t, telegramUserId]);
 
-    const audiobookUrl = useMemo(() => {
-        if (!proposal?.audiobookWalrusFileId) {
-            return null;
+    const handleStartReading = useCallback(() => {
+        if (!proposal?.bookId) {
+            return;
         }
 
-        try {
-            return buildWalrusFileDownloadUrl(proposal.audiobookWalrusFileId, { telegramUserId });
-        } catch (error) {
-            console.error("Failed to resolve audiobook url", error);
-            return null;
+        navigate(`/reader/${encodeURIComponent(proposal.bookId)}`);
+    }, [navigate, proposal]);
+
+    const handleStartListening = useCallback(() => {
+        if (!proposal?.bookId) {
+            return;
         }
-    }, [proposal, telegramUserId]);
+
+        navigate(`/listen/${encodeURIComponent(proposal.bookId)}`);
+    }, [navigate, proposal]);
 
     const handleVote = useCallback(
         async (direction: VoteDirection) => {
@@ -413,6 +416,26 @@ export default function ProposalDetails(): JSX.Element {
                                 ) : (
                                     <Text style={{color: theme.hint}}>{t("account.proposalDetails.noDownload")}</Text>
                                 )}
+                                {canVote && proposal.bookId ? (
+                                    <Button
+                                        type="button"
+                                        mode="filled"
+                                        size="s"
+                                        onClick={handleStartReading}
+                                    >
+                                        {t("account.proposalDetails.read")}
+                                    </Button>
+                                ) : null}
+                                {canVote && proposal.bookId && proposal.audiobookWalrusFileId ? (
+                                    <Button
+                                        type="button"
+                                        mode="outline"
+                                        size="s"
+                                        onClick={handleStartListening}
+                                    >
+                                        {t("account.proposalDetails.listen")}
+                                    </Button>
+                                ) : null}
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.cover")}</Text>
@@ -422,15 +445,11 @@ export default function ProposalDetails(): JSX.Element {
                             </div>
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.audiobook")}</Text>
-                                {proposal.audiobookWalrusFileId && audiobookUrl ? (
-                                    <audio controls src={audiobookUrl} style={{width: "100%"}}>
-                                        {t("account.proposalDetails.audioUnsupported")}
-                                    </audio>
-                                ) : (
-                                    <Text style={{color: theme.hint}}>
-                                        {t("account.proposalDetails.noAudiobook")}
-                                    </Text>
-                                )}
+                                <Text style={{color: theme.subtitle}}>
+                                    {proposal.audiobookWalrusFileId
+                                        ? t("account.proposalDetails.audiobookAvailable")
+                                        : t("account.proposalDetails.noAudiobook")}
+                                </Text>
                             </div>
                         </div>
                     </Card>

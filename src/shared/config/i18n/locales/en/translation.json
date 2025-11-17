@@ -99,7 +99,8 @@
     "audiobook": {
       "title": "Audiobook",
       "locked": "Purchase the book to listen to the audiobook.",
-      "audioUnsupported": "Your browser does not support audio playback."
+      "audioUnsupported": "Your browser does not support audio playback.",
+      "listenPrompt": "Open the audiobook player to keep listening."
     },
     "subscribeDescription": "A subscription opens access to new releases and this book.",
     "buyDescription": "You will get full access to the book after completing the purchase.",
@@ -112,6 +113,7 @@
       "download": "Download",
       "buy": "Buy",
       "subscribe": "Subscribe",
+      "listen": "Listen",
       "preview": "Read first 50 pages",
       "confirm": "Complete",
       "like": "Like \"{{title}}\"",
@@ -147,7 +149,14 @@
       "paymentCancelled": "Payment was cancelled",
       "paymentFailed": "Payment failed",
       "readAccessRequired": "Purchase the book to read it.",
+      "listenAccessRequired": "Purchase the book to listen to the audiobook.",
       "downloadFailed": "Could not load the book file. Try again later."
+    },
+    "listen": {
+      "title": "Listen to the audiobook",
+      "back": "Back",
+      "unavailable": "We couldn't find the audiobook for this book.",
+      "unsupported": "Your browser does not support audio playback."
     },
     "purchase": {
       "statusTitle": "Purchase details",
@@ -441,10 +450,12 @@
       "cover": "Cover image",
       "audiobook": "Audiobook",
       "download": "Download manuscript",
+      "read": "Read in the app",
+      "listen": "Listen in the app",
       "noDownload": "File stored on Walrus decentralized storage",
       "noCover": "Cover file unavailable",
       "noAudiobook": "No audiobook was attached.",
-      "audioUnsupported": "Your browser does not support audio playback."
+      "audiobookAvailable": "Audiobook attached to the proposal."
     }
   },
   "contact": {

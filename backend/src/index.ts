@@ -84,7 +84,7 @@ const server = http.createServer(async (req, res) => {
     const url = safeParseUrl(req.url, req.headers.host);
     const bookDownloadMatch =
         req.method === 'GET'
-            ? url?.pathname.match(/^\/books\/([^/]+)\/(book|cover)\/download\.epub$/)
+            ? url?.pathname.match(/^\/books\/([^/]+)\/(book|cover|audiobook)\/download\.epub$/)
             : null;
     if (bookDownloadMatch) {
         const rawBookId = bookDownloadMatch[1];
@@ -97,7 +97,8 @@ const server = http.createServer(async (req, res) => {
         }
 
         const telegramUserId = normalizeTelegramUserId(url?.searchParams.get('telegramUserId') ?? null);
-        const fileKind = bookDownloadMatch[2] === 'cover' ? 'cover' : 'book';
+        const rawFileKind = bookDownloadMatch[2];
+        const fileKind = rawFileKind === 'cover' ? 'cover' : rawFileKind === 'audiobook' ? 'audiobook' : 'book';
 
         await handleFileDownloadRequest(req, res, {
             bookId: decodedBookId,

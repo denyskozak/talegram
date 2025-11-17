@@ -59,7 +59,7 @@ export const proposalsRouter = createRouter({
     const proposals = await bookProposalRepository.find({
       where: { status: ProposalStatus.PENDING, isDeleted: false },
       order: { createdAt: 'DESC' },
-      relations: { votes: true },
+      relations: { votes: true, books: true },
     });
 
     const coverFileIds = Array.from(
@@ -86,7 +86,8 @@ export const proposalsRouter = createRouter({
             )
           : undefined;
 
-      const { votes: _votes, ...rest } = proposal;
+      const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
+      const { votes: _votes, books: _books, ...rest } = proposal;
 
       const coverImageData =
         proposal.coverWalrusFileId && coverDataByFileId.has(proposal.coverWalrusFileId)
@@ -95,6 +96,7 @@ export const proposalsRouter = createRouter({
 
       return {
         ...rest,
+        bookId: firstBook ? firstBook.id : null,
         coverImageData,
         votes: {
           positiveVotes,
@@ -120,7 +122,7 @@ export const proposalsRouter = createRouter({
 
     const proposal = await bookProposalRepository.findOne({
       where: { id: input.proposalId, isDeleted: false },
-      relations: { votes: true },
+      relations: { votes: true, books: true },
     });
     if (!proposal) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
@@ -140,10 +142,12 @@ export const proposalsRouter = createRouter({
         ? votes.find((vote: ProposalVote) => vote.telegramUsername === normalizedTelegramUsername)
         : undefined;
 
-    const { votes: _votes, ...rest } = proposal;
+    const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
+    const { votes: _votes, books: _books, ...rest } = proposal;
 
     return {
       ...rest,
+      bookId: firstBook ? firstBook.id : null,
       coverImageData,
       votes: {
         positiveVotes,
