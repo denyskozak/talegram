@@ -4,8 +4,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
 import { Book } from '../entities/Book.js';
-import { BookProposal } from '../entities/BookProposal.js';
+import { BookProposal, ProposalStatus } from '../entities/BookProposal.js';
 import { Purchase } from '../entities/Purchase.js';
+import { CommunityMember } from '../entities/CommunityMember.js';
 import { decryptBookFile } from '../services/encryption.js';
 import { suiClient } from '../services/walrus-storage.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
@@ -437,7 +438,10 @@ export async function handleFileDownloadRequest(
   }
 
   const bookRepository = appDataSource.getRepository(Book);
+  const proposalRepository = appDataSource.getRepository(BookProposal);
+  const communityMemberRepository = appDataSource.getRepository(CommunityMember);
   let book: Book | null = null;
+  let proposal: BookProposal | null = null;
 
   try {
     book = await bookRepository.findOne({ where: { id: normalizedBookId } });
@@ -452,32 +456,79 @@ export async function handleFileDownloadRequest(
     return;
   }
 
-  if (params.fileKind !== 'cover') {
-    const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
-    if (price > 0) {
+  if (book.proposalId) {
+    try {
+      proposal = await proposalRepository.findOne({ where: { id: book.proposalId } });
+    } catch (error) {
+      console.error('Failed to load book proposal for download request', {
+        bookId: normalizedBookId,
+        proposalId: book.proposalId,
+        error,
+      });
+      respondWithError(res, 500, 'Failed to process file download');
+      return;
+    }
+  }
+
+  const isCoverRequest = params.fileKind === 'cover';
+  const requiresCommunityMembership =
+    !isCoverRequest &&
+    proposal !== null &&
+    !proposal.isDeleted &&
+    proposal.status === ProposalStatus.PENDING;
+
+  if (!isCoverRequest) {
+    if (requiresCommunityMembership) {
       if (!params.telegramUserId) {
         respondWithError(res, 401, 'Telegram user id is required to download this book');
         return;
       }
 
       try {
-        const purchaseRepository = appDataSource.getRepository(Purchase);
-        const purchase = await purchaseRepository.findOne({
-          where: { bookId: normalizedBookId, telegramUserId: params.telegramUserId },
+        const communityMember = await communityMemberRepository.findOne({
+          where: { telegramUserId: params.telegramUserId },
         });
 
-        if (!purchase) {
-          respondWithError(res, 403, 'Purchase required to download this book');
+        if (!communityMember) {
+          respondWithError(res, 403, 'Community membership required to download this file');
           return;
         }
       } catch (error) {
-        console.error('Failed to verify purchase before download', {
+        console.error('Failed to verify community membership before download', {
           bookId: normalizedBookId,
           telegramUserId: params.telegramUserId,
           error,
         });
         respondWithError(res, 500, 'Failed to process file download');
         return;
+      }
+    } else {
+      const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
+      if (price > 0) {
+        if (!params.telegramUserId) {
+          respondWithError(res, 401, 'Telegram user id is required to download this book');
+          return;
+        }
+
+        try {
+          const purchaseRepository = appDataSource.getRepository(Purchase);
+          const purchase = await purchaseRepository.findOne({
+            where: { bookId: normalizedBookId, telegramUserId: params.telegramUserId },
+          });
+
+          if (!purchase) {
+            respondWithError(res, 403, 'Purchase required to download this book');
+            return;
+          }
+        } catch (error) {
+          console.error('Failed to verify purchase before download', {
+            bookId: normalizedBookId,
+            telegramUserId: params.telegramUserId,
+            error,
+          });
+          respondWithError(res, 500, 'Failed to process file download');
+          return;
+        }
       }
     }
   }

@@ -26,6 +26,7 @@ export type BookProposal = {
     mimeType?: string | null;
     fileName: string;
     fileSize?: number | null;
+    bookId?: string | null;
     audiobookMimeType?: string | null;
     audiobookFileName?: string | null;
     audiobookFileSize?: number | null;
