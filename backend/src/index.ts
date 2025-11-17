@@ -166,6 +166,7 @@ async function handleCreateProposalRequest(
         const hashtagsRaw = fields['hashtags'];
         const file = files['file'];
         const cover = files['cover'];
+        const audiobook = files['audiobook'];
 
         if (!title || !author || !description || !globalCategory || !category) {
             res.statusCode = 400;
@@ -226,6 +227,14 @@ async function handleCreateProposalRequest(
                 size: cover.data.byteLength,
                 data: cover.data,
             },
+            audiobook: audiobook
+                ? {
+                      name: audiobook.filename,
+                      mimeType: audiobook.mimeType,
+                      size: audiobook.data.byteLength,
+                      data: audiobook.data,
+                  }
+                : null,
         });
 
         res.statusCode = 201;

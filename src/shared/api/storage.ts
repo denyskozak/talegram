@@ -1,6 +1,6 @@
 import { resolveBackendUrl } from "./trpc";
 
-export type BookFileKind = "book" | "cover";
+export type BookFileKind = "book" | "cover" | "audiobook";
 
 export type DecryptedFile = {
   bookId: string;
@@ -71,6 +71,27 @@ export function buildBookFileDownloadUrl(
     `${backendUrl}/`,
   );
 
+  if (options.telegramUserId) {
+    url.searchParams.set("telegramUserId", options.telegramUserId);
+  }
+
+  return url.toString();
+}
+
+type BuildWalrusDownloadUrlOptions = {
+  telegramUserId?: string | null;
+};
+
+export function buildWalrusFileDownloadUrl(
+  fileId: string,
+  options: BuildWalrusDownloadUrlOptions = {},
+): string {
+  const normalized = fileId.trim();
+  if (!normalized) {
+    throw new Error("fileId must be a non-empty string");
+  }
+
+  const url = new URL(`/file/download/${encodeURIComponent(normalized)}`, `${backendUrl}/`);
   if (options.telegramUserId) {
     url.searchParams.set("telegramUserId", options.telegramUserId);
   }

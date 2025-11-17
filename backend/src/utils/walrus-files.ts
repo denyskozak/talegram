@@ -31,9 +31,16 @@ const MIME_EXTENSION_MAP: Record<string, string> = {
   'text/plain': 'txt',
   'image/jpeg': 'jpg',
   'image/png': 'png',
+  'audio/mpeg': 'mp3',
+  'audio/mp3': 'mp3',
+  'audio/aac': 'aac',
+  'audio/wav': 'wav',
+  'audio/webm': 'webm',
+  'audio/ogg': 'ogg',
+  'audio/mp4': 'm4a',
 };
 
-export type BookFileKind = 'book' | 'cover';
+export type BookFileKind = 'book' | 'cover' | 'audiobook';
 
 function ensureCacheDirectory(): Promise<void> {
   if (ensureCacheDirectoryPromise === null) {
@@ -187,6 +194,37 @@ function matchesCoverFile(
   );
 }
 
+function matchesAudiobookFile(
+  source: { audiobookWalrusFileId?: string | null; audiobookWalrusBlobId?: string | null },
+  id: string,
+): boolean {
+  const normalizedId = id.trim();
+  return (
+    (typeof source.audiobookWalrusFileId === 'string' && source.audiobookWalrusFileId.trim() === normalizedId) ||
+    (typeof source.audiobookWalrusBlobId === 'string' && source.audiobookWalrusBlobId.trim() === normalizedId)
+  );
+}
+
+function determineSourceFileKind(
+  source: {
+    coverWalrusFileId?: string | null;
+    coverWalrusBlobId?: string | null;
+    audiobookWalrusFileId?: string | null;
+    audiobookWalrusBlobId?: string | null;
+  },
+  id: string,
+): BookFileKind {
+  if (matchesCoverFile(source, id)) {
+    return 'cover';
+  }
+
+  if (matchesAudiobookFile(source, id)) {
+    return 'audiobook';
+  }
+
+  return 'book';
+}
+
 async function fetchWalrusFileBuffer(id: string): Promise<Buffer | null> {
   const base64 = await fetchWalrusFileBase64(id);
   if (!base64) {
@@ -224,18 +262,32 @@ function sanitizeFileNameBase(base: string | null | undefined): string {
 }
 
 function determineDownloadFileName(book: Book, fileKind: BookFileKind): string {
-  const explicitName = fileKind === 'cover' ? book.coverFileName : book.fileName;
+  const explicitName =
+    fileKind === 'cover'
+      ? book.coverFileName
+      : fileKind === 'audiobook'
+      ? book.audiobookFileName
+      : book.fileName;
   const normalized = typeof explicitName === 'string' ? explicitName.trim() : '';
   if (normalized.length > 0) {
     return normalized;
   }
 
   const baseName = sanitizeFileNameBase(book.title);
-  const mimeType = fileKind === 'cover' ? book.coverMimeType : book.mimeType;
-  const extension = guessExtensionFromMime(mimeType) ?? (fileKind === 'cover' ? 'jpg' : 'bin');
+  const mimeType =
+    fileKind === 'cover'
+      ? book.coverMimeType
+      : fileKind === 'audiobook'
+      ? book.audiobookMimeType
+      : book.mimeType;
+  const extension = guessExtensionFromMime(mimeType) ?? (fileKind === 'cover' ? 'jpg' : fileKind === 'audiobook' ? 'mp3' : 'bin');
 
   if (fileKind === 'cover') {
     return `${baseName}-cover.${extension}`;
+  }
+
+  if (fileKind === 'audiobook') {
+    return `${baseName}-audiobook.${extension}`;
   }
 
   return `${baseName}.${extension}`;
@@ -400,7 +452,7 @@ export async function handleFileDownloadRequest(
     return;
   }
 
-  if (params.fileKind === 'book') {
+  if (params.fileKind !== 'cover') {
     const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
     if (price > 0) {
       if (!params.telegramUserId) {
@@ -433,6 +485,8 @@ export async function handleFileDownloadRequest(
   const storageId =
     params.fileKind === 'cover'
       ? resolveWalrusStorageId(book.coverWalrusFileId, book.coverWalrusBlobId)
+      : params.fileKind === 'audiobook'
+      ? resolveWalrusStorageId(book.audiobookWalrusFileId, book.audiobookWalrusBlobId)
       : resolveWalrusStorageId(book.walrusFileId, book.walrusBlobId);
 
   if (!storageId) {
@@ -447,11 +501,20 @@ export async function handleFileDownloadRequest(
   }
 
   let responseBuffer = walrusBuffer;
-  let mimeType = params.fileKind === 'cover' ? book.coverMimeType ?? null : book.mimeType ?? null;
+  let mimeType =
+    params.fileKind === 'cover'
+      ? book.coverMimeType ?? null
+      : params.fileKind === 'audiobook'
+      ? book.audiobookMimeType ?? null
+      : book.mimeType ?? null;
 
-  if (params.fileKind === 'book') {
-    const iv = decodeBase64Buffer(book.fileEncryptionIv);
-    const authTag = decodeBase64Buffer(book.fileEncryptionTag);
+  if (params.fileKind === 'book' || params.fileKind === 'audiobook') {
+    const iv = decodeBase64Buffer(
+      params.fileKind === 'audiobook' ? book.audiobookFileEncryptionIv : book.fileEncryptionIv,
+    );
+    const authTag = decodeBase64Buffer(
+      params.fileKind === 'audiobook' ? book.audiobookFileEncryptionTag : book.fileEncryptionTag,
+    );
 
     if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
       try {
@@ -472,7 +535,8 @@ export async function handleFileDownloadRequest(
   }
 
   const fileName = determineDownloadFileName(book, params.fileKind);
-  const resolvedMimeType = mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : 'application/octet-stream');
+  const resolvedMimeType =
+    mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 
   const cacheTimeMs = 2 * 24 * 3600 * 1000;
   res.statusCode = 200;
@@ -510,8 +574,10 @@ export async function handleWalrusFileDownloadRequest(
     book = await bookRepository.findOne({
       where: [
         { walrusFileId: normalizedFileId },
+        { audiobookWalrusFileId: normalizedFileId },
         { coverWalrusFileId: normalizedFileId },
         { walrusBlobId: normalizedFileId },
+        { audiobookWalrusBlobId: normalizedFileId },
         { coverWalrusBlobId: normalizedFileId },
       ],
     });
@@ -532,8 +598,10 @@ export async function handleWalrusFileDownloadRequest(
       proposal = await proposalRepository.findOne({
         where: [
           { walrusFileId: normalizedFileId },
+          { audiobookWalrusFileId: normalizedFileId },
           { coverWalrusFileId: normalizedFileId },
           { walrusBlobId: normalizedFileId },
+          { audiobookWalrusBlobId: normalizedFileId },
           { coverWalrusBlobId: normalizedFileId },
         ],
       });
@@ -552,9 +620,9 @@ export async function handleWalrusFileDownloadRequest(
     return;
   }
 
-  const isCoverFile = matchesCoverFile(book ?? proposal!, normalizedFileId);
+  const fileKind = determineSourceFileKind(book ?? proposal!, normalizedFileId);
 
-  if (book && !isCoverFile) {
+  if (book && fileKind !== 'cover') {
     const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
     if (price > 0) {
       if (!params.telegramUserId) {
@@ -595,11 +663,20 @@ export async function handleWalrusFileDownloadRequest(
   let fileName: string;
 
   if (book) {
-    mimeType = isCoverFile ? book.coverMimeType ?? null : book.mimeType ?? null;
+    mimeType =
+      fileKind === 'cover'
+        ? book.coverMimeType ?? null
+        : fileKind === 'audiobook'
+        ? book.audiobookMimeType ?? null
+        : book.mimeType ?? null;
 
-    if (!isCoverFile) {
-      const iv = decodeBase64Buffer(book.fileEncryptionIv);
-      const authTag = decodeBase64Buffer(book.fileEncryptionTag);
+    if (fileKind !== 'cover') {
+      const iv = decodeBase64Buffer(
+        fileKind === 'audiobook' ? book.audiobookFileEncryptionIv : book.fileEncryptionIv,
+      );
+      const authTag = decodeBase64Buffer(
+        fileKind === 'audiobook' ? book.audiobookFileEncryptionTag : book.fileEncryptionTag,
+      );
 
       if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
         try {
@@ -617,14 +694,27 @@ export async function handleWalrusFileDownloadRequest(
       }
     }
 
-    fileName = determineDownloadFileName(book, isCoverFile ? 'cover' : 'book');
+    fileName = determineDownloadFileName(book, fileKind);
   } else {
     const proposalEntity = proposal!;
-    mimeType = isCoverFile ? proposalEntity.coverMimeType ?? null : proposalEntity.mimeType ?? null;
+    mimeType =
+      fileKind === 'cover'
+        ? proposalEntity.coverMimeType ?? null
+        : fileKind === 'audiobook'
+        ? proposalEntity.audiobookMimeType ?? null
+        : proposalEntity.mimeType ?? null;
 
-    if (!isCoverFile) {
-      const iv = decodeBase64Buffer(proposalEntity.fileEncryptionIv);
-      const authTag = decodeBase64Buffer(proposalEntity.fileEncryptionTag);
+    if (fileKind !== 'cover') {
+      const iv = decodeBase64Buffer(
+        fileKind === 'audiobook'
+          ? proposalEntity.audiobookFileEncryptionIv
+          : proposalEntity.fileEncryptionIv,
+      );
+      const authTag = decodeBase64Buffer(
+        fileKind === 'audiobook'
+          ? proposalEntity.audiobookFileEncryptionTag
+          : proposalEntity.fileEncryptionTag,
+      );
 
       if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
         try {
@@ -638,18 +728,31 @@ export async function handleWalrusFileDownloadRequest(
       }
     }
 
-    const explicitName = isCoverFile ? proposalEntity.coverFileName : proposalEntity.fileName;
+    const explicitName =
+      fileKind === 'cover'
+        ? proposalEntity.coverFileName
+        : fileKind === 'audiobook'
+        ? proposalEntity.audiobookFileName
+        : proposalEntity.fileName;
     const normalizedName = typeof explicitName === 'string' ? explicitName.trim() : '';
     if (normalizedName.length > 0) {
       fileName = normalizedName;
     } else {
       const baseName = sanitizeFileNameBase(proposalEntity.title);
-      const extension = guessExtensionFromMime(mimeType) ?? (isCoverFile ? 'jpg' : 'bin');
-      fileName = isCoverFile ? `${baseName}-cover.${extension}` : `${baseName}.${extension}`;
+      const extension =
+        guessExtensionFromMime(mimeType) ?? (fileKind === 'cover' ? 'jpg' : fileKind === 'audiobook' ? 'mp3' : 'bin');
+      if (fileKind === 'cover') {
+        fileName = `${baseName}-cover.${extension}`;
+      } else if (fileKind === 'audiobook') {
+        fileName = `${baseName}-audiobook.${extension}`;
+      } else {
+        fileName = `${baseName}.${extension}`;
+      }
     }
   }
 
-  const resolvedMimeType = mimeType ?? (isCoverFile ? 'image/jpeg' : 'application/octet-stream');
+  const resolvedMimeType =
+    mimeType ?? (fileKind === 'cover' ? 'image/jpeg' : fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
   const cacheTimeMs = 2 * 24 * 3600 * 1000;
 
   res.statusCode = 200;

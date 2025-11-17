@@ -68,6 +68,18 @@ export default function BookPage(): JSX.Element {
 
     const isFreeBook = Boolean(book && book.priceStars === 0);
     const hasFullAccess = isPurchased || isFreeBook;
+    const audiobookUrl = useMemo(() => {
+        if (!book?.audiobookWalrusFileId) {
+            return null;
+        }
+
+        try {
+            return buildBookFileDownloadUrl(book.id, "audiobook", {telegramUserId});
+        } catch (error) {
+            console.error("Failed to build audiobook url", error);
+            return null;
+        }
+    }, [book?.audiobookWalrusFileId, book?.id, telegramUserId]);
 
 
     const loadBook = useCallback(async () => {
@@ -596,6 +608,22 @@ export default function BookPage(): JSX.Element {
                             </Button>
                         </div>
                     )}
+                    {book?.audiobookWalrusFileId ? (
+                        <Card style={{padding: 16, borderRadius: 20}}>
+                            <Text weight="2" style={{marginBottom: 8}}>
+                                {t("book.audiobook.title")}
+                            </Text>
+                            {hasFullAccess && audiobookUrl ? (
+                                <audio controls src={audiobookUrl} style={{width: "100%"}}>
+                                    {t("book.audiobook.audioUnsupported")}
+                                </audio>
+                            ) : (
+                                <Text style={{color: "var(--app-subtitle-color)"}}>
+                                    {t("book.audiobook.locked")}
+                                </Text>
+                            )}
+                        </Card>
+                    ) : null}
                     <Card style={{padding: 16, borderRadius: 20}}>
                         <Title level="3" weight="2" style={{marginBottom: 12}}>
                             {t("book.description.title")}

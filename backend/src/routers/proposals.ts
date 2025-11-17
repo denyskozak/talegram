@@ -235,6 +235,8 @@ export const proposalsRouter = createRouter({
           description: proposal.description,
           walrusBlobId: proposal.walrusBlobId,
           walrusFileId: proposal.walrusFileId ?? null,
+          audiobookWalrusBlobId: proposal.audiobookWalrusBlobId ?? null,
+          audiobookWalrusFileId: proposal.audiobookWalrusFileId ?? null,
           coverWalrusBlobId: proposal.coverWalrusBlobId,
           coverWalrusFileId: proposal.coverWalrusFileId ?? null,
           coverMimeType: proposal.coverMimeType,
@@ -245,6 +247,11 @@ export const proposalsRouter = createRouter({
           fileSize: proposal.fileSize,
           fileEncryptionIv: proposal.fileEncryptionIv,
           fileEncryptionTag: proposal.fileEncryptionTag,
+          audiobookMimeType: proposal.audiobookMimeType ?? null,
+          audiobookFileName: proposal.audiobookFileName ?? null,
+          audiobookFileSize: proposal.audiobookFileSize ?? null,
+          audiobookFileEncryptionIv: proposal.audiobookFileEncryptionIv ?? null,
+          audiobookFileEncryptionTag: proposal.audiobookFileEncryptionTag ?? null,
           proposalId: proposal.id,
           categories: categoryId,
           tags,
@@ -269,6 +276,7 @@ export const proposalsRouter = createRouter({
         await Promise.all([
           warmWalrusFileCache(persistedBook.walrusFileId),
           warmWalrusFileCache(persistedBook.coverWalrusFileId),
+          warmWalrusFileCache(persistedBook.audiobookWalrusFileId),
         ]);
 
         await voteRepository.delete({ proposalId: input.proposalId });

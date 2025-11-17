@@ -27,6 +27,7 @@ export type CreateBookProposalParams = {
   hashtags: string[];
   file: CreateProposalFileInput;
   cover: CreateProposalFileInput;
+  audiobook?: CreateProposalFileInput | null;
 };
 
 const MAX_HASHTAGS = 8;
@@ -66,6 +67,9 @@ export async function createBookProposal(
 ): Promise<BookProposal> {
   const fileSize = params.file.size ?? params.file.data.byteLength;
   const coverSize = params.cover.size ?? params.cover.data.byteLength;
+  const audiobookSize = params.audiobook
+    ? params.audiobook.size ?? params.audiobook.data.byteLength
+    : null;
 
   if (!fileSize || params.file.data.byteLength === 0) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Uploaded file is empty' });
@@ -83,36 +87,76 @@ export async function createBookProposal(
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
   }
 
+  if (params.audiobook) {
+    if (!audiobookSize || params.audiobook.data.byteLength === 0) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Uploaded audiobook is empty' });
+    }
+
+    if (audiobookSize > MAX_FILE_SIZE_BYTES) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Audiobook size exceeds the allowed limit' });
+    }
+  }
+
   const { encryptedData, iv, authTag } = encryptBookFile(params.file.data);
+  const audiobookEncryption = params.audiobook
+    ? encryptBookFile(params.audiobook.data)
+    : null;
 
   const bookFile = WalrusFile.from({
     contents: encryptedData,
     identifier: `book:${params.file.name}`,
-      tags: {
-          'content-type': params.file.mimeType!,
-      },
+    tags: params.file.mimeType
+      ? {
+          'content-type': params.file.mimeType,
+        }
+      : undefined,
   });
 
   const coverFile = WalrusFile.from({
     contents: params.cover.data,
     identifier: `cover:${params.cover.name}`,
-      tags: {
-          'content-type': params.cover.mimeType!,
-      },
+    tags: params.cover.mimeType
+      ? {
+          'content-type': params.cover.mimeType,
+        }
+      : undefined,
   });
 
-  const [uploadResult, coverUploadResult] = await writeWalrusFiles({
-      files: [bookFile, coverFile],
-      epochs: 3,
-      deletable: true,
-      signer: getKeypair(),
+  const filesToUpload = [bookFile, coverFile];
+  if (params.audiobook && audiobookEncryption) {
+    const audiobookFile = WalrusFile.from({
+      contents: audiobookEncryption.encryptedData,
+      identifier: `audiobook:${params.audiobook.name}`,
+      tags: params.audiobook.mimeType
+        ? {
+            'content-type': params.audiobook.mimeType,
+          }
+        : undefined,
+    });
+    filesToUpload.push(audiobookFile);
+  }
+
+  const uploadResults = await writeWalrusFiles({
+    files: filesToUpload,
+    epochs: 3,
+    deletable: true,
+    signer: getKeypair(),
   });
+
+  const [uploadResult, coverUploadResult, audiobookUploadResult] = uploadResults;
 
 
   if (!uploadResult || !coverUploadResult) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
       message: 'Failed to upload proposal files to Walrus storage',
+    });
+  }
+
+  if (params.audiobook && !audiobookUploadResult) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Failed to upload audiobook file to Walrus storage',
     });
   }
 
@@ -145,6 +189,11 @@ export async function createBookProposal(
     hashtags: normalizeHashtags(params.hashtags),
     walrusFileId: uploadResult.id,
     walrusBlobId: uploadResult.blobId,
+    audiobookWalrusFileId: audiobookUploadResult?.id ?? null,
+    audiobookWalrusBlobId: audiobookUploadResult?.blobId ?? null,
+    audiobookMimeType: params.audiobook?.mimeType ?? null,
+    audiobookFileName: params.audiobook?.name ?? null,
+    audiobookFileSize: params.audiobook?.size ?? null,
     coverWalrusFileId: coverUploadResult.id,
     coverWalrusBlobId: coverUploadResult.blobId,
     coverMimeType: params.cover.mimeType ?? null,
@@ -155,6 +204,8 @@ export async function createBookProposal(
     mimeType: params.file.mimeType ?? null,
     fileEncryptionIv: iv.toString('base64'),
     fileEncryptionTag: authTag.toString('base64'),
+    audiobookFileEncryptionIv: audiobookEncryption?.iv.toString('base64') ?? null,
+    audiobookFileEncryptionTag: audiobookEncryption?.authTag.toString('base64') ?? null,
   });
 
   return bookProposalRepository.save(proposal);

@@ -73,6 +73,37 @@ const matchesCoverFile = (
   );
 };
 
+const matchesAudiobookFile = (
+  source: { audiobookWalrusFileId?: string | null; audiobookWalrusBlobId?: string | null },
+  id: string,
+) => {
+  const normalizedId = id.trim();
+  return (
+    (typeof source.audiobookWalrusFileId === 'string' && source.audiobookWalrusFileId.trim() === normalizedId) ||
+    (typeof source.audiobookWalrusBlobId === 'string' && source.audiobookWalrusBlobId.trim() === normalizedId)
+  );
+};
+
+const determineSourceFileKind = (
+  source: {
+    coverWalrusFileId?: string | null;
+    coverWalrusBlobId?: string | null;
+    audiobookWalrusFileId?: string | null;
+    audiobookWalrusBlobId?: string | null;
+  },
+  id: string,
+): 'cover' | 'book' | 'audiobook' => {
+  if (matchesCoverFile(source, id)) {
+    return 'cover';
+  }
+
+  if (matchesAudiobookFile(source, id)) {
+    return 'audiobook';
+  }
+
+  return 'book';
+};
+
 export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile> {
   const normalizedFileId = fileId.trim();
   if (!normalizedFileId) {
@@ -109,7 +140,7 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     throw new FileNotFoundError();
   }
 
-  const isCoverFile = matchesCoverFile(source, normalizedFileId);
+  const fileKind = determineSourceFileKind(source, normalizedFileId);
 
   let blobBytes: Buffer;
   try {
@@ -123,7 +154,7 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     throw new WalrusFileFetchError();
   }
 
-  if (isCoverFile) {
+  if (fileKind === 'cover') {
     if (book) {
       return {
         sourceType: 'book',
@@ -149,8 +180,12 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     } satisfies ProposalResolvedFile;
   }
 
-  const iv = decodeBase64Buffer(source.fileEncryptionIv);
-  const tag = decodeBase64Buffer(source.fileEncryptionTag);
+  const iv = decodeBase64Buffer(
+    fileKind === 'audiobook' ? source.audiobookFileEncryptionIv : source.fileEncryptionIv,
+  );
+  const tag = decodeBase64Buffer(
+    fileKind === 'audiobook' ? source.audiobookFileEncryptionTag : source.fileEncryptionTag,
+  );
 
   let payload = blobBytes;
 
@@ -170,26 +205,34 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
   }
 
   if (book) {
+    const fileName = fileKind === 'audiobook' ? book.audiobookFileName ?? null : book.fileName ?? null;
+    const mimeType = fileKind === 'audiobook' ? book.audiobookMimeType ?? null : book.mimeType ?? null;
+
     return {
       sourceType: 'book',
       book,
       proposal: null,
       fileId: normalizedFileId,
-      fileName: book.fileName ?? null,
-      mimeType: book.mimeType ?? null,
+      fileName,
+      mimeType,
       buffer: payload,
-      isCoverFile,
+      isCoverFile: fileKind === 'cover',
     } satisfies BookResolvedFile;
   }
+
+  const fileName =
+    fileKind === 'audiobook' ? proposal!.audiobookFileName ?? null : proposal!.fileName ?? null;
+  const mimeType =
+    fileKind === 'audiobook' ? proposal!.audiobookMimeType ?? null : proposal!.mimeType ?? null;
 
   return {
     sourceType: 'proposal',
     book: null,
     proposal: proposal!,
     fileId: normalizedFileId,
-    fileName: proposal!.fileName ?? null,
-    mimeType: proposal!.mimeType ?? null,
+    fileName,
+    mimeType,
     buffer: payload,
-    isCoverFile,
+    isCoverFile: fileKind === 'cover',
   } satisfies ProposalResolvedFile;
 }

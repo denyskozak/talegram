@@ -152,20 +152,13 @@ export default function ProposalDetails(): JSX.Element {
         setIsDownloading(true);
         try {
             const resolvedFileName = proposal.fileName ?? `${proposal.title}.epub`;
-            const downloadUrl = buildBookFileDownloadUrl(proposal.walrusFileId, 'book', {telegramUserId});
+            const downloadUrl = buildWalrusFileDownloadUrl(proposal.walrusFileId, { telegramUserId });
 
-            try {
-                if (downloadFile.isAvailable()) {
-                    await downloadFile(
-                        downloadUrl,
-                        resolvedFileName,
-                    );
-                } else {
-                    showToast(t("account.voting.downloadError"));
-                    return;
-                }
-            } finally {
-                URL.revokeObjectURL(downloadUrl);
+            if (downloadFile.isAvailable()) {
+                await downloadFile(downloadUrl, resolvedFileName);
+            } else {
+                showToast(t("account.voting.downloadError"));
+                return;
             }
         } catch (downloadError) {
             console.error("Failed to download proposal manuscript", downloadError);
@@ -173,7 +166,20 @@ export default function ProposalDetails(): JSX.Element {
         } finally {
             setIsDownloading(false);
         }
-    }, [proposal, showToast, t]);
+    }, [proposal, showToast, t, telegramUserId]);
+
+    const audiobookUrl = useMemo(() => {
+        if (!proposal?.audiobookWalrusFileId) {
+            return null;
+        }
+
+        try {
+            return buildWalrusFileDownloadUrl(proposal.audiobookWalrusFileId, { telegramUserId });
+        } catch (error) {
+            console.error("Failed to resolve audiobook url", error);
+            return null;
+        }
+    }, [proposal, telegramUserId]);
 
     const handleVote = useCallback(
         async (direction: VoteDirection) => {
@@ -413,6 +419,18 @@ export default function ProposalDetails(): JSX.Element {
                                 <Text style={{color: theme.subtitle}}>
                                     {proposal.coverFileName ?? t("account.proposalDetails.noCover")}
                                 </Text>
+                            </div>
+                            <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                                <Text weight="2">{t("account.proposalDetails.audiobook")}</Text>
+                                {proposal.audiobookWalrusFileId && audiobookUrl ? (
+                                    <audio controls src={audiobookUrl} style={{width: "100%"}}>
+                                        {t("account.proposalDetails.audioUnsupported")}
+                                    </audio>
+                                ) : (
+                                    <Text style={{color: theme.hint}}>
+                                        {t("account.proposalDetails.noAudiobook")}
+                                    </Text>
+                                )}
                             </div>
                         </div>
                     </Card>
