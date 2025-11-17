@@ -23,7 +23,7 @@ export function CategoryTile({category, onClick}: CategoryTileProps): JSX.Elemen
                 <Title weight="2" level="3" style={{marginBottom: 8}}>
                     {category.title}
                 </Title>
-                <Text weight="2" style={{color: "var(--app-subtitle-color)"}}>
+                <Text weight="2" style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
                     {category.booksCount ? t("categories.booksCount", {count: category.booksCount}) : t('categories.specialCategory')}
                 </Text>
             </Card>

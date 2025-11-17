@@ -28,7 +28,7 @@ export function BookRating({ value, votes }: BookRatingProps): JSX.Element {
           <span key={index}>{STAR_SYMBOLS[star]}</span>
         ))}
       </Text>
-      <Text style={{ color: "var(--app-subtitle-color)" }}>{t("book.votes", { count: votes })}</Text>
+      <Text style={{ color: "var(--tg-theme-subtitle-text-color, #7f7f81)" }}>{t("book.votes", { count: votes })}</Text>
     </div>
   );
 }

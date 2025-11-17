@@ -6,7 +6,7 @@ export function CategoryTileSkeleton(): JSX.Element {
       style={{
         padding: 16,
         borderRadius: 16,
-        background: "var(--app-section-color)",
+        background: "var(--tg-theme-secondary-bg-color, #f3f3f5)",
         display: "flex",
         flexDirection: "column",
         gap: 12,
@@ -25,7 +25,7 @@ export function BookCardSkeleton(): JSX.Element {
       style={{
         borderRadius: 18,
         overflow: "hidden",
-        background: "var(--app-section-color)",
+        background: "var(--tg-theme-secondary-bg-color, #f3f3f5)",
       }}
     >
       <Skeleton style={{ height: 160 }} />

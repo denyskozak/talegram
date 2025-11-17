@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 
-import {Button, Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
+import {Button, Card, Chip, Modal, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
@@ -508,7 +508,7 @@ export default function BookPage(): JSX.Element {
                                 <Title level="1" weight="2">
                                     {book.title}
                                 </Title>
-                                <div style={{color: "var(--app-subtitle-color)"}}>{book.authors.join(", ")}</div>
+                                <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>{book.authors.join(", ")}</div>
                             </div>
                             <div style={{display: "flex", gap: 4}}>
                                 <Button aria-label={t("book.share")} mode="plain" onClick={handleShare}>
@@ -568,7 +568,7 @@ export default function BookPage(): JSX.Element {
                                     {book.priceStars} ⭐
                                 </Chip>
                             </div>
-                            <div style={{color: "var(--app-subtitle-color)"}}>
+                            <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
                                 {t("book.reviewsCount", {count: book.reviewsCount})}
                             </div>
                         </div>
@@ -625,7 +625,7 @@ export default function BookPage(): JSX.Element {
                             <Text weight="2" style={{marginBottom: 8}}>
                                 {t("book.audiobook.title")}
                             </Text>
-                            <Text style={{color: "var(--app-subtitle-color)", marginBottom: 8}}>
+                            <Text style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)", marginBottom: 8}}>
                                 {hasFullAccess
                                     ? t("book.audiobook.listenPrompt")
                                     : t("book.audiobook.locked")}
@@ -708,7 +708,7 @@ export default function BookPage(): JSX.Element {
                             <Button mode="outline" onClick={handleOpenInvoice}>
                                 {t("book.purchase.openInvoice")}
                             </Button>
-                            <p style={{margin: 0, lineHeight: 1.5, color: "var(--app-subtitle-color)"}}>
+                            <p style={{margin: 0, lineHeight: 1.5, color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
                                 {t("book.purchase.confirmHelp")}
                             </p>
                         </>
