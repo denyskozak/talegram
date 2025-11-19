@@ -1,5 +1,6 @@
-import {Button, Card, Text, Title} from "@telegram-apps/telegram-ui";
-import {useTranslation} from "react-i18next";
+import { Card, Text, Title } from "@telegram-apps/telegram-ui";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/shared/ui/Button";
 
 interface ErrorBannerProps {
     message: string;

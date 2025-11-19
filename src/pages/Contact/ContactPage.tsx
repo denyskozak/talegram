@@ -1,7 +1,8 @@
-import { Card, Text, Title, Button } from "@telegram-apps/telegram-ui";
+import { Card, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/app/providers/ThemeProvider";
+import { Button } from "@/shared/ui/Button";
 
 export default function ContactPage(): JSX.Element {
   const { t } = useTranslation();

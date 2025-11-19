@@ -7,7 +7,7 @@ import {
   type FormEvent,
 } from "react";
 
-import { Avatar, Button, Card, Input, Text, Title } from "@telegram-apps/telegram-ui";
+import { Avatar, Card, Input, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTMA } from "@/app/providers/TMAProvider";
@@ -17,6 +17,7 @@ import { useToast } from "@/shared/ui/ToastProvider";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { ReviewSkeleton } from "@/shared/ui/Skeletons";
+import { Button } from "@/shared/ui/Button";
 
 interface ReviewsListProps {
   api: CatalogApi;

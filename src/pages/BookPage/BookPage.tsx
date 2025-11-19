@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 
-import {Button, Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
+import {Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
@@ -31,6 +31,7 @@ import {
 import {BookPageSkeleton} from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
+import {Button} from "@/shared/ui/Button";
 
 export default function BookPage(): JSX.Element {
     const {id} = useParams<{ id: ID }>();

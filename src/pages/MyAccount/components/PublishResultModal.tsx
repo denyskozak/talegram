@@ -1,9 +1,10 @@
-import { Button, Modal, Text } from "@telegram-apps/telegram-ui";
+import { Modal, Text } from "@telegram-apps/telegram-ui";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
 
 import type { PublishResultState } from "../types";
+import { Button } from "@/shared/ui/Button";
 
 export type PublishResultModalProps = {
   result: PublishResultState | null;

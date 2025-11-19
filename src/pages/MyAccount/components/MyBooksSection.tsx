@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { Button, Card, Chip, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
+import { Card, Chip, SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
@@ -8,6 +8,7 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 import type { MyBook, MyBooksFilter } from "../types";
 
 import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
+import { Button } from "@/shared/ui/Button";
 
 export type MyBooksSectionProps = {
   books: MyBook[];

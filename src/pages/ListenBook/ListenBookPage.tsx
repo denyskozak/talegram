@@ -2,11 +2,12 @@ import {useMemo} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate, useParams} from "react-router-dom";
 
-import {Button, Card, Text, Title} from "@telegram-apps/telegram-ui";
+import {Card, Text, Title} from "@telegram-apps/telegram-ui";
 
 import {useTMA} from "@/app/providers/TMAProvider";
 import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {getTelegramUserId} from "@/shared/lib/telegram";
+import {Button} from "@/shared/ui/Button";
 
 interface ListenRouteParams {
     bookId?: string;
