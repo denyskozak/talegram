@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { Button, Title } from "@telegram-apps/telegram-ui";
+import { Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/app/providers/ThemeProvider";
+import { Button } from "@/shared/ui/Button";
 
 export function HeaderBar(): JSX.Element {
   const navigate = useNavigate();

@@ -1,9 +1,10 @@
-import { Button, Card, Select, Text, Title } from "@telegram-apps/telegram-ui";
+import { Card, Select, Text, Title } from "@telegram-apps/telegram-ui";
 import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
 import { GLOBAL_CATEGORIES, isGlobalCategory, type GlobalCategory } from "@/shared/lib/globalCategories";
+import { Button } from "@/shared/ui/Button";
 
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
 import type { PublishFormState } from "../types";

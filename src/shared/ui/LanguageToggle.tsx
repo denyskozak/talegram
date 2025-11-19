@@ -1,4 +1,4 @@
-import { Button } from "@telegram-apps/telegram-ui";
+import { Button } from "@/shared/ui/Button";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 

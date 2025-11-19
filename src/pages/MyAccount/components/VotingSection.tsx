@@ -1,7 +1,9 @@
-import { Button, Card, Chip, Text, Title } from "@telegram-apps/telegram-ui";
+import { Card, Chip, Text, Title } from "@telegram-apps/telegram-ui";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
+
+import { Button } from "@/shared/ui/Button";
 
 import { REQUIRED_APPROVALS } from "../constants";
 import type { VotingProposal } from "../types";

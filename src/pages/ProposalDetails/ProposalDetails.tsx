@@ -2,7 +2,7 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate, useParams} from "react-router-dom";
 
-import {Button, Card, Chip, Text, Title} from "@telegram-apps/telegram-ui";
+import {Card, Chip, Text, Title} from "@telegram-apps/telegram-ui";
 
 import {useTheme} from "@/app/providers/ThemeProvider";
 import {useTMA} from "@/app/providers/TMAProvider";
@@ -14,6 +14,7 @@ import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyA
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
 import {buildWalrusFileDownloadUrl} from "@/shared/api/storage";
 import {downloadFile} from "@telegram-apps/sdk-react";
+import {Button} from "@/shared/ui/Button";
 
 function formatDate(value: string): string {
     const date = new Date(value);
