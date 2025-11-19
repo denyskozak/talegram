@@ -9,14 +9,10 @@ import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {getTelegramUserId} from "@/shared/lib/telegram";
 import {Button} from "@/shared/ui/Button";
 
-interface ListenRouteParams {
-    bookId?: string;
-}
-
 export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const {bookId} = useParams<ListenRouteParams>();
+    const {bookId} = useParams<{ bookId?: string }>();
     const {launchParams} = useTMA();
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -60,7 +56,7 @@ export default function ListenBookPage(): JSX.Element {
                         {t("book.listen.unsupported")}
                     </audio>
                 ) : (
-                    <Text style={{color: "var(--app-subtitle-color)"}}>
+                    <Text style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
                         {t("book.listen.unavailable")}
                     </Text>
                 )}

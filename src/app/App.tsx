@@ -6,7 +6,7 @@ import {AppRoot} from "@telegram-apps/telegram-ui";
 import {TonConnectUIProvider} from "@tonconnect/ui-react";
 
 import {TMAProvider, useTMA} from "./providers/TMAProvider";
-import {ThemeProvider} from "./providers/ThemeProvider";
+import {useTheme} from "./providers/ThemeProvider";
 import {AppRouter} from "./router";
 import {ToastProvider} from "@/shared/ui/ToastProvider";
 import {DemoBanner} from "@/shared/ui/DemoBanner";
@@ -110,6 +110,7 @@ function NavigationControls(): null {
 
 function AppContent(): JSX.Element {
     const {isTelegram} = useTMA();
+    const theme = useTheme();
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
     const [isSplashVisible, setIsSplashVisible] = useState(true);
 
@@ -124,11 +125,17 @@ function AppContent(): JSX.Element {
 
     return (
 
-        <AppRoot style={{paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0}}>
+        <AppRoot
+            style={{
+                paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0,
+                background: theme.background,
+                color: theme.text,
+            }}
+        >
             <ToastProvider>
                 <div
                     style={{
-                        minHeight: "100%",
+                        minHeight: "100vh",
                         display: "flex",
                         flexDirection: "column",
                     }}
@@ -157,10 +164,7 @@ export default function App(): JSX.Element {
         <BrowserRouter>
             <TonConnectUIProvider manifestUrl={manifestUrl} uiPreferences={{theme: "SYSTEM"}}>
                 <TMAProvider>
-                    <ThemeProvider>
                             <AppContent/>
-
-                    </ThemeProvider>
                 </TMAProvider>
             </TonConnectUIProvider>
         </BrowserRouter>
