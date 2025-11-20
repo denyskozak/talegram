@@ -1,10 +1,12 @@
 import type { ImpactHapticFeedbackStyle } from "@telegram-apps/bridge";
-import { impactOccurred, selectionChanged } from "@telegram-apps/sdk";
+import { hapticFeedback } from '@telegram-apps/sdk';
+
 import { Button as TelegramButton } from "@telegram-apps/telegram-ui";
 import type { ComponentProps } from "react";
 import { forwardRef, useCallback } from "react";
 
 const DEFAULT_IMPACT_STYLE: ImpactHapticFeedbackStyle = "light";
+const { impactOccurred, selectionChanged } = hapticFeedback;
 
 const HAPTIC_EFFECTS = {
   impact: (style: ImpactHapticFeedbackStyle) => {
