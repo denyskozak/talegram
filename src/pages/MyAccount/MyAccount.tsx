@@ -22,7 +22,6 @@ import { MyBooksSection } from "./components/MyBooksSection";
 import { PublishResultModal } from "./components/PublishResultModal";
 import { PublishSection } from "./components/PublishSection";
 import { VotingSection } from "./components/VotingSection";
-import { WalletSummaryCard } from "./components/WalletSummaryCard";
 import { usePublishForm } from "./hooks/usePublishForm";
 import type {
   AccountSection,
@@ -468,8 +467,6 @@ export default function MyAccount(): JSX.Element {
         </Title>
         <Text style={{ color: theme.subtitle }}>{t("account.subtitle")}</Text>
       </header>
-
-      <WalletSummaryCard />
 
       <SegmentedControl>
         {menuItems.map((item) => (
