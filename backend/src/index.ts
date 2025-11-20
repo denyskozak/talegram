@@ -27,6 +27,8 @@ const trpcHandler = createHTTPHandler({
 // Разрешённые источники. Добавь сюда свои фронтовые домены при необходимости.
 const ALLOWED_ORIGINS = new Set<string>([
     'https://192.168.1.80:5173',
+    'https://192.168.1.80:5174',
+    'http://localhost:5174',
     'https://bridgette-nonfertile-nonimmanently.ngrok-free.dev',
     'https://talegramfrontend.gastroand.me',
     // если фронт иногда открыт по http в локалке, добавь:
@@ -98,7 +100,11 @@ const server = http.createServer(async (req, res) => {
 
         const telegramUserId = normalizeTelegramUserId(url?.searchParams.get('telegramUserId') ?? null);
         const rawFileKind = bookDownloadMatch[2];
-        const fileKind = rawFileKind === 'cover' ? 'cover' : rawFileKind === 'audiobook' ? 'audiobook' : 'book';
+        const fileKind = rawFileKind === 'cover'
+            ? 'cover'
+            : rawFileKind === 'audiobook'
+                ? 'audiobook'
+                : 'book';
 
         await handleFileDownloadRequest(req, res, {
             bookId: decodedBookId,
@@ -108,19 +114,20 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    if (req.method === 'GET' && url?.pathname.startsWith('/file/download/')) {
-        const fileId = extractFileIdFromPath(url.pathname);
-        if (!fileId) {
-            respondWithError(res, 400, 'Invalid file id');
-            return;
-        }
-
-        await handleWalrusFileDownloadRequest(req, res, {
-            fileId,
-            telegramUserId: normalizeTelegramUserId(url.searchParams.get('telegramUserId')),
-        });
-        return;
-    }
+    // TODO remove it
+    // if (req.method === 'GET' && url?.pathname.startsWith('/file/download/')) {
+    //     const fileId = extractFileIdFromPath(url.pathname);
+    //     if (!fileId) {
+    //         respondWithError(res, 400, 'Invalid file id');
+    //         return;
+    //     }
+    //
+    //     await handleWalrusFileDownloadRequest(req, res, {
+    //         fileId,
+    //         telegramUserId: normalizeTelegramUserId(url.searchParams.get('telegramUserId')),
+    //     });
+    //     return;
+    // }
     if (req.method === 'POST' && url?.pathname === '/proposals') {
         await handleCreateProposalRequest(req, res);
         return;

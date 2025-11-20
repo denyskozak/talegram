@@ -38,7 +38,7 @@ import {
 import { isGlobalCategory } from "@/shared/lib/globalCategories";
 import { purchasesApi } from "@/entities/purchase/api";
 import { catalogApi } from "@/entities/book/api";
-import { downloadFile } from "@telegram-apps/sdk-react";
+import { downloadFile } from "@tma.js/sdk-react";
 import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 import {
   isBookLiked,

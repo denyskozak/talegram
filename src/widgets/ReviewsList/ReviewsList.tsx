@@ -44,9 +44,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
   const hasMore = useMemo(() => Boolean(cursorState), [cursorState]);
 
   const defaultAuthorName = useMemo(() => {
-    const user = (launchParams?.initData as {
-      user?: { first_name?: string; last_name?: string };
-    } | undefined)?.user;
+    const user = launchParams?.tgWebAppData?.user;
     const firstName = user?.first_name?.trim();
     const lastName = user?.last_name?.trim();
 

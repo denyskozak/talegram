@@ -12,8 +12,8 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import {buildWalrusFileDownloadUrl} from "@/shared/api/storage";
-import {downloadFile} from "@telegram-apps/sdk-react";
+import {buildBookFileDownloadUrl, buildWalrusFileDownloadUrl} from "@/shared/api/storage";
+import {downloadFile} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button";
 
 function formatDate(value: string): string {
@@ -48,6 +48,20 @@ export default function ProposalDetails(): JSX.Element {
         () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
         [],
     );
+
+    const audioUrl = useMemo(() => {
+        if (!id) {
+            return null;
+        }
+
+        try {
+            return buildBookFileDownloadUrl(id, "audiobook", {telegramUserId});
+        } catch (error) {
+            console.error("Failed to build audiobook download url", error);
+            return null;
+        }
+    }, [id, telegramUserId]);
+
     const telegramUsername = useMemo(() => {
         const rawUsername = launchParams?.tgWebAppData?.user?.username ?? null;
         return normalizeTelegramUsername(rawUsername);
@@ -451,6 +465,9 @@ export default function ProposalDetails(): JSX.Element {
                                         ? t("account.proposalDetails.audiobookAvailable")
                                         : t("account.proposalDetails.noAudiobook")}
                                 </Text>
+                                <audio controls autoPlay src={audioUrl} style={{width: "100%"}}>
+                                    {t("book.listen.unsupported")}
+                                </audio>
                             </div>
                         </div>
                     </Card>

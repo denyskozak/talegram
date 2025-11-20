@@ -1,9 +1,10 @@
 import {BrowserRouter, useLocation, useNavigate} from "react-router-dom";
 import {useEffect, useState, type TransitionEvent} from "react";
-import {useLaunchParams} from '@telegram-apps/sdk-react';
+import {useLaunchParams} from '@tma.js/sdk-react';
 
 import {AppRoot} from "@telegram-apps/telegram-ui";
 import {TonConnectUIProvider} from "@tonconnect/ui-react";
+import { init } from '@tma.js/sdk';
 
 import {TMAProvider, useTMA} from "./providers/TMAProvider";
 import {useTheme} from "./providers/ThemeProvider";
@@ -91,6 +92,8 @@ function NavigationControls(): null {
             navigate(-1);
         };
 
+        if (!backButton.isMounted()) backButton.mount();
+
         if (location.pathname === "/") {
             backButton.hide();
             backButton.offClick(handleBack);
@@ -156,6 +159,8 @@ function AppContent(): JSX.Element {
 
     );
 }
+
+void init();
 
 export default function App(): JSX.Element {
     const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;

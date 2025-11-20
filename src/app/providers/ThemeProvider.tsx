@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import type { ThemeParams } from "@telegram-apps/types";
+import type { ThemeParamsState } from "@tma.js/sdk";
 
 import { useTMA } from "./TMAProvider";
 
@@ -24,7 +24,7 @@ const defaultColors: ThemeColors = {
   separator: "#d3d3d7",
 };
 
-function mapTheme(theme?: ThemeParams | null): ThemeColors {
+function mapTheme(theme?: ThemeParamsState | null): ThemeColors {
   if (!theme) {
     return defaultColors;
   }
@@ -42,6 +42,6 @@ function mapTheme(theme?: ThemeParams | null): ThemeColors {
 
 export function useTheme(): ThemeColors {
   const { theme } = useTMA();
-
+    console.log("theme: ", theme?.bg_color);
   return useMemo(() => mapTheme(theme), [theme]);
 }

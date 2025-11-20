@@ -1,5 +1,4 @@
-import type { ImpactHapticFeedbackStyle } from "@telegram-apps/bridge";
-import { hapticFeedback } from '@telegram-apps/sdk';
+import {hapticFeedback, ImpactHapticFeedbackStyle} from '@tma.js/sdk';
 
 import { Button as TelegramButton } from "@telegram-apps/telegram-ui";
 import type { ComponentProps } from "react";
@@ -21,7 +20,7 @@ type TelegramUIButtonProps = ComponentProps<typeof TelegramButton>;
 
 export type ButtonProps = TelegramUIButtonProps & {
   hapticEffect?:
-    | { type: "selection" }
+    | { type: "selection", style?: ImpactHapticFeedbackStyle }
     | { type: "impact"; style?: ImpactHapticFeedbackStyle };
 };
 
