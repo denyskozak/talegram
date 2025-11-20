@@ -1,5 +1,6 @@
 import { FormEvent, useMemo, useState } from 'react';
 import { useTrpc, normalizeBackendUrl } from '../api/trpcProvider.js';
+import { WalrusTreasuryCard } from '../components/WalrusTreasuryCard.js';
 import './SettingsPage.css';
 
 type Feedback =
@@ -75,6 +76,8 @@ export function SettingsPage(): JSX.Element {
           <p>Configure how the admin console connects to the Talegram backend.</p>
         </div>
       </header>
+
+      <WalrusTreasuryCard />
 
       <section className="settings__card">
         <h2>Backend connection</h2>
