@@ -11,7 +11,11 @@ import {
     MAX_FILE_SIZE_BYTES,
     createBookProposal,
 } from './services/proposals/create.js';
-import { handleFileDownloadRequest, handleWalrusFileDownloadRequest } from './utils/walrus-files.js';
+import {
+    handleBookFileDownloadRequest,
+    handleProposalFileDownloadRequest,
+    handleWalrusFileDownloadRequest,
+} from './utils/walrus-files.js';
 
 config();
 
@@ -86,31 +90,40 @@ const server = http.createServer(async (req, res) => {
     const url = safeParseUrl(req.url, req.headers.host);
     const bookDownloadMatch =
         req.method === 'GET'
-            ? url?.pathname.match(/^\/books\/([^/]+)\/(book|cover|audiobook)\/download\.epub$/)
+            ? url?.pathname.match(/^\/(books|propsals)\/([^/]+)\/(book|cover|audiobook)\/download\.epub$/)
             : null;
     if (bookDownloadMatch) {
-        const rawBookId = bookDownloadMatch[1];
-        let decodedBookId: string;
+        const resource = bookDownloadMatch[1];
+        const rawId = bookDownloadMatch[2];
+        let decodedId: string;
         try {
-            decodedBookId = decodeURIComponent(rawBookId);
+            decodedId = decodeURIComponent(rawId);
         } catch (error) {
             respondWithError(res, 400, 'Invalid book id');
             return;
         }
 
         const telegramUserId = normalizeTelegramUserId(url?.searchParams.get('telegramUserId') ?? null);
-        const rawFileKind = bookDownloadMatch[2];
+        const rawFileKind = bookDownloadMatch[3];
         const fileKind = rawFileKind === 'cover'
             ? 'cover'
             : rawFileKind === 'audiobook'
                 ? 'audiobook'
                 : 'book';
 
-        await handleFileDownloadRequest(req, res, {
-            bookId: decodedBookId,
-            fileKind,
-            telegramUserId,
-        });
+        if (resource === 'books') {
+            await handleBookFileDownloadRequest(req, res, {
+                bookId: decodedId,
+                fileKind,
+                telegramUserId,
+            });
+        } else {
+            await handleProposalFileDownloadRequest(req, res, {
+                proposalId: decodedId,
+                fileKind,
+                telegramUserId,
+            });
+        }
         return;
     }
 

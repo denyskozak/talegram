@@ -81,8 +81,6 @@ const getBookInput = z.object({
   id: z.string().trim().min(1),
 });
 
-const createBookInput = baseBookSchema;
-
 const updateBookInput = z.object({
   id: z.string().trim().min(1),
   patch: baseBookSchema.omit({ id: true }).partial(),
@@ -167,12 +165,6 @@ export const adminRouter = createRouter({
     }
 
     return book;
-  }),
-  createBook: adminProcedure.input(createBookInput).mutation(() => {
-    throw new TRPCError({
-      code: 'NOT_IMPLEMENTED',
-      message: 'Manual book management is disabled for the database-backed catalog.',
-    });
   }),
   updateBook: adminProcedure.input(updateBookInput).mutation(() => {
     throw new TRPCError({

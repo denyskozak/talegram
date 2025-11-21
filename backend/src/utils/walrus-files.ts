@@ -418,7 +418,7 @@ export async function fetchWalrusFileBase64(id: string): Promise<string | null> 
   return result.get(id.trim()) ?? null;
 }
 
-export async function handleFileDownloadRequest(
+export async function handleBookFileDownloadRequest(
   _req: http.IncomingMessage,
   res: http.ServerResponse,
   params: { bookId: string; fileKind: BookFileKind; telegramUserId: string | null },
@@ -586,6 +586,125 @@ export async function handleFileDownloadRequest(
   }
 
   const fileName = determineDownloadFileName(book, params.fileKind);
+  const resolvedMimeType =
+    mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
+
+  const cacheTimeMs = 2 * 24 * 3600 * 1000;
+  res.statusCode = 200;
+  res.setHeader('Content-Type', resolvedMimeType);
+  res.setHeader('Content-Length', responseBuffer.byteLength.toString(10));
+  res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
+  res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
+  res.setHeader('Expires', new Date(Date.now() + cacheTimeMs).toUTCString());
+  res.end(responseBuffer);
+}
+
+export async function handleProposalFileDownloadRequest(
+  _req: http.IncomingMessage,
+  res: http.ServerResponse,
+  params: { proposalId: string; fileKind: BookFileKind; telegramUserId: string | null },
+): Promise<void> {
+  const normalizedProposalId = params.proposalId.trim();
+  if (!normalizedProposalId) {
+    respondWithError(res, 400, 'Invalid proposal id');
+    return;
+  }
+
+  try {
+    await initializeDataSource();
+  } catch (error) {
+    console.error('Failed to initialize data source for file download', error);
+    respondWithError(res, 500, 'Failed to process file download');
+    return;
+  }
+
+  const proposalRepository = appDataSource.getRepository(BookProposal);
+  let proposal: BookProposal | null = null;
+
+  try {
+    proposal = await proposalRepository.findOne({ where: { id: normalizedProposalId } });
+  } catch (error) {
+    console.error('Failed to load proposal for download request', { proposalId: normalizedProposalId, error });
+    respondWithError(res, 500, 'Failed to process file download');
+    return;
+  }
+
+  if (!proposal) {
+    respondWithError(res, 404, 'Proposal not found');
+    return;
+  }
+
+  const storageId =
+    params.fileKind === 'cover'
+      ? resolveWalrusStorageId(proposal.coverWalrusFileId, proposal.coverWalrusBlobId)
+      : params.fileKind === 'audiobook'
+      ? resolveWalrusStorageId(proposal.audiobookWalrusFileId, proposal.audiobookWalrusBlobId)
+      : resolveWalrusStorageId(proposal.walrusFileId, proposal.walrusBlobId);
+
+  if (!storageId) {
+    respondWithError(res, 404, 'File not found');
+    return;
+  }
+
+  const walrusBuffer = await fetchWalrusFileBuffer(storageId);
+  if (!walrusBuffer) {
+    respondWithError(res, 404, 'File not found');
+    return;
+  }
+
+  let responseBuffer = walrusBuffer;
+  let mimeType: string | null =
+    params.fileKind === 'cover'
+      ? proposal.coverMimeType ?? null
+      : params.fileKind === 'audiobook'
+      ? proposal.audiobookMimeType ?? null
+      : proposal.mimeType ?? null;
+
+  if (params.fileKind !== 'cover') {
+    const iv = decodeBase64Buffer(
+      params.fileKind === 'audiobook' ? proposal.audiobookFileEncryptionIv : proposal.fileEncryptionIv,
+    );
+    const authTag = decodeBase64Buffer(
+      params.fileKind === 'audiobook' ? proposal.audiobookFileEncryptionTag : proposal.fileEncryptionTag,
+    );
+
+    if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
+      try {
+        responseBuffer = decryptBookFile(walrusBuffer, iv, authTag);
+      } catch (error) {
+        console.warn('Failed to decrypt Walrus proposal file, falling back to encrypted payload', {
+          proposalId: normalizedProposalId,
+          storageId,
+          error,
+        });
+      }
+    }
+  }
+
+  const explicitName =
+    params.fileKind === 'cover'
+      ? proposal.coverFileName
+      : params.fileKind === 'audiobook'
+      ? proposal.audiobookFileName
+      : proposal.fileName;
+  const normalizedName = typeof explicitName === 'string' ? explicitName.trim() : '';
+
+  let fileName: string;
+  if (normalizedName.length > 0) {
+    fileName = normalizedName;
+  } else {
+    const baseName = sanitizeFileNameBase(proposal.title);
+    const extension =
+      guessExtensionFromMime(mimeType) ?? (params.fileKind === 'cover' ? 'jpg' : params.fileKind === 'audiobook' ? 'mp3' : 'bin');
+    if (params.fileKind === 'cover') {
+      fileName = `${baseName}-cover.${extension}`;
+    } else if (params.fileKind === 'audiobook') {
+      fileName = `${baseName}-audiobook.${extension}`;
+    } else {
+      fileName = `${baseName}.${extension}`;
+    }
+  }
+
   const resolvedMimeType =
     mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 

@@ -1,6 +1,7 @@
 import { resolveBackendUrl } from "./trpc";
 
 export type BookFileKind = "book" | "cover" | "audiobook";
+export type DownloadResource = "books" | "proposals";
 
 export type DecryptedFile = {
   bookId: string;
@@ -60,38 +61,19 @@ export function buildBookFileDownloadUrl(
   bookId: string,
   fileKind: BookFileKind,
   options: BuildBookDownloadUrlOptions = {},
+  resource: DownloadResource = "books",
 ): string {
   const normalized = bookId.trim();
   if (normalized.length === 0) {
     throw new Error("bookId must be a non-empty string");
   }
 
+  const resourcePath = resource === "proposals" ? "propsals" : "books";
   const url = new URL(
-    `/books/${encodeURIComponent(normalized)}/${fileKind}/download.epub`,
+    `/${resourcePath}/${encodeURIComponent(normalized)}/${fileKind}/download.epub`,
     `${backendUrl}/`,
   );
 
-  if (options.telegramUserId) {
-    url.searchParams.set("telegramUserId", options.telegramUserId);
-  }
-
-  return url.toString();
-}
-
-type BuildWalrusDownloadUrlOptions = {
-  telegramUserId?: string | null;
-};
-
-export function buildWalrusFileDownloadUrl(
-  fileId: string,
-  options: BuildWalrusDownloadUrlOptions = {},
-): string {
-  const normalized = fileId.trim();
-  if (!normalized) {
-    throw new Error("fileId must be a non-empty string");
-  }
-
-  const url = new URL(`/file/download/${encodeURIComponent(normalized)}`, `${backendUrl}/`);
   if (options.telegramUserId) {
     url.searchParams.set("telegramUserId", options.telegramUserId);
   }
