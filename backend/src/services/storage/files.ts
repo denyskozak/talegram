@@ -216,7 +216,7 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
       fileName,
       mimeType,
       buffer: payload,
-      isCoverFile: fileKind === 'cover',
+      isCoverFile: false,
     } satisfies BookResolvedFile;
   }
 
@@ -233,6 +233,6 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     fileName,
     mimeType,
     buffer: payload,
-    isCoverFile: fileKind === 'cover',
+    isCoverFile: false,
   } satisfies ProposalResolvedFile;
 }
