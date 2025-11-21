@@ -89,9 +89,6 @@ export function BookListPage(): JSX.Element {
           <h1>Books</h1>
           <p>Manage catalogue metadata, tags and availability.</p>
         </div>
-        <Link to="/books/new" className="book-list__new">
-          + New book
-        </Link>
       </header>
 
       {error ? <div className="book-list__error">{error}</div> : null}
@@ -99,7 +96,7 @@ export function BookListPage(): JSX.Element {
       {isLoading ? (
         <div className="book-list__empty">Loading books…</div>
       ) : rows.length === 0 ? (
-        <div className="book-list__empty">No books yet. Create the first entry.</div>
+        <div className="book-list__empty">No books yet.</div>
       ) : (
         <div className="book-list__table-wrapper">
           <table className="book-list__table">

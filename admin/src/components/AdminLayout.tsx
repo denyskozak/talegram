@@ -19,9 +19,6 @@ export function AdminLayout(): JSX.Element {
           <NavLink to="/books" className={({ isActive }) => (isActive ? 'nav-link nav-link--active' : 'nav-link')}>
             Books
           </NavLink>
-          <NavLink to="/books/new" className={({ isActive }) => (isActive ? 'nav-link nav-link--active' : 'nav-link')}>
-            New book
-          </NavLink>
           <NavLink to="/authors" className={({ isActive }) => (isActive ? 'nav-link nav-link--active' : 'nav-link')}>
             Authors
           </NavLink>

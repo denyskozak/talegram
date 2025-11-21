@@ -12,7 +12,7 @@ import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
 import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
 import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
-import {buildBookFileDownloadUrl, buildWalrusFileDownloadUrl} from "@/shared/api/storage";
+import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {downloadFile} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button";
 
@@ -55,7 +55,7 @@ export default function ProposalDetails(): JSX.Element {
         }
 
         try {
-            return buildBookFileDownloadUrl(id, "audiobook", {telegramUserId});
+            return buildBookFileDownloadUrl(id, "audiobook", {telegramUserId}, "proposals");
         } catch (error) {
             console.error("Failed to build audiobook download url", error);
             return null;
@@ -167,7 +167,12 @@ export default function ProposalDetails(): JSX.Element {
         setIsDownloading(true);
         try {
             const resolvedFileName = proposal.fileName ?? `${proposal.title}.epub`;
-            const downloadUrl = buildWalrusFileDownloadUrl(proposal.walrusFileId, { telegramUserId });
+            const downloadUrl = buildBookFileDownloadUrl(
+                proposal.id,
+                "book",
+                { telegramUserId },
+                "proposals",
+            );
 
             if (downloadFile.isAvailable()) {
                 await downloadFile(downloadUrl, resolvedFileName);
