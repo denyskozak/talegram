@@ -12,7 +12,7 @@ import {Button} from "@/shared/ui/Button";
 export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
     const navigate = useNavigate();
-    const {bookId} = useParams<{ bookId?: string }>();
+    const {id, type} = useParams<{ id?: string, type?: 'books' | 'proposals' }>();
     const {launchParams} = useTMA();
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -20,17 +20,17 @@ export default function ListenBookPage(): JSX.Element {
     );
 
     const audioUrl = useMemo(() => {
-        if (!bookId) {
+        if (!id) {
             return null;
         }
 
         try {
-            return buildBookFileDownloadUrl(bookId, "audiobook", {telegramUserId});
+            return buildBookFileDownloadUrl(id, "audiobook", type, {telegramUserId});
         } catch (error) {
             console.error("Failed to build audiobook download url", error);
             return null;
         }
-    }, [bookId, telegramUserId]);
+    }, [id, telegramUserId]);
 
     return (
         <div

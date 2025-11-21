@@ -49,19 +49,6 @@ export default function ProposalDetails(): JSX.Element {
         [],
     );
 
-    const audioUrl = useMemo(() => {
-        if (!id) {
-            return null;
-        }
-
-        try {
-            return buildBookFileDownloadUrl(id, "audiobook", {telegramUserId}, "proposals");
-        } catch (error) {
-            console.error("Failed to build audiobook download url", error);
-            return null;
-        }
-    }, [id, telegramUserId]);
-
     const telegramUsername = useMemo(() => {
         const rawUsername = launchParams?.tgWebAppData?.user?.username ?? null;
         return normalizeTelegramUsername(rawUsername);
@@ -170,8 +157,8 @@ export default function ProposalDetails(): JSX.Element {
             const downloadUrl = buildBookFileDownloadUrl(
                 proposal.id,
                 "book",
-                { telegramUserId },
                 "proposals",
+                { telegramUserId },
             );
 
             if (downloadFile.isAvailable()) {
@@ -189,19 +176,19 @@ export default function ProposalDetails(): JSX.Element {
     }, [proposal, showToast, t, telegramUserId]);
 
     const handleStartReading = useCallback(() => {
-        if (!proposal?.bookId) {
+        if (!proposal?.id) {
             return;
         }
 
-        navigate(`/reader/${encodeURIComponent(proposal.bookId)}`);
+        navigate(`/reader/${encodeURIComponent(proposal.id)}/proposals`);
     }, [navigate, proposal]);
 
     const handleStartListening = useCallback(() => {
-        if (!proposal?.bookId) {
+        if (!proposal?.id) {
             return;
         }
 
-        navigate(`/listen/${encodeURIComponent(proposal.bookId)}`);
+        navigate(`/listen/${encodeURIComponent(proposal.id)}/proposals`);
     }, [navigate, proposal]);
 
     const handleVote = useCallback(
@@ -436,7 +423,7 @@ export default function ProposalDetails(): JSX.Element {
                                 ) : (
                                     <Text style={{color: theme.hint}}>{t("account.proposalDetails.noDownload")}</Text>
                                 )}
-                                {canVote && proposal.bookId ? (
+                                {canVote ? (
                                     <Button
                                         type="button"
                                         mode="filled"
@@ -446,7 +433,7 @@ export default function ProposalDetails(): JSX.Element {
                                         {t("account.proposalDetails.read")}
                                     </Button>
                                 ) : null}
-                                {canVote && proposal.bookId && proposal.audiobookWalrusFileId ? (
+                                {canVote && proposal.audiobookWalrusFileId ? (
                                     <Button
                                         type="button"
                                         mode="outline"
@@ -470,9 +457,6 @@ export default function ProposalDetails(): JSX.Element {
                                         ? t("account.proposalDetails.audiobookAvailable")
                                         : t("account.proposalDetails.noAudiobook")}
                                 </Text>
-                                <audio controls autoPlay src={audioUrl} style={{width: "100%"}}>
-                                    {t("book.listen.unsupported")}
-                                </audio>
                             </div>
                         </div>
                     </Card>

@@ -1,12 +1,12 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 
-import { Card, Chip, Modal, Text, Title} from "@telegram-apps/telegram-ui";
+import { Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
 
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
-import {handleBookCoverError, resolveBookCover} from "@/entities/book/lib";
+import {handleBookCoverError} from "@/entities/book/lib";
 import type {Book, ID, Review} from "@/entities/book/types";
 import {downloadFile} from "@tma.js/sdk-react";
 import {copyTextToClipboard} from "@tma.js/sdk";
@@ -169,7 +169,7 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        navigate(`/reader/${encodeURIComponent(book.id)}`);
+        navigate(`/reader/${encodeURIComponent(book.id)}/books`);
     }, [book, hasFullAccess, navigate, showToast, t]);
 
     const handleListen = useCallback(() => {
@@ -187,7 +187,7 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        navigate(`/listen/${encodeURIComponent(book.id)}`);
+        navigate(`/listen/${encodeURIComponent(book.id)}/books`);
     }, [book, hasFullAccess, navigate, showToast, t]);
 
     const handleReviewCreated = useCallback((review: Review) => {
@@ -238,7 +238,7 @@ export default function BookPage(): JSX.Element {
             }
 
             const fileName = book?.fileName ?? `${book?.title ?? "book"}.pdf`;
-            const downloadUrl = buildBookFileDownloadUrl(book.id, "book", {telegramUserId});
+            const downloadUrl = buildBookFileDownloadUrl(book.id, "book", "books", {telegramUserId});
             if (downloadFile.isAvailable()) {
                 await downloadFile(downloadUrl, fileName);
             } else {
@@ -473,12 +473,7 @@ export default function BookPage(): JSX.Element {
             const mimeType = book.coverMimeType ?? "image/jpeg";
             return `data:${mimeType};base64,${book.coverImageData}`;
         }
-
-        if (!book) {
-            return "";
-        }
-
-        return resolveBookCover({id: book.id, coverUrl: book.coverUrl});
+        return '';
     }, [book]);
 
     if (isLoading || !book) {
@@ -622,21 +617,7 @@ export default function BookPage(): JSX.Element {
                             </Button>
                         </div>
                     )}
-                    {hasAudiobook ? (
-                        <Card style={{padding: 16, borderRadius: 20}}>
-                            <Text weight="2" style={{marginBottom: 8}}>
-                                {t("book.audiobook.title")}
-                            </Text>
-                            <Text style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)", marginBottom: 8}}>
-                                {hasFullAccess
-                                    ? t("book.audiobook.listenPrompt")
-                                    : t("book.audiobook.locked")}
-                            </Text>
-                            <Button size="m" mode="outline" onClick={handleListen}>
-                                {t("book.actions.listen")}
-                            </Button>
-                        </Card>
-                    ) : null}
+
                     <Card style={{padding: 16, borderRadius: 20}}>
                         <Title level="3" weight="2" style={{marginBottom: 12}}>
                             {t("book.description.title")}

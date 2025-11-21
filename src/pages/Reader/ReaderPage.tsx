@@ -1,4 +1,4 @@
-import { useMemo} from "react";
+import {ReactNode, useMemo} from "react";
 
 import {useParams} from "react-router-dom";
 
@@ -8,18 +8,19 @@ import {useTMA} from "@/app/providers/TMAProvider";
 import {getTelegramUserId} from "@/shared/lib/telegram";
 
 type ReaderRouteParams = {
-    bookId?: string;
+    id?: string;
+    type?: 'books' | 'proposals';
 };
 
-
-export default function ReaderPage(): JSX.Element {
-    const {bookId} = useParams<ReaderRouteParams>();
+export default function ReaderPage(): ReactNode | undefined {
+    const {id, type} = useParams<ReaderRouteParams>();
     const {launchParams} = useTMA();
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
-    const downloadUrl = buildBookFileDownloadUrl(bookId || '', 'book', {telegramUserId: telegramUserId});
-    console.log("downloadUrl: ", downloadUrl);
+    if (id === undefined || type === undefined) return null;
+
+    const downloadUrl = buildBookFileDownloadUrl(id || '', 'book', type, {telegramUserId: telegramUserId});
     return <ReadingOverlay fileUrl={downloadUrl}/>;
 }

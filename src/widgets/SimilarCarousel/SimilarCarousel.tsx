@@ -4,8 +4,8 @@ import type { Book } from "@/entities/book/types";
 import { Card, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
-import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
-import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
+import { handleBookCoverError } from "@/entities/book/lib";
+import {useMemo} from "react";
 
 interface SimilarCarouselProps {
   books: Book[];
@@ -41,13 +41,15 @@ type SimilarCarouselItemProps = {
 };
 
 function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): JSX.Element {
-  const walrusCover = useWalrusCover({
-    bookId: book.coverImageData ? null : book.id,
-    mimeType: book.coverMimeType,
-    enabled: !book.coverImageData,
-  });
-  const coverSrc = walrusCover ?? resolveBookCover(book);
 
+
+    const coverSrc = useMemo(() => {
+        if (book?.coverImageData) {
+            const mimeType = book.coverMimeType ?? "image/jpeg";
+            return `data:${mimeType};base64,${book.coverImageData}`;
+        }
+        return '';
+    }, [book]);
   return (
     <Tappable
       onClick={() => onSelect(book.id)}

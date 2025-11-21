@@ -253,7 +253,7 @@ export default function MyAccount(): JSX.Element {
         return;
       }
 
-      navigate(`/reader/${encodeURIComponent(item.book.id)}`);
+      navigate(`/reader/${encodeURIComponent(item.book.id)}/books`);
     },
     [myBooks, navigate, showToast, t],
   );
@@ -278,7 +278,7 @@ export default function MyAccount(): JSX.Element {
       setDownloadingBookId(bookId);
       try {
         const fileName = item.book.fileName ?? `${item.book.title}.pdf`;
-        const downloadUrl = buildBookFileDownloadUrl(bookId, "book", { telegramUserId });
+        const downloadUrl = buildBookFileDownloadUrl(bookId, "book", 'books', { telegramUserId });
         if (downloadFile.isAvailable()) {
           await downloadFile(downloadUrl, fileName);
         } else {

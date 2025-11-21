@@ -7,7 +7,6 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 
 import type { MyBook, MyBooksFilter } from "../types";
 
-import { useWalrusCover } from "@/entities/book/hooks/useWalrusCover";
 import { Button } from "@/shared/ui/Button";
 
 export type MyBooksSectionProps = {
@@ -54,19 +53,15 @@ function MyBookCard({
   onToggleLike,
 }: MyBookCardProps): JSX.Element {
   const { book, purchase } = item;
-  const walrusCoverUrl = useWalrusCover({
-    bookId: book.coverImageData ? null : book.id,
-    mimeType: book.coverMimeType,
-    enabled: !book.coverImageData,
-  });
+
   const coverUrl = useMemo(() => {
     if (book.coverImageData) {
       const mimeType = book.coverMimeType ?? "image/jpeg";
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
-    return walrusCoverUrl;
-  }, [book.coverImageData, book.coverMimeType, walrusCoverUrl]);
+    return '';
+  }, [book.coverImageData, book.coverMimeType]);
   const author = book.authors.join(", ");
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);

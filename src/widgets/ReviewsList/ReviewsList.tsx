@@ -174,9 +174,9 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
               <Input
                   className="input-wrapper"
                 value={authorName}
+                  disabled
                 onChange={(event) => setAuthorName(event.target.value)}
                 placeholder={t("reviews.form.namePlaceholder")}
-                disabled={isSubmitting}
                 required
               />
             </label>

@@ -5,7 +5,7 @@ import type { Book } from "@/entities/book/types";
 import { Card, Chip, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
-import { handleBookCoverError, resolveBookCover } from "@/entities/book/lib";
+import { handleBookCoverError } from "@/entities/book/lib";
 import { BookRating } from "./BookRating";
 
 interface BookCardProps {
@@ -22,7 +22,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       return `data:${mimeType};base64,${book.coverImageData}`;
     }
 
-    return resolveBookCover({ id: book.id, coverUrl: book.coverUrl });
+    return '';
   }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id]);
 
   return (

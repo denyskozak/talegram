@@ -1,11 +1,8 @@
 import { useState} from "react";
 
-
 // import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "./ReadingOverlay.css";
 import {ReactReader} from "react-reader";
-
-
 
 type ReadingOverlayProps = {
   fileUrl: string;
