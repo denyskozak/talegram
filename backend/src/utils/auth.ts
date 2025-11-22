@@ -1,6 +1,6 @@
 import type http from 'node:http';
 
-import { parse } from '@tma.js/init-data-node';
+import { parse } from '@telegram-apps/init-data-node';
 
 export type TelegramAuthData = {
   rawInitData: string | null;

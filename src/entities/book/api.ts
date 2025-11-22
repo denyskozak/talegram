@@ -4,7 +4,7 @@ import type { Book, CatalogApi, ID } from "./types";
 
 type ListCategoriesPayload = {
   search?: string;
-  globalCategory?: string;
+  globalCategory?: "article" | "book" | "comics";
 };
 
 type ListBooksPayload = {
@@ -33,8 +33,8 @@ export const catalogApi: CatalogApi = {
   listCategories(query) {
     const payload: ListCategoriesPayload | undefined = query
       ? {
-          search: query.search,
-          globalCategory: query.globalCategory,
+          search: query.search as any,
+          globalCategory: query.globalCategory as any,
         }
       : undefined;
 

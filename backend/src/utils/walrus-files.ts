@@ -503,7 +503,7 @@ export async function handleBookFileDownloadRequest(
         return;
       }
     } else {
-      const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
+      const price = Number.isFinite(book.price) ? Math.max(0, Number(book.price)) : 0;
       if (price > 0) {
         if (!params.telegramUserId) {
           respondWithError(res, 401, 'Telegram user id is required to download this book');
@@ -793,7 +793,7 @@ export async function handleWalrusFileDownloadRequest(
   const fileKind = determineSourceFileKind(book ?? proposal!, normalizedFileId);
 
   if (book && fileKind !== 'cover') {
-    const price = Number.isFinite(book.priceStars) ? Math.max(0, Number(book.priceStars)) : 0;
+    const price = Number.isFinite(book.price) ? Math.max(0, Number(book.price)) : 0;
     if (price > 0) {
       if (!params.telegramUserId) {
         respondWithError(res, 401, 'Telegram user id is required to download this book');

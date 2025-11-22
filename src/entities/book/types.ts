@@ -1,38 +1,9 @@
 import type { Category } from "@/entities/category/types";
+import {trpc} from "@/shared/api/trpc.ts";
 
 export type ID = string;
 
-export type Book = {
-  id: ID;
-  title: string;
-  authors: string[];
-  categories: ID | null;
-  coverUrl: string;
-  coverImageData?: string | null;
-  description: string;
-  priceStars: number;
-  rating: {
-    average: number;
-    votes: number;
-  };
-  tags: string[];
-  publishedAt?: string;
-  reviewsCount: number;
-  walrusBlobId?: string;
-  walrusFileId?: string | null;
-  audiobookWalrusBlobId?: string | null;
-  audiobookWalrusFileId?: string | null;
-  coverWalrusBlobId?: string | null;
-  coverWalrusFileId?: string | null;
-  coverMimeType?: string | null;
-  mimeType?: string | null;
-  fileName?: string | null;
-  audiobookMimeType?: string | null;
-  audiobookFileName?: string | null;
-  audiobookFileSize?: number | null;
-  bookFileURL?: string | null;
-  globalCategory?: string | null;
-};
+export type Book = Awaited<ReturnType<typeof trpc.catalog.getBook.query>>;
 
 export type Review = {
   id: ID;

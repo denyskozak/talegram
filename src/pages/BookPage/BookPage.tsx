@@ -68,7 +68,7 @@ export default function BookPage(): JSX.Element {
 
     useScrollToTop([id]);
 
-    const isFreeBook = Boolean(book && book.priceStars === 0);
+    const isFreeBook = Boolean(book && book.price === 0);
     const hasFullAccess = isPurchased || isFreeBook;
     const hasAudiobook = Boolean(book?.audiobookWalrusFileId);
 
@@ -255,7 +255,7 @@ export default function BookPage(): JSX.Element {
 
     const handleStartPurchase = useCallback(
         async (action: "buy" | "subscribe") => {
-            if (!book || isActionLoading || book.priceStars === 0) {
+            if (!book || isActionLoading || book.price === 0) {
                 return;
             }
 
@@ -561,7 +561,7 @@ export default function BookPage(): JSX.Element {
                                     <BookRating value={book.rating.average} votes={book.rating.votes}/>
                                 </div>
                                 <Chip mode="outline" style={{fontWeight: 600}}>
-                                    {book.priceStars} ⭐
+                                    {book.price} {book.currency === 'stars' ? '⭐' : ''}
                                 </Chip>
                             </div>
                             <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
@@ -611,9 +611,9 @@ export default function BookPage(): JSX.Element {
                             >
                                 {t("book.actions.subscribe")}
                             </Button>
-                            <Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>
-                                {t("book.actions.preview")}
-                            </Button>
+                            {/*<Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>*/}
+                            {/*    {t("book.actions.preview")}*/}
+                            {/*</Button>*/}
                         </div>
                     )}
 
@@ -673,7 +673,7 @@ export default function BookPage(): JSX.Element {
                             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
                                 <span style={{fontWeight: 600}}>{book.title}</span>
                                 <span style={{fontWeight: 600}}>
-                  {(invoice?.amountStars ?? book.priceStars)} ⭐
+                  {(invoice?.amountStars ?? book.price)} ⭐
                 </span>
                             </div>
                             {invoice && (

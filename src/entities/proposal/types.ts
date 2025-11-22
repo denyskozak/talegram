@@ -1,43 +1,9 @@
-import type { GlobalCategory } from "@/shared/lib/globalCategories";
+import {trpc} from "@/shared/api/trpc.ts";
+import {ProposalStatus} from "../../../backend/src/entities/BookProposal.ts";
 
-export type ProposalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+export type BookProposal = Awaited<ReturnType<typeof trpc.proposals.getById.query>>;
 
-export type BookProposal = {
-    id: string;
-    title: string;
-    author: string;
-    description: string;
-    globalCategory: GlobalCategory;
-    category: string;
-    price: number;
-    currency: string;
-    submittedByTelegramUsername?: string | null;
-    hashtags: string[];
-    walrusBlobId: string;
-    walrusFileId: string;
-    audiobookWalrusBlobId?: string | null;
-    audiobookWalrusFileId?: string | null;
-    coverWalrusFileId: string | null;
-    coverWalrusBlobId: string | null;
-    coverMimeType?: string | null;
-    coverFileName?: string | null;
-    coverFileSize?: number | null;
-    coverImageData?: string | null;
-    mimeType?: string | null;
-    fileName: string;
-    fileSize?: number | null;
-    audiobookMimeType?: string | null;
-    audiobookFileName?: string | null;
-    audiobookFileSize?: number | null;
-    status: ProposalStatus;
-    isDeleted: boolean;
-    reviewerNotes?: string | null;
-    createdAt: string;
-    updatedAt: string;
-    votes?: ProposalVotingStats;
-};
-
-export type ProposalVoteChoice = 'positive' | 'negative';
+export type ProposalVoteChoice = string;
 
 export type ProposalVotingStats = {
     positiveVotes: number;
@@ -49,13 +15,10 @@ export type ProposalForVoting = BookProposal & {
     votes: ProposalVotingStats;
 };
 
-export type ProposalVotingListResponse = {
-    allowedVotersCount: number;
-    proposals: ProposalForVoting[];
-};
+export type ProposalVotingListResponse = Awaited<ReturnType<typeof trpc.proposals.listForVoting.query>>;
 
 export type SubmitProposalVoteResult = {
-    proposalId: string;
+    approvedBookId: string | null;
     status: ProposalStatus;
     positiveVotes: number;
     negativeVotes: number;

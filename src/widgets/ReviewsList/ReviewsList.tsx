@@ -7,7 +7,7 @@ import {
   type FormEvent,
 } from "react";
 
-import { Avatar, Card, Input, Text, Title } from "@telegram-apps/telegram-ui";
+import {Avatar, Card, Input, Section, Select, Text, Textarea, Title} from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTMA } from "@/app/providers/TMAProvider";
@@ -161,14 +161,15 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <Card style={{ padding: 16, borderRadius: 20 }}>
         {isFormOpen ? (
+
+                <Section   header={t("reviews.form.title")}>
+
+
           <form
             onSubmit={handleSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: 12 }}
+            style={{ display: "flex", padding: 4, flexDirection: "column", gap: 12 }}
             noValidate
           >
-            <Title level="3" weight="2">
-              {t("reviews.form.title")}
-            </Title>
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <Text weight="2">{t("reviews.form.nameLabel")}</Text>
               <Input
@@ -182,41 +183,27 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <Text weight="2">{t("reviews.form.ratingLabel")}</Text>
-              <select
+              <Select
                 value={rating}
                 onChange={(event) => setRating(Number.parseInt(event.target.value, 10))}
                 disabled={isSubmitting}
-                style={{
-                  padding: "12px",
-                  borderRadius: 16,
-                  border: "1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.08))",
-                  background: "var(--tg-theme-bg-color, #ffffff)",
-                  color: "inherit",
-                }}
               >
                 {[5, 4, 3, 2, 1].map((value) => (
                   <option key={value} value={value}>
                     {t("reviews.form.ratingOption", { value })}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <Text weight="2">{t("reviews.form.textLabel")}</Text>
-              <textarea
+              <Textarea
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 placeholder={t("reviews.form.textPlaceholder")}
                 rows={4}
                 disabled={isSubmitting}
-                style={{
-                  padding: 12,
-                  borderRadius: 16,
-                  border: "1px solid var(--tg-theme-section-separator-color, rgba(0,0,0,0.08))",
-                  background: "var(--tg-theme-bg-color, #ffffff)",
-                  resize: "vertical",
-                  font: "inherit",
-                }}
+
                 required
               />
             </label>
@@ -237,6 +224,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
               </Button>
             </div>
           </form>
+                </Section>
         ) : (
           <Button mode="outline" onClick={handleOpenForm} aria-label={t("reviews.addButton")}>
             {t("reviews.addButton")}

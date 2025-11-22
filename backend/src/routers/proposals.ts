@@ -6,7 +6,6 @@ import { BookProposal, ProposalStatus } from '../entities/BookProposal.js';
 import { ProposalVote } from '../entities/ProposalVote.js';
 import { authorizedProcedure, createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
-import { normalizeCategoryId } from '../utils/categories.js';
 import { fetchWalrusFilesBase64, warmWalrusFileCache } from '../utils/walrus-files.js';
 
 import {
@@ -224,7 +223,7 @@ export const proposalsRouter = createRouter({
           });
         }
 
-        const categoryId = normalizeCategoryId(proposal.category);
+        // const categoryId = normalizeCategoryId(proposal.category);
         const tags = Array.isArray(proposal.hashtags) ? proposal.hashtags : [];
 
         const book = bookRepository.create({
@@ -233,6 +232,7 @@ export const proposalsRouter = createRouter({
           description: proposal.description,
           walrusBlobId: proposal.walrusBlobId,
           walrusFileId: proposal.walrusFileId,
+            fileName: proposal.fileName,
           fileEncryptionIv: proposal.fileEncryptionIv,
           fileEncryptionTag: proposal.fileEncryptionTag,
           audiobookFileEncryptionIv: proposal.audiobookFileEncryptionIv ?? null,
@@ -241,13 +241,12 @@ export const proposalsRouter = createRouter({
           category: proposal.category,
           globalCategory: proposal.globalCategory,
           price: proposal.price,
-          hashtags: proposal.hashtags,
           tags,
           currency: proposal.currency,
         });
 
         if (proposal.coverWalrusFileId) {
-          await warmWalrusFileCache({ proposal });
+          await warmWalrusFileCache(proposal.coverWalrusFileId);
         }
 
         await bookRepository.save(book);
@@ -260,8 +259,8 @@ export const proposalsRouter = createRouter({
         proposal.status = ProposalStatus.REJECTED;
       }
 
-      proposal.approvedAt = proposal.status === ProposalStatus.APPROVED ? new Date() : null;
-      proposal.rejectedAt = proposal.status === ProposalStatus.REJECTED ? new Date() : null;
+      // proposal.approvedAt = proposal.status === ProposalStatus.APPROVED ? new Date() : null;
+      // proposal.rejectedAt = proposal.status === ProposalStatus.REJECTED ? new Date() : null;
 
       await proposalRepository.save(proposal);
 

@@ -17,7 +17,7 @@ export const paymentsRouter = createRouter({
     return createInvoice({
       bookId: book.id,
       title: book.title,
-      amountStars: book.priceStars,
+      amountStars: book.price,
     });
   }),
 });

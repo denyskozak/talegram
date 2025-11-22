@@ -46,7 +46,7 @@ function ensureArray(value: string[] | null | undefined): string[] {
 }
 
 function getCategoryId(entity: BookEntity): string | null {
-  const raw = entity.categories;
+  const raw = entity.category;
   if (typeof raw !== 'string') {
     return null;
   }
@@ -122,11 +122,12 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     categories: getCategoryId(entity),
     coverUrl: '',
     description: entity.description,
-    priceStars: entity.priceStars ?? 0,
+      price: entity.price ?? 0,
     rating: {
       average: ratingAverage,
       votes: ratingVotes,
     },
+      currency: entity.currency,
     tags: ensureArray(entity.tags),
     publishedAt: getPublishedAt(entity),
     reviewsCount: entity.reviewsCount ?? 0,
