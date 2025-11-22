@@ -14,8 +14,8 @@ import {
 import {
     handleBookFileDownloadRequest,
     handleProposalFileDownloadRequest,
-    handleWalrusFileDownloadRequest,
 } from './utils/walrus-files.js';
+import { parseTelegramAuth, resolveTelegramUserId, resolveTelegramUsername } from './utils/auth.js';
 
 config();
 
@@ -75,6 +75,7 @@ function applyCors(req: http.IncomingMessage, res: http.ServerResponse) {
 }
 
 const server = http.createServer(async (req, res) => {
+    const telegramAuth = parseTelegramAuth(req);
     applyCors(req, res);
 
 
@@ -103,7 +104,9 @@ const server = http.createServer(async (req, res) => {
             return;
         }
 
-        const telegramUserId = normalizeTelegramUserId(url?.searchParams.get('telegramUserId') ?? null);
+        const telegramUserId = normalizeTelegramUserId(
+            resolveTelegramUserId(telegramAuth, url?.searchParams.get('telegramUserId') ?? null),
+        );
         const rawFileKind = bookDownloadMatch[3];
         const fileKind = rawFileKind === 'cover'
             ? 'cover'
@@ -127,22 +130,8 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    // TODO remove it
-    // if (req.method === 'GET' && url?.pathname.startsWith('/file/download/')) {
-    //     const fileId = extractFileIdFromPath(url.pathname);
-    //     if (!fileId) {
-    //         respondWithError(res, 400, 'Invalid file id');
-    //         return;
-    //     }
-    //
-    //     await handleWalrusFileDownloadRequest(req, res, {
-    //         fileId,
-    //         telegramUserId: normalizeTelegramUserId(url.searchParams.get('telegramUserId')),
-    //     });
-    //     return;
-    // }
     if (req.method === 'POST' && url?.pathname === '/proposals') {
-        await handleCreateProposalRequest(req, res);
+        await handleCreateProposalRequest(req, res, telegramAuth);
         return;
     }
 
@@ -168,6 +157,7 @@ type ParsedFormFileMap = Record<string, ParsedFormFile>;
 async function handleCreateProposalRequest(
     req: http.IncomingMessage,
     res: http.ServerResponse,
+    telegramAuth: ReturnType<typeof parseTelegramAuth>,
 ): Promise<void> {
     try {
         if (!isMultipartForm(req)) {
@@ -185,7 +175,7 @@ async function handleCreateProposalRequest(
         const category = fields['category'];
         const priceRaw = fields['price'];
         const hashtagsRaw = fields['hashtags'];
-        const telegramUsername = fields['telegramUsername'];
+        const telegramUsername = resolveTelegramUsername(telegramAuth, fields['telegramUsername']);
         const file = files['file'];
         const cover = files['cover'];
         const audiobook = files['audiobook'];

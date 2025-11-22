@@ -4,7 +4,7 @@ import { EntityManager } from 'typeorm';
 import { Book } from '../entities/Book.js';
 import { BookProposal, ProposalStatus } from '../entities/BookProposal.js';
 import { ProposalVote } from '../entities/ProposalVote.js';
-import { createRouter, procedure } from '../trpc/trpc.js';
+import { authorizedProcedure, createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { normalizeCategoryId } from '../utils/categories.js';
 import { fetchWalrusFilesBase64, warmWalrusFileCache } from '../utils/walrus-files.js';
@@ -19,21 +19,15 @@ import {
 const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 1;
 
-
-
-const listForVotingInput = z.object({
-  telegramUsername: z.string().min(1).optional(),
-});
+const listForVotingInput = z.void();
 
 const voteOnProposalInput = z.object({
   proposalId: z.string().uuid(),
-  telegramUsername: z.string().min(1),
   isPositive: z.boolean(),
 });
 
 const getProposalByIdInput = z.object({
   proposalId: z.string().uuid(),
-  telegramUsername: z.string().min(1).optional(),
 });
 
 export const proposalsRouter = createRouter({
@@ -47,8 +41,8 @@ export const proposalsRouter = createRouter({
 
     return proposals;
   }),
-  listForVoting: procedure.input(listForVotingInput).query(async ({ input }) => {
-    const normalizedTelegramUsername = normalizeTelegramUsername(input.telegramUsername ?? null);
+  listForVoting: procedure.input(listForVotingInput).query(async ({ ctx }) => {
+    const normalizedTelegramUsername = normalizeTelegramUsername(ctx.telegramAuth.username ?? null);
     const isAllowedToViewVotes =
       typeof normalizedTelegramUsername === 'string' &&
       isAllowedTelegramVoter(normalizedTelegramUsername);
@@ -111,8 +105,8 @@ export const proposalsRouter = createRouter({
       proposals: normalized,
     };
   }),
-  getById: procedure.input(getProposalByIdInput).query(async ({ input }) => {
-    const normalizedTelegramUsername = normalizeTelegramUsername(input.telegramUsername ?? null);
+  getById: procedure.input(getProposalByIdInput).query(async ({ input, ctx }) => {
+    const normalizedTelegramUsername = normalizeTelegramUsername(ctx.telegramAuth.username ?? null);
     const isAllowedToViewVotes =
       typeof normalizedTelegramUsername === 'string' &&
       isAllowedTelegramVoter(normalizedTelegramUsername);
@@ -156,8 +150,8 @@ export const proposalsRouter = createRouter({
       },
     };
   }),
-  voteForProposal: procedure.input(voteOnProposalInput).mutation(async ({ input }) => {
-    const normalizedTelegramUsername = assertAllowedTelegramVoter(input.telegramUsername);
+  voteForProposal: authorizedProcedure.input(voteOnProposalInput).mutation(async ({ input, ctx }) => {
+    const normalizedTelegramUsername = assertAllowedTelegramVoter(ctx.telegramAuth.username ?? '');
 
     const allowedVotersCount = getAllowedTelegramVoterUsernames().length;
     await initializeDataSource();
@@ -238,95 +232,52 @@ export const proposalsRouter = createRouter({
           author: proposal.author,
           description: proposal.description,
           walrusBlobId: proposal.walrusBlobId,
-          walrusFileId: proposal.walrusFileId ?? null,
-          audiobookWalrusBlobId: proposal.audiobookWalrusBlobId ?? null,
-          audiobookWalrusFileId: proposal.audiobookWalrusFileId ?? null,
-          coverWalrusBlobId: proposal.coverWalrusBlobId,
-          coverWalrusFileId: proposal.coverWalrusFileId ?? null,
-          coverMimeType: proposal.coverMimeType,
-          coverFileName: proposal.coverFileName,
-          coverFileSize: proposal.coverFileSize,
-          mimeType: proposal.mimeType,
-          fileName: proposal.fileName,
-          fileSize: proposal.fileSize,
+          walrusFileId: proposal.walrusFileId,
           fileEncryptionIv: proposal.fileEncryptionIv,
           fileEncryptionTag: proposal.fileEncryptionTag,
-          audiobookMimeType: proposal.audiobookMimeType ?? null,
-          audiobookFileName: proposal.audiobookFileName ?? null,
-          audiobookFileSize: proposal.audiobookFileSize ?? null,
           audiobookFileEncryptionIv: proposal.audiobookFileEncryptionIv ?? null,
           audiobookFileEncryptionTag: proposal.audiobookFileEncryptionTag ?? null,
-          proposalId: proposal.id,
-          categories: categoryId,
+          coverWalrusFileId: proposal.coverWalrusFileId ?? null,
+          category: proposal.category,
+          globalCategory: proposal.globalCategory,
+          price: proposal.price,
+          hashtags: proposal.hashtags,
           tags,
-          priceStars: Number.isFinite(proposal.price) ? Math.max(0, proposal.price) : 0,
-          ratingAverage: 0,
-          ratingVotes: 0,
-          middleRate: 0,
-          reviewsCount: 0,
-          publishedAt: new Date(),
-          globalCategory: proposal.globalCategory ?? null,
+          currency: proposal.currency,
         });
-        const savedBook = await bookRepository.save(book);
 
-        const persistedBook = await bookRepository.findOne({ where: { id: savedBook.id } });
-        if (!persistedBook) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to move approved proposal to books table",
-          });
+        if (proposal.coverWalrusFileId) {
+          await warmWalrusFileCache({ proposal });
         }
 
-        await Promise.all([
-          warmWalrusFileCache(persistedBook.walrusFileId),
-          warmWalrusFileCache(persistedBook.coverWalrusFileId),
-          warmWalrusFileCache(persistedBook.audiobookWalrusFileId),
-        ]);
+        await bookRepository.save(book);
 
-        await voteRepository.delete({ proposalId: input.proposalId });
-
-        const deleteResult = await proposalRepository.delete({ id: input.proposalId });
-        if (!deleteResult.affected) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to remove proposal after publishing",
-          });
-        }
-
-        return {
-          status: 'APPROVED' as const,
-          positiveVotes,
-          negativeVotes,
-        };
+        proposal.status = ProposalStatus.APPROVED;
+        proposal.books = [book];
       }
 
       if (negativeVotes >= REQUIRED_REJECTIONS) {
         proposal.status = ProposalStatus.REJECTED;
-        proposal.isDeleted = true;
-        await proposalRepository.save(proposal);
-        await voteRepository.delete({ proposalId: input.proposalId });
-
-        return {
-          status: 'REJECTED' as const,
-          positiveVotes,
-          negativeVotes,
-        };
       }
 
-      return {
-        status: 'PENDING' as const,
-        positiveVotes,
-        negativeVotes,
-      };
+      proposal.approvedAt = proposal.status === ProposalStatus.APPROVED ? new Date() : null;
+      proposal.rejectedAt = proposal.status === ProposalStatus.REJECTED ? new Date() : null;
+
+      await proposalRepository.save(proposal);
+
+      return { proposal, positiveVotes, negativeVotes, userVote: input.isPositive ? 'positive' : 'negative' as const };
     });
 
     return {
-      proposalId: input.proposalId,
-      status: result.status,
+      status: result.proposal.status,
+      allowedVotersCount,
       positiveVotes: result.positiveVotes,
       negativeVotes: result.negativeVotes,
-      allowedVotersCount,
-      userVote: input.isPositive ? 'positive' : 'negative',
+      userVote: result.userVote,
+      approvedBookId: result.proposal.status === ProposalStatus.APPROVED && result.proposal.books?.[0]
+        ? result.proposal.books[0].id
+        : null,
     };
   }),
 });
+

@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {useCallback, useEffect, useMemo, useRef} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate, useParams} from "react-router-dom";
 
@@ -8,6 +8,7 @@ import {useTMA} from "@/app/providers/TMAProvider";
 import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {getTelegramUserId} from "@/shared/lib/telegram";
 import {Button} from "@/shared/ui/Button";
+import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
 
 export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
@@ -18,6 +19,11 @@ export default function ListenBookPage(): JSX.Element {
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
+    const savedAudioPositionSeconds = useMemo(
+        () => Number.parseFloat(getStoredBookProgress('audio_position', id, '0')),
+        [id],
+    );
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const audioUrl = useMemo(() => {
         if (!id) {
@@ -31,6 +37,53 @@ export default function ListenBookPage(): JSX.Element {
             return null;
         }
     }, [id, telegramUserId]);
+
+    useEffect(() => {
+        const audioElement = audioRef.current;
+        if (!audioElement) {
+            return;
+        }
+
+        const setInitialPosition = () => {
+            if (!Number.isFinite(savedAudioPositionSeconds) || savedAudioPositionSeconds <= 0) {
+                return;
+            }
+
+            const duration = Number.isFinite(audioElement.duration) ? audioElement.duration : null;
+            const target = duration ? Math.min(savedAudioPositionSeconds, duration) : savedAudioPositionSeconds;
+            if (target > 0) {
+                try {
+                    audioElement.currentTime = target;
+                } catch (error) {
+                    console.warn("Failed to restore audio position", error);
+                }
+            }
+        };
+
+        if (audioElement.readyState >= 1) {
+            setInitialPosition();
+        }
+
+        audioElement.addEventListener("loadedmetadata", setInitialPosition);
+
+        return () => {
+            audioElement.removeEventListener("loadedmetadata", setInitialPosition);
+        };
+    }, [audioUrl, savedAudioPositionSeconds]);
+
+    const handleAudioProgressChange = useCallback(() => {
+        const audioElement = audioRef.current;
+        if (!audioElement) {
+            return;
+        }
+
+        const position = Math.floor(audioElement.currentTime);
+        setStoredBookProgress('audio_position', id, position.toString());
+    }, [id]);
+
+    const handleAudioEnded = useCallback(() => {
+        setStoredBookProgress('audio_position', id, '0');
+    }, [id]);
 
     return (
         <div
@@ -52,7 +105,17 @@ export default function ListenBookPage(): JSX.Element {
                     {t("book.listen.title")}
                 </Title>
                 {audioUrl ? (
-                    <audio controls autoPlay src={audioUrl} style={{width: "100%"}}>
+                    <audio
+                        key={id}
+                        ref={audioRef}
+                        controls
+                        autoPlay
+                        src={audioUrl}
+                        style={{width: "100%"}}
+                        onTimeUpdate={handleAudioProgressChange}
+                        onPause={handleAudioProgressChange}
+                        onEnded={handleAudioEnded}
+                    >
                         {t("book.listen.unsupported")}
                     </audio>
                 ) : (

@@ -15,16 +15,10 @@ export type PurchaseStatus = {
 export type ConfirmPurchasePayload = {
   bookId: ID;
   paymentId: string;
-  telegramUserId: string;
 };
 
 export type PurchaseStatusPayload = {
   bookId: ID;
-  telegramUserId: string;
-};
-
-export type PurchasesListPayload = {
-  telegramUserId: string;
 };
 
 export type ConfirmPurchaseResponse = {

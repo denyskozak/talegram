@@ -6,6 +6,7 @@ import {ReadingOverlay} from "@/entities/book/components/ReadingOverlay";
 import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {useTMA} from "@/app/providers/TMAProvider";
 import {getTelegramUserId} from "@/shared/lib/telegram";
+import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
 
 type ReaderRouteParams = {
     id?: string;
@@ -20,18 +21,13 @@ export default function ReaderPage(): ReactNode | undefined {
         [launchParams],
     );
     if (id === undefined || type === undefined) return null;
-    const initialReaderLocation = useMemo(() => {
-        const value = window.localStorage.getItem(`book_location_${id}`);
-        return window.localStorage && value
-            ? value
-            : '0';
-    }, []);
+    const initialReaderLocation = useMemo(
+        () => getStoredBookProgress('reader_location', id, '0'),
+        [id],
+    );
     const handleReaderLocationChange = (location: string) => {
-        if (window.localStorage) {
-            console.log("location: ", location);
-            window.localStorage.setItem(`book_location_${id}`, String(location));
-        }
-    }
+        setStoredBookProgress('reader_location', id, String(location));
+    };
     const downloadUrl = buildBookFileDownloadUrl(id || '', 'book', type, {telegramUserId: telegramUserId});
 
     return <ReadingOverlay fileUrl={downloadUrl} initialLocation={initialReaderLocation} onLocationChange={handleReaderLocationChange}/>;

@@ -5,6 +5,7 @@ import type {
   SubmitProposalVoteResult,
 } from "./types";
 import { trpc, resolveBackendUrl } from "@/shared/api/trpc";
+import { retrieveRawInitData } from "@tma.js/sdk";
 import type { GlobalCategory } from "@/shared/lib/globalCategories";
 
 export type SubmitProposalPayload = {
@@ -18,7 +19,6 @@ export type SubmitProposalPayload = {
   file: File;
   coverFile: File;
   audiobookFile?: File | null;
-  telegramUsername: string;
 };
 
 export async function submitBookProposal(
@@ -33,7 +33,6 @@ export async function submitBookProposal(
   formData.append("category", payload.category);
   formData.append("price", payload.price.toString(10));
   formData.append("hashtags", JSON.stringify(payload.hashtags));
-  formData.append("telegramUsername", payload.telegramUsername);
   formData.append("file", payload.file, payload.file.name);
   formData.append("cover", payload.coverFile, payload.coverFile.name);
   if (payload.audiobookFile) {
@@ -45,6 +44,7 @@ export async function submitBookProposal(
     body: formData,
     headers: {
       "ngrok-skip-browser-warning": "true",
+      Authorization: `tma ${retrieveRawInitData()}`,
     },
   });
 
@@ -59,24 +59,16 @@ export async function submitBookProposal(
   return proposal;
 }
 
-export async function fetchProposalsForVoting(
-  telegramUsername?: string,
-): Promise<ProposalVotingListResponse> {
-  return trpc.proposals.listForVoting.query({
-    telegramUsername,
-  });
+export async function fetchProposalsForVoting(): Promise<ProposalVotingListResponse> {
+  return trpc.proposals.listForVoting.query();
 }
 
-export async function fetchProposalById(
-  proposalId: string,
-  telegramUsername?: string,
-): Promise<BookProposal> {
-  return trpc.proposals.getById.query({ proposalId, telegramUsername });
+export async function fetchProposalById(proposalId: string): Promise<BookProposal> {
+  return trpc.proposals.getById.query({ proposalId });
 }
 
 export type SubmitProposalVotePayload = {
   proposalId: string;
-  telegramUsername: string;
   isPositive: boolean;
 };
 
