@@ -611,9 +611,9 @@ export default function BookPage(): JSX.Element {
                             >
                                 {t("book.actions.subscribe")}
                             </Button>
-                            {/*<Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>*/}
-                            {/*    {t("book.actions.preview")}*/}
-                            {/*</Button>*/}
+                            <Button size="l" mode="outline" disabled={isActionLoading || true} onClick={handlePreview}>
+                                {t("book.actions.preview")}
+                            </Button>
                         </div>
                     )}
 
