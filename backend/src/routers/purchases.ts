@@ -1,5 +1,6 @@
+import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
-import { createRouter, procedure } from '../trpc/trpc.js';
+import { authorizedProcedure, createRouter } from '../trpc/trpc.js';
 import {
   getPurchaseDetails,
   listPurchasedBooks,
@@ -8,29 +9,35 @@ import {
 import { getBook } from '../data/catalog.js';
 import { fetchStarsInvoiceStatus, markInvoiceAsFailed } from '../services/telegram-payments.js';
 
-const telegramUserIdInput = z.object({
-  telegramUserId: z.string().trim().min(1),
-});
-
 const bookIdInput = z.object({
   bookId: z.string().trim().min(1),
 });
 
-const purchaseStatusInput = bookIdInput.merge(telegramUserIdInput);
+const purchaseStatusInput = bookIdInput;
 
 const confirmPurchaseInput = purchaseStatusInput.extend({
   paymentId: z.string().trim().min(1),
 });
 
 export const purchasesRouter = createRouter({
-  getStatus: procedure.input(purchaseStatusInput).query(async ({ input }) => {
-    const details = await getPurchaseDetails(input.bookId, input.telegramUserId);
+  getStatus: authorizedProcedure.input(purchaseStatusInput).query(async ({ input, ctx }) => {
+    const telegramUserId = ctx.telegramAuth.userId;
+    if (!telegramUserId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Telegram authorization required' });
+    }
+
+    const details = await getPurchaseDetails(input.bookId, telegramUserId);
     return {
       purchased: Boolean(details),
       details: details ?? null,
     };
   }),
-  confirm: procedure.input(confirmPurchaseInput).mutation(async ({ input }) => {
+  confirm: authorizedProcedure.input(confirmPurchaseInput).mutation(async ({ input, ctx }) => {
+    const telegramUserId = ctx.telegramAuth.userId;
+    if (!telegramUserId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Telegram authorization required' });
+    }
+
     const book = await getBook(input.bookId);
     if (!book) {
       throw new Error('Book not found');
@@ -55,7 +62,7 @@ export const purchasesRouter = createRouter({
       walrusFileId: book.walrusFileId ?? null,
     };
 
-    await setPurchased(book.id, input.telegramUserId, purchaseDetails);
+    await setPurchased(book.id, telegramUserId, purchaseDetails);
 
     return {
       ok: true,
@@ -65,7 +72,12 @@ export const purchasesRouter = createRouter({
       },
     };
   }),
-  list: procedure.input(telegramUserIdInput).query(async ({ input }) => ({
-    items: await listPurchasedBooks(input.telegramUserId),
-  })),
+  list: authorizedProcedure.query(async ({ ctx }) => {
+    const telegramUserId = ctx.telegramAuth.userId;
+    if (!telegramUserId) {
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Telegram authorization required' });
+    }
+
+    return { items: await listPurchasedBooks(telegramUserId) };
+  }),
 });

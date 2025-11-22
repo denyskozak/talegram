@@ -51,10 +51,8 @@ export const catalogApi: CatalogApi = {
         nextCursor: response.nextCursor,
       }));
   },
-  getBook(id, params) {
-    return trpc.catalog.getBook
-      .query({ id, telegramUserId: params?.telegramUserId })
-      .then((book: Book) => book as Book);
+  getBook(id) {
+    return trpc.catalog.getBook.query({ id }).then((book: Book) => book as Book);
   },
   listReviews(bookId, cursor, limit) {
     const payload: ListReviewsPayload = { bookId };

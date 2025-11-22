@@ -5,7 +5,6 @@ import type {
   ConfirmPurchaseResponse,
   PurchaseStatus,
   PurchaseStatusPayload,
-  PurchasesListPayload,
   PurchasesListResponse,
 } from "./types";
 export const purchasesApi = {
@@ -15,8 +14,8 @@ export const purchasesApi = {
   confirm(payload: ConfirmPurchasePayload): Promise<ConfirmPurchaseResponse> {
     return trpc.purchases.confirm.mutate(payload);
   },
-  list(payload: PurchasesListPayload): Promise<PurchasesListResponse> {
-    return trpc.purchases.list.query(payload);
+  list(): Promise<PurchasesListResponse> {
+    return trpc.purchases.list.query();
   },
 };
 

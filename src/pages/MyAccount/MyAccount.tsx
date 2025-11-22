@@ -195,12 +195,12 @@ export default function MyAccount(): JSX.Element {
     }
 
     try {
-      const response = await purchasesApi.list({ telegramUserId });
+      const response = await purchasesApi.list();
       const likedSet = likedBookIdsRef.current;
       const items = await Promise.all(
         response.items.map(async (item) => {
           try {
-            const book = await catalogApi.getBook(item.bookId, { telegramUserId });
+            const book = await catalogApi.getBook(item.bookId);
             if (!book) {
               return null;
             }
@@ -315,7 +315,7 @@ export default function MyAccount(): JSX.Element {
     setIsVotingLoading(true);
     setVotingError(null);
     try {
-      const response = await fetchProposalsForVoting(telegramUsername ?? undefined);
+      const response = await fetchProposalsForVoting();
       const proposalsWithCovers = await enhanceProposalsWithCovers(response.proposals);
       setVotingProposals(proposalsWithCovers);
       setAllowedVotersCount(
@@ -432,7 +432,6 @@ export default function MyAccount(): JSX.Element {
         file: formState.file,
         coverFile: formState.coverFile,
         audiobookFile: formState.audiobookFile,
-        telegramUsername,
       });
 
       const title = formState.title || t("account.publish.toastFallbackTitle");

@@ -29,7 +29,6 @@ const listBooksInput = z.object({
 
 const getBookInput = z.object({
   id: z.string().trim().min(1),
-  telegramUserId: z.string().trim().min(1).optional(),
 });
 
 const listReviewsInput = z.object({
@@ -89,14 +88,14 @@ export const catalogRouter = createRouter({
 
       return { ...result, items };
     }),
-  getBook: procedure.input(getBookInput).query(async ({ input }) => {
+  getBook: procedure.input(getBookInput).query(async ({ input, ctx }) => {
     const book = await getBook(input.id);
     if (!book) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
-    if (input.telegramUserId) {
-      const details = await getPurchaseDetails(book.id, input.telegramUserId);
+    if (ctx.telegramAuth.userId) {
+      const details = await getPurchaseDetails(book.id, ctx.telegramAuth.userId);
       if (details?.walrusBlobId) {
         // Preserve purchase details lookup side effect for validation purposes.
       }

@@ -16,5 +16,14 @@ const requireTestEnvMiddleware = t.middleware(({ ctx, next }) => {
   return next();
 });
 
+const requireTelegramAuthMiddleware = t.middleware(({ ctx, next }) => {
+  if (!ctx.telegramAuth.userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Telegram authorization required' });
+  }
+
+  return next();
+});
+
 export const createRouter = t.router;
 export const procedure = t.procedure.use(requireTestEnvMiddleware);
+export const authorizedProcedure = procedure.use(requireTelegramAuthMiddleware);

@@ -81,7 +81,7 @@ export default function BookPage(): JSX.Element {
         try {
             setIsLoading(true);
             setError(null);
-            const item = await catalogApi.getBook(id, {telegramUserId});
+            const item = await catalogApi.getBook(id);
             setBook(item);
             if (item.categories) {
                 const similarBooksResponse = await catalogApi.listBooks({
@@ -107,7 +107,7 @@ export default function BookPage(): JSX.Element {
         }
 
         try {
-            const status = await purchasesApi.getStatus({bookId: id, telegramUserId});
+            const status = await purchasesApi.getStatus({bookId: id});
             setIsPurchased(status.purchased);
         } catch (err) {
             console.error(err);
@@ -293,7 +293,6 @@ export default function BookPage(): JSX.Element {
             await purchasesApi.confirm({
                 bookId: book.id,
                 paymentId: invoice.paymentId,
-                telegramUserId,
             });
 
             setIsPurchased(true);
@@ -303,7 +302,7 @@ export default function BookPage(): JSX.Element {
             invoiceStatusRef.current = 'paid';
             showToast(t("book.toast.accessGranted"));
             try {
-                const updatedBook = await catalogApi.getBook(book.id, {telegramUserId});
+                const updatedBook = await catalogApi.getBook(book.id);
                 setBook(updatedBook);
             } catch (updateError) {
                 console.error(updateError);

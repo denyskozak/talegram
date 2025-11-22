@@ -76,7 +76,7 @@ export default function ProposalDetails(): JSX.Element {
             setIsLoading(true);
             setError(null);
             try {
-                const data = await fetchProposalById(id, telegramUsername ?? undefined);
+                const data = await fetchProposalById(id);
                 if (!isCancelled) {
                     setProposal(data);
                 }
@@ -206,7 +206,6 @@ export default function ProposalDetails(): JSX.Element {
             try {
                 const result = await submitProposalVote({
                     proposalId: proposal.id,
-                    telegramUsername,
                     isPositive: direction === "positive",
                 });
 
