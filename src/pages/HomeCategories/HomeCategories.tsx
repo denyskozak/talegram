@@ -122,43 +122,60 @@ export default function HomeCategories(): JSX.Element {
                     ))}
                 </SegmentedControl>
             </div>
-            <Card  style={{marginBottom: 16, width: '100%'}}>
-            <Input
-                type="search"
-                className="input-wrapper"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={t("homeCategories.searchPlaceholder")}
-                aria-label={t("homeCategories.searchPlaceholder")}
+            <Card style={{marginBottom: 16, width: '100%'}}>
+                <Input
+                    type="search"
+                    className="input-wrapper"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder={t("homeCategories.searchPlaceholder")}
+                    aria-label={t("homeCategories.searchPlaceholder")}
 
-            />
+                />
             </Card>
             {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
                                    onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
-            {isLoading && displayedCategories.length === 0 ? (
-                <div style={{display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"}}>
-                    {Array.from({length: 6}).map((_, index) => (
-                        <CategoryTileSkeleton key={index}/>
-                    ))}
-                </div>
-            ) : displayedCategories.length > 0 ? (
-                <div style={{display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"}}>
-                    {displayedCategories.map((category) => (
-                        <CategoryTile
-                            key={category.id}
-                            category={category}
-                            onClick={() => handleCategoryClick(category)}
-                        />
-                    ))}
-                </div>
-            ) : (
-                !isLoading && (
-                    <EmptyState
-                        title={t("homeCategories.emptyTitle")}
-                        description={t("homeCategories.emptyDescription")}
-                    />
-                )
-            )}
+            {selectedGlobalCategory === 'article' || selectedGlobalCategory === 'comics'
+                ? <div style={{
+                    width: "100%",
+                    display: 'flex',
+                    justifyContent: "center"
+                }}>{t("homeCategories.comingSoon")}</div>
+                : isLoading && displayedCategories.length === 0
+                    ? (
+                        <div style={{
+                            display: "grid",
+                            gap: 16,
+                            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"
+                        }}>
+                            {Array.from({length: 6}).map((_, index) => (
+                                <CategoryTileSkeleton key={index}/>
+                            ))}
+                        </div>
+                    )
+                    : displayedCategories.length > 0 ? (
+                        <div style={{
+                            display: "grid",
+                            gap: 16,
+                            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"
+                        }}>
+                            {displayedCategories.map((category) => (
+                                <CategoryTile
+                                    key={category.id}
+                                    category={category}
+                                    onClick={() => handleCategoryClick(category)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        !isLoading && (
+                            <EmptyState
+                                title={t("homeCategories.emptyTitle")}
+                                description={t("homeCategories.emptyDescription")}
+                            />
+                        )
+                    )}
+
         </main>
     );
 }

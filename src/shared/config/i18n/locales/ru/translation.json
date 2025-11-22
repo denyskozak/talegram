@@ -39,6 +39,7 @@
   },
   "homeCategories": {
     "title": "Категории",
+    "comingSoon": "Скоро появиться",
     "searchPlaceholder": "Поиск по категориям",
     "alphaBanner": {
       "title": "Альфа-версия",

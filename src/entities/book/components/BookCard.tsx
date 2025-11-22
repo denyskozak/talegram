@@ -33,7 +33,7 @@ export function BookCard({ book, onClick }: BookCardProps): JSX.Element {
       style={{ textDecoration: "none", color: "inherit", display: "flex", justifyContent: "center" }}
     >
       <Card style={{ width: '100%', borderRadius: 20, overflow: "hidden" }}>
-        <div style={{ position: "relative", aspectRatio: "3 / 3", background: "var(--tg-theme-secondary-bg-color, #f3f3f5)" }}>
+        <div style={{ position: "relative", aspectRatio: "3 / 3" }}>
           <img
             src={coverSrc}
             alt={t("book.coverAlt", { title: book.title })}

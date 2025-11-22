@@ -20,7 +20,19 @@ export default function ReaderPage(): ReactNode | undefined {
         [launchParams],
     );
     if (id === undefined || type === undefined) return null;
-
+    const initialReaderLocation = useMemo(() => {
+        const value = window.localStorage.getItem(`book_location_${id}`);
+        return window.localStorage && value
+            ? value
+            : '0';
+    }, []);
+    const handleReaderLocationChange = (location: string) => {
+        if (window.localStorage) {
+            console.log("location: ", location);
+            window.localStorage.setItem(`book_location_${id}`, String(location));
+        }
+    }
     const downloadUrl = buildBookFileDownloadUrl(id || '', 'book', type, {telegramUserId: telegramUserId});
-    return <ReadingOverlay fileUrl={downloadUrl}/>;
+
+    return <ReadingOverlay fileUrl={downloadUrl} initialLocation={initialReaderLocation} onLocationChange={handleReaderLocationChange}/>;
 }

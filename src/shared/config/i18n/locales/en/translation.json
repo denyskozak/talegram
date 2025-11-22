@@ -45,6 +45,7 @@
   },
   "homeCategories": {
     "title": "Categories",
+    "comingSoon": "Coming Soon",
     "searchPlaceholder": "Search categories",
     "alphaBanner": {
       "title": "Alpha version",

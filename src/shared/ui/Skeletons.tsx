@@ -1,4 +1,4 @@
-import { Skeleton } from "@telegram-apps/telegram-ui";
+import {Card, Skeleton} from "@telegram-apps/telegram-ui";
 
 export function CategoryTileSkeleton(): JSX.Element {
   return (
@@ -21,11 +21,10 @@ export function CategoryTileSkeleton(): JSX.Element {
 
 export function BookCardSkeleton(): JSX.Element {
   return (
-    <div
+    <Card
       style={{
         borderRadius: 18,
         overflow: "hidden",
-        background: "var(--tg-theme-secondary-bg-color, #f3f3f5)",
       }}
     >
       <Skeleton style={{ height: 160 }} />
@@ -39,7 +38,7 @@ export function BookCardSkeleton(): JSX.Element {
           ))}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
