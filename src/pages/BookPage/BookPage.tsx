@@ -146,8 +146,22 @@ export default function BookPage(): JSX.Element {
     }, []);
 
     const handlePreview = useCallback(() => {
-        showToast(t("book.toast.readAccessRequired"));
-    }, [showToast, t]);
+        if (!book) {
+            return;
+        }
+
+        const hasStorage = Boolean(
+            (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0) ||
+            (typeof book.walrusBlobId === "string" && book.walrusBlobId.length > 0),
+        );
+
+        if (!hasStorage) {
+            showToast(t("book.toast.downloadFailed"));
+            return;
+        }
+
+        navigate(`/reader/${encodeURIComponent(book.id)}/books?preview=1`);
+    }, [book, navigate, showToast, t]);
 
     const handleRead = useCallback(() => {
         if (!book) {
@@ -189,6 +203,19 @@ export default function BookPage(): JSX.Element {
 
         navigate(`/listen/${encodeURIComponent(book.id)}/books`);
     }, [book, hasFullAccess, navigate, showToast, t]);
+
+    const handleListenPreview = useCallback(() => {
+        if (!book) {
+            return;
+        }
+
+        if (!book.audiobookWalrusFileId && !book.audiobookWalrusBlobId) {
+            showToast(t("book.audiobook.unavailable"));
+            return;
+        }
+
+        navigate(`/listen/${encodeURIComponent(book.id)}/books?preview=1`);
+    }, [book, navigate, showToast, t]);
 
     const handleReviewCreated = useCallback((review: Review) => {
         setBook((prev) => {
@@ -593,27 +620,39 @@ export default function BookPage(): JSX.Element {
                             {isDownloading || isLoading ? <QuoteCarouselNotice theme={theme} t={t}/> : null}
                         </>
                     ) : (
-                        <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
-                            <Button
-                                size="l"
-                                loading={isActionLoading && activeAction === "buy"}
-                                disabled={isActionLoading}
-                                onClick={() => handleStartPurchase("buy")}
-                            >
-                                {t("book.actions.buy")}
-                            </Button>
-                            <Button
-                                size="l"
-                                mode="outline"
-                                loading={isActionLoading && activeAction === "subscribe"}
-                                disabled={isActionLoading}
-                                onClick={() => handleStartPurchase("subscribe")}
-                            >
-                                {t("book.actions.subscribe")}
-                            </Button>
-                            <Button size="l" mode="outline" disabled={isActionLoading || true} onClick={handlePreview}>
-                                {t("book.actions.preview")}
-                            </Button>
+                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                            {hasAudiobook ? (
+                                <Chip mode="outline" style={{alignSelf: "flex-start", fontWeight: 600}}>
+                                    {t("book.audiobook.badge")}
+                                </Chip>
+                            ) : null}
+                            <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
+                                <Button
+                                    size="l"
+                                    loading={isActionLoading && activeAction === "buy"}
+                                    disabled={isActionLoading}
+                                    onClick={() => handleStartPurchase("buy")}
+                                >
+                                    {t("book.actions.buy")}
+                                </Button>
+                                <Button
+                                    size="l"
+                                    mode="outline"
+                                    loading={isActionLoading && activeAction === "subscribe"}
+                                    disabled={isActionLoading}
+                                    onClick={() => handleStartPurchase("subscribe")}
+                                >
+                                    {t("book.actions.subscribe")}
+                                </Button>
+                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>
+                                    {t("book.actions.preview")}
+                                </Button>
+                                {hasAudiobook ? (
+                                    <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleListenPreview}>
+                                        {t("book.actions.previewAudio")}
+                                    </Button>
+                                ) : null}
+                            </div>
                         </div>
                     )}
 

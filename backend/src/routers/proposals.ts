@@ -4,16 +4,10 @@ import { EntityManager } from 'typeorm';
 import { Book } from '../entities/Book.js';
 import { BookProposal, ProposalStatus } from '../entities/BookProposal.js';
 import { ProposalVote } from '../entities/ProposalVote.js';
+import { CommunityMember } from '../entities/CommunityMember.js';
 import { authorizedProcedure, createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { fetchWalrusFilesBase64, warmWalrusFileCache } from '../utils/walrus-files.js';
-
-import {
-  assertAllowedTelegramVoter,
-  getAllowedTelegramVoterUsernames,
-  isAllowedTelegramVoter,
-  normalizeTelegramUsername,
-} from '../utils/telegram.js';
 
 const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 1;
@@ -41,12 +35,14 @@ export const proposalsRouter = createRouter({
     return proposals;
   }),
   listForVoting: procedure.input(listForVotingInput).query(async ({ ctx }) => {
-    const normalizedTelegramUsername = normalizeTelegramUsername(ctx.telegramAuth.username ?? null);
-    const isAllowedToViewVotes =
-      typeof normalizedTelegramUsername === 'string' &&
-      isAllowedTelegramVoter(normalizedTelegramUsername);
+    const telegramUserId = ctx.telegramAuth.userId;
 
     await initializeDataSource();
+    const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+    const communityMember = telegramUserId
+      ? await communityMemberRepository.findOne({ where: { telegramUserId } })
+      : null;
+    const isAllowedToViewVotes = Boolean(communityMember);
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposals = await bookProposalRepository.find({
@@ -73,10 +69,8 @@ export const proposalsRouter = createRouter({
       const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
       const negativeVotes = votes.length - positiveVotes;
       const userVote =
-        isAllowedToViewVotes && normalizedTelegramUsername
-          ? votes.find(
-              (vote: ProposalVote) => vote.telegramUsername === normalizedTelegramUsername,
-            )
+        isAllowedToViewVotes && communityMember
+          ? votes.find((vote: ProposalVote) => vote.telegramUsername === communityMember.telegramUserId)
           : undefined;
 
       const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
@@ -99,18 +93,22 @@ export const proposalsRouter = createRouter({
       };
     });
 
+    const allowedVotersCount = await communityMemberRepository.count();
+
     return {
-      allowedVotersCount: getAllowedTelegramVoterUsernames().length,
+      allowedVotersCount,
       proposals: normalized,
     };
   }),
   getById: procedure.input(getProposalByIdInput).query(async ({ input, ctx }) => {
-    const normalizedTelegramUsername = normalizeTelegramUsername(ctx.telegramAuth.username ?? null);
-    const isAllowedToViewVotes =
-      typeof normalizedTelegramUsername === 'string' &&
-      isAllowedTelegramVoter(normalizedTelegramUsername);
+    const telegramUserId = ctx.telegramAuth.userId;
 
     await initializeDataSource();
+    const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+    const communityMember = telegramUserId
+      ? await communityMemberRepository.findOne({ where: { telegramUserId } })
+      : null;
+    const isAllowedToViewVotes = Boolean(communityMember);
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposal = await bookProposalRepository.findOne({
@@ -131,8 +129,8 @@ export const proposalsRouter = createRouter({
     const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
     const negativeVotes = votes.length - positiveVotes;
     const userVote =
-      isAllowedToViewVotes && normalizedTelegramUsername
-        ? votes.find((vote: ProposalVote) => vote.telegramUsername === normalizedTelegramUsername)
+      isAllowedToViewVotes && communityMember
+        ? votes.find((vote: ProposalVote) => vote.telegramUsername === communityMember.telegramUserId)
         : undefined;
 
     const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
@@ -150,10 +148,20 @@ export const proposalsRouter = createRouter({
     };
   }),
   voteForProposal: authorizedProcedure.input(voteOnProposalInput).mutation(async ({ input, ctx }) => {
-    const normalizedTelegramUsername = assertAllowedTelegramVoter(ctx.telegramAuth.username ?? '');
+    const telegramUserId = ctx.telegramAuth.userId;
+    if (!telegramUserId) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Voting is not available for this Telegram user' });
+    }
 
-    const allowedVotersCount = getAllowedTelegramVoterUsernames().length;
     await initializeDataSource();
+
+    const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+    const member = await communityMemberRepository.findOne({ where: { telegramUserId } });
+    if (!member) {
+      throw new TRPCError({ code: 'FORBIDDEN', message: 'Voting is not available for this Telegram user' });
+    }
+
+    const allowedVotersCount = await communityMemberRepository.count();
 
     const result = await appDataSource.transaction(async (manager: EntityManager) => {
       const proposalRepository = manager.getRepository(BookProposal);
@@ -172,14 +180,14 @@ export const proposalsRouter = createRouter({
       let vote = await voteRepository.findOne({
         where: {
           proposalId: input.proposalId,
-          telegramUsername: normalizedTelegramUsername,
+          telegramUsername: telegramUserId,
         },
       });
 
       if (!vote) {
         vote = voteRepository.create({
           proposalId: input.proposalId,
-          telegramUsername: normalizedTelegramUsername,
+          telegramUsername: telegramUserId,
           isPositive: input.isPositive,
         });
       } else {

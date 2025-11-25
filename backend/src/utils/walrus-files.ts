@@ -10,6 +10,7 @@ import { CommunityMember } from '../entities/CommunityMember.js';
 import { decryptBookFile } from '../services/encryption.js';
 import { suiClient } from '../services/walrus-storage.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
+import { buildAudioPreview, buildEpubPreview } from './preview.js';
 
 type WriteWalrusFilesParams = Parameters<typeof suiClient.walrus.writeFiles>[0];
 type WriteWalrusFilesResult = Awaited<ReturnType<typeof suiClient.walrus.writeFiles>>;
@@ -597,6 +598,69 @@ export async function handleBookFileDownloadRequest(
   res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
   res.setHeader('Expires', new Date(Date.now() + cacheTimeMs).toUTCString());
   res.end(responseBuffer);
+}
+
+export async function handleBookPreviewRequest(
+  _req: http.IncomingMessage,
+  res: http.ServerResponse,
+  params: { bookId: string; fileKind: Exclude<BookFileKind, 'cover'> },
+): Promise<void> {
+  const normalizedBookId = params.bookId.trim();
+  if (!normalizedBookId) {
+    respondWithError(res, 400, 'Invalid book id');
+    return;
+  }
+
+  try {
+    await initializeDataSource();
+  } catch (error) {
+    console.error('Failed to initialize data source for preview download', error);
+    respondWithError(res, 500, 'Failed to process preview download');
+    return;
+  }
+
+  const bookRepository = appDataSource.getRepository(Book);
+
+  let book: Book | null = null;
+
+  try {
+    book = await bookRepository.findOne({ where: { id: normalizedBookId } });
+  } catch (error) {
+    console.error('Failed to load book for preview request', { bookId: normalizedBookId, error });
+    respondWithError(res, 500, 'Failed to process preview download');
+    return;
+  }
+
+  if (!book) {
+    respondWithError(res, 404, 'Book not found');
+    return;
+  }
+
+  const walrusId =
+    params.fileKind === 'audiobook'
+      ? book.audiobookWalrusFileId ?? book.audiobookWalrusBlobId
+      : book.walrusFileId ?? book.walrusBlobId;
+
+  if (!walrusId) {
+    respondWithError(res, 404, 'Book file not available for preview');
+    return;
+  }
+
+  try {
+    const resolved = await resolveDecryptedFile(walrusId);
+    const previewBuffer =
+      params.fileKind === 'audiobook'
+        ? buildAudioPreview(resolved.buffer)
+        : await buildEpubPreview(resolved.buffer);
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', resolved.mimeType ?? 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${resolved.fileName ?? 'preview'}"`);
+    res.end(previewBuffer);
+  } catch (error) {
+    console.error('Failed to prepare preview file', { bookId: normalizedBookId, error });
+    respondWithError(res, 500, 'Failed to prepare preview');
+  }
 }
 
 export async function handleProposalFileDownloadRequest(

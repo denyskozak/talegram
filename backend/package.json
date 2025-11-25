@@ -16,6 +16,7 @@
     "@trpc/server": "^11.7.1",
     "dotenv": "^16.6.1",
     "fp-ts": "^2.16.11",
+    "jszip": "^3.10.1",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20",
