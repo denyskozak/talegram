@@ -42,7 +42,7 @@ export const proposalsRouter = createRouter({
     const communityMember = telegramUserId
       ? await communityMemberRepository.findOne({ where: { telegramUserId } })
       : null;
-    const isAllowedToViewVotes = Boolean(communityMember);
+    const isAllowedToViewVotes = true;
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposals = await bookProposalRepository.find({
@@ -69,8 +69,8 @@ export const proposalsRouter = createRouter({
       const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
       const negativeVotes = votes.length - positiveVotes;
       const userVote =
-        isAllowedToViewVotes && communityMember
-          ? votes.find((vote: ProposalVote) => vote.telegramUsername === communityMember.telegramUserId)
+        isAllowedToViewVotes && telegramUserId
+          ? votes.find((vote: ProposalVote) => vote.telegramUserId === telegramUserId)
           : undefined;
 
       const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
@@ -108,7 +108,7 @@ export const proposalsRouter = createRouter({
     const communityMember = telegramUserId
       ? await communityMemberRepository.findOne({ where: { telegramUserId } })
       : null;
-    const isAllowedToViewVotes = Boolean(communityMember);
+    const isAllowedToViewVotes = true;
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposal = await bookProposalRepository.findOne({
@@ -129,8 +129,8 @@ export const proposalsRouter = createRouter({
     const positiveVotes = votes.filter((vote: ProposalVote) => vote.isPositive).length;
     const negativeVotes = votes.length - positiveVotes;
     const userVote =
-      isAllowedToViewVotes && communityMember
-        ? votes.find((vote: ProposalVote) => vote.telegramUsername === communityMember.telegramUserId)
+      isAllowedToViewVotes && telegramUserId
+        ? votes.find((vote: ProposalVote) => vote.telegramUserId === telegramUserId)
         : undefined;
 
     const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
@@ -180,14 +180,14 @@ export const proposalsRouter = createRouter({
       let vote = await voteRepository.findOne({
         where: {
           proposalId: input.proposalId,
-          telegramUsername: telegramUserId,
+          telegramUserId,
         },
       });
 
       if (!vote) {
         vote = voteRepository.create({
           proposalId: input.proposalId,
-          telegramUsername: telegramUserId,
+          telegramUserId,
           isPositive: input.isPositive,
         });
       } else {
