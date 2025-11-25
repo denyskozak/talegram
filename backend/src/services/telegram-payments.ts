@@ -25,13 +25,50 @@ type StarsInvoice = Pick<StarsInvoiceRecord, 'paymentId' | 'invoiceLink' | 'amou
 
 type StarsInvoiceStatus = Pick<StarsInvoiceRecord, 'paymentId' | 'status' | 'amountStars' | 'currency'>;
 
-const STARS_INVOICE_BASE_URL = 'https://t.me/stars-payments-demo/app/invoice';
+const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
+const FALLBACK_INVOICE_BASE_URL = 'https://t.me/stars-payments-demo/app/invoice';
 
 const invoices = new Map<string, StarsInvoiceRecord>();
 
 export async function createStarsInvoice(params: CreateStarsInvoiceParams): Promise<StarsInvoice> {
   const paymentId = randomUUID();
-  const invoiceLink = `${STARS_INVOICE_BASE_URL}/${params.bookId}/${paymentId}`;
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
+  const providerToken = process.env.PAYMENT_PROVIDER_TOKEN;
+
+  let invoiceLink: string | null = null;
+
+  if (!botToken || !providerToken) {
+    invoiceLink = `${FALLBACK_INVOICE_BASE_URL}/${params.bookId}/${paymentId}`;
+  } else {
+    const priceInStars = Math.max(1, params.amountStars);
+    const priceInMinUnits = priceInStars * 100;
+
+    const apiUrl = `${TELEGRAM_API_BASE}${botToken}/createInvoiceLink`;
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: params.title,
+        description: `Purchase access to ${params.title}`,
+        payload: JSON.stringify({ paymentId, bookId: params.bookId }),
+        provider_token: providerToken,
+        currency: 'XTR',
+        prices: [{ label: params.title, amount: priceInMinUnits }],
+      }),
+    });
+
+    const data: unknown = await response.json();
+    invoiceLink =
+      typeof data === 'object' && data !== null && 'ok' in data && (data as { ok: boolean }).ok &&
+      typeof (data as { result?: unknown }).result === 'string'
+        ? ((data as { result: string }).result as string)
+        : null;
+  }
+
+  if (!invoiceLink) {
+    throw new Error('Failed to create Telegram invoice link');
+  }
 
   invoices.set(paymentId, {
     paymentId,

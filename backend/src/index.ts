@@ -13,6 +13,7 @@ import {
 } from './services/proposals/create.js';
 import {
     handleBookFileDownloadRequest,
+    handleBookPreviewRequest,
     handleProposalFileDownloadRequest,
 } from './utils/walrus-files.js';
 import { parseTelegramAuth, resolveTelegramUserId, resolveTelegramUsername } from './utils/auth.js';
@@ -89,6 +90,30 @@ const server = http.createServer(async (req, res) => {
     }
 
     const url = safeParseUrl(req.url, req.headers.host);
+    const previewMatch =
+        req.method === 'GET'
+            ? url?.pathname.match(/^\/preview\/(books|propsals)\/([^/]+)\/(book|audiobook)\/preview\.(?:epub|mp3)$/)
+            : null;
+    if (previewMatch) {
+        const resource = previewMatch[1];
+        if (resource !== 'books') {
+            respondWithError(res, 404, 'Preview is available for books only');
+            return;
+        }
+
+        let decodedId: string;
+        try {
+            decodedId = decodeURIComponent(previewMatch[2]);
+        } catch (error) {
+            respondWithError(res, 400, 'Invalid book id');
+            return;
+        }
+
+        const rawFileKind = previewMatch[3];
+        const fileKind = rawFileKind === 'audiobook' ? 'audiobook' : 'book';
+        await handleBookPreviewRequest(req, res, {bookId: decodedId, fileKind});
+        return;
+    }
     const bookDownloadMatch =
         req.method === 'GET'
             ? url?.pathname.match(/^\/(books|propsals)\/([^/]+)\/(book|cover|audiobook)\/download\.epub$/)

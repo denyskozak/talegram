@@ -100,7 +100,8 @@
       "title": "Audiobook",
       "locked": "Purchase the book to listen to the audiobook.",
       "audioUnsupported": "Your browser does not support audio playback.",
-      "listenPrompt": "Open the audiobook player to keep listening."
+      "listenPrompt": "Open the audiobook player to keep listening.",
+      "badge": "Audiobook included"
     },
     "subscribeDescription": "A subscription opens access to new releases and this book.",
     "buyDescription": "You will get full access to the book after completing the purchase.",
@@ -114,7 +115,8 @@
       "buy": "Buy",
       "subscribe": "Subscribe",
       "listen": "Listen",
-      "preview": "Read first 50 pages",
+      "preview": "Preview",
+      "previewAudio": "Preview audio",
       "confirm": "Complete",
       "like": "Like \"{{title}}\"",
       "unlike": "Remove like from \"{{title}}\""
@@ -156,7 +158,8 @@
       "title": "Listen to the audiobook",
       "back": "Back",
       "unavailable": "We couldn't find the audiobook for this book.",
-      "unsupported": "Your browser does not support audio playback."
+      "unsupported": "Your browser does not support audio playback.",
+      "speed": "Speed"
     },
     "purchase": {
       "statusTitle": "Purchase details",
