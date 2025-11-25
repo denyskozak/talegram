@@ -19,6 +19,15 @@ function normalizeTelegramUsername(value: string | null | undefined): string | n
   return prefixed.toLowerCase();
 }
 
+export function normalizeTelegramUserId(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 const allowedTelegramUsernames = new Set(
   [
     ...DEFAULT_ALLOWED_TELEGRAM_USERNAMES,
@@ -55,4 +64,4 @@ export function assertAllowedTelegramVoter(telegramUsername: string): string {
   return normalized;
 }
 
-export { normalizeTelegramUsername };
+export { normalizeTelegramUsername, normalizeTelegramUserId };

@@ -46,9 +46,10 @@ import {
   persistLikedBookIds,
   toggleLikedBookId,
 } from "@/shared/lib/likedBooks";
+import { Button } from "@/shared/ui/Button";
 
 export default function MyAccount(): JSX.Element {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const { launchParams } = useTMA();
   const { showToast } = useToast();
@@ -98,12 +99,10 @@ export default function MyAccount(): JSX.Element {
   const [downloadingBookId, setDownloadingBookId] = useState<string | null>(null);
   const likedBookIdsRef = useRef<Set<string>>(new Set());
   const [myBooksFilter, setMyBooksFilter] = useState<MyBooksFilter>("purchased");
-  const [authorUsernames, setAuthorUsernames] = useState<Set<string>>(
-    () => new Set<string>(),
-  );
+  const [authorUserIds, setAuthorUserIds] = useState<Set<string>>(() => new Set<string>());
   const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
-  const isAllowedAuthor = telegramUsername ? authorUsernames.has(telegramUsername) : false;
-  const canPublish = Boolean(telegramUsername && isAllowedAuthor);
+  const isAllowedAuthor = telegramUserId ? authorUserIds.has(telegramUserId) : false;
+  const canPublish = Boolean(telegramUserId && isAllowedAuthor);
   useEffect(() => {
     let isMounted = true;
 
@@ -116,20 +115,19 @@ export default function MyAccount(): JSX.Element {
         }
         const normalized = new Set<string>();
         authors.forEach((author) => {
-          const normalizedUsername = normalizeTelegramUsername(author.telegramUsername);
-          if (normalizedUsername) {
-            normalized.add(normalizedUsername);
+          const normalizedId = getTelegramUserId(author.telegramUserId);
+          if (normalizedId) {
+            normalized.add(normalizedId);
           }
         });
-        
 
-        setAuthorUsernames(normalized);
+        setAuthorUserIds(normalized);
       } catch (error) {
         console.error("Failed to load allowed authors", error);
         if (!isMounted) {
           return;
         }
-        setAuthorUsernames(new Set<string>());
+        setAuthorUserIds(new Set<string>());
       } finally {
         if (isMounted) {
           setIsAuthorsLoading(false);
@@ -370,7 +368,7 @@ export default function MyAccount(): JSX.Element {
       return;
     }
 
-    if (!telegramUsername) {
+    if (!telegramUserId) {
       showToast(t("account.publish.toastRestricted"));
       return;
     }
@@ -432,6 +430,8 @@ export default function MyAccount(): JSX.Element {
         file: formState.file,
         coverFile: formState.coverFile,
         audiobookFile: formState.audiobookFile,
+        language: i18n.language,
+        telegramUserId,
       });
 
       const title = formState.title || t("account.publish.toastFallbackTitle");
@@ -460,79 +460,89 @@ export default function MyAccount(): JSX.Element {
           gap: 24,
         }}
       >
-      <header style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <Title level="1" weight="2">
-          {t("account.title")}
-        </Title>
-        <Text style={{ color: theme.subtitle }}>{t("account.subtitle")}</Text>
-      </header>
+        <header style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <Title level="1" weight="2">
+            {t("account.title")}
+          </Title>
+          <Text style={{ color: theme.subtitle }}>{t("account.subtitle")}</Text>
+          <Text style={{ color: theme.hint }}>
+            {telegramUserId
+              ? t("account.telegramUserId", { id: telegramUserId })
+              : t("account.telegramUserIdUnavailable")}
+          </Text>
+          {isAllowedAuthor && (
+            <Button type="button" size="l" onClick={() => navigate("/account/published")}>
+              {t("account.publishedBooks")}
+            </Button>
+          )}
+        </header>
 
-      <SegmentedControl>
-        {menuItems.map((item) => (
-          <SegmentedControl.Item
-            key={item.key}
-            selected={item.key === activeSection}
-            onClick={() => setActiveSection(item.key as AccountSection)}
-          >
-            {item.label}
-          </SegmentedControl.Item>
-        ))}
-      </SegmentedControl>
+        <SegmentedControl>
+          {menuItems.map((item) => (
+            <SegmentedControl.Item
+              key={item.key}
+              selected={item.key === activeSection}
+              onClick={() => setActiveSection(item.key as AccountSection)}
+            >
+              {item.label}
+            </SegmentedControl.Item>
+          ))}
+        </SegmentedControl>
 
-      {activeSection === BOOK_SECTION && (
-        <MyBooksSection
-          books={myBooks}
-          theme={theme}
-          t={t}
-          isLoading={isMyBooksLoading}
-          error={myBooksError}
-          onRetry={handleRetryMyBooks}
-          onRead={handleReadBook}
-          onDownload={handleDownloadBook}
-          downloadingBookId={downloadingBookId}
-          filter={myBooksFilter}
-          onFilterChange={(value) => setMyBooksFilter(value)}
-          onToggleLike={handleToggleLike}
-        />
-      )}
+        {activeSection === BOOK_SECTION && (
+          <MyBooksSection
+            books={myBooks}
+            theme={theme}
+            t={t}
+            isLoading={isMyBooksLoading}
+            error={myBooksError}
+            onRetry={handleRetryMyBooks}
+            onRead={handleReadBook}
+            onDownload={handleDownloadBook}
+            downloadingBookId={downloadingBookId}
+            filter={myBooksFilter}
+            onFilterChange={(value) => setMyBooksFilter(value)}
+            onToggleLike={handleToggleLike}
+          />
+        )}
 
-      {activeSection === PUBLISH_SECTION && (
-        <PublishSection
-          formState={formState}
-          theme={theme}
-          t={t}
-          isSubmitting={isSubmitting}
-          fileInputRef={fileInputRef}
-          coverInputRef={coverInputRef}
-          audiobookInputRef={audiobookInputRef}
-          canSubmit={canPublish}
-          isAuthorsLoading={isAuthorsLoading}
-          onSubmit={handleSubmit}
-          onInputChange={handleInputChange}
-          onFileSelect={handleFileSelect}
-          onCoverSelect={handleCoverSelect}
-          onAudiobookSelect={handleAudiobookSelect}
-          onHashtagAdd={handleHashtagAdd}
-          onHashtagRemove={handleHashtagRemove}
-          onHashtagKeyDown={handleHashtagKeyDown}
-        />
-      )}
+        {activeSection === PUBLISH_SECTION && (
+          <PublishSection
+            formState={formState}
+            theme={theme}
+            t={t}
+            isSubmitting={isSubmitting}
+            fileInputRef={fileInputRef}
+            coverInputRef={coverInputRef}
+            audiobookInputRef={audiobookInputRef}
+            canSubmit={canPublish}
+            isAuthorsLoading={isAuthorsLoading}
+            onSubmit={handleSubmit}
+            onInputChange={handleInputChange}
+            onFileSelect={handleFileSelect}
+            onCoverSelect={handleCoverSelect}
+            onAudiobookSelect={handleAudiobookSelect}
+            onHashtagAdd={handleHashtagAdd}
+            onHashtagRemove={handleHashtagRemove}
+            onHashtagKeyDown={handleHashtagKeyDown}
+          />
+        )}
 
-      {activeSection === VOTE_SECTION && (
-        <VotingSection
-          proposals={votingProposals}
-          theme={theme}
-          t={t}
-          isLoading={isVotingLoading}
-          error={votingError}
-          canVote={canVote}
-          isTelegramUser={Boolean(telegramUsername)}
-          allowedVotersCount={displayedAllowedVoters}
-          requiredApprovals={REQUIRED_APPROVALS}
-          onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}
-          onRetry={handleRetryVoting}
-        />
-      )}
+        {activeSection === VOTE_SECTION && (
+          <VotingSection
+            proposals={votingProposals}
+            theme={theme}
+            t={t}
+            isLoading={isVotingLoading}
+            error={votingError}
+            canVote={canVote}
+            isTelegramUser={Boolean(telegramUsername)}
+            allowedVotersCount={displayedAllowedVoters}
+            requiredApprovals={REQUIRED_APPROVALS}
+            onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}
+            onRetry={handleRetryVoting}
+          />
+        )}
 
         <PublishResultModal
           result={publishResult}

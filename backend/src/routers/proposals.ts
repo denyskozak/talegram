@@ -255,6 +255,8 @@ export const proposalsRouter = createRouter({
             audiobookFileName: proposal.audiobookFileName,
             audiobookFileSize: proposal.audiobookFileSize,
             publishedAt: Date.now(),
+          authorTelegramUserId: proposal.submittedByTelegramUserId ?? null,
+          language: proposal.language ?? null,
           audiobookFileEncryptionIv: proposal.audiobookFileEncryptionIv ?? null,
           audiobookFileEncryptionTag: proposal.audiobookFileEncryptionTag ?? null,
           coverWalrusFileId: proposal.coverWalrusFileId ?? null,

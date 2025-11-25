@@ -7,7 +7,8 @@ import { appDataSource, initializeDataSource } from '../../utils/data-source.js'
 import { getKeypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
 import { writeWalrusFiles } from '../../utils/walrus-files.js';
-import { normalizeTelegramUsername } from '../../utils/telegram.js';
+import { normalizeTelegramUserId } from '../../utils/telegram.js';
+import { Author } from '../../entities/Author.js';
 
 export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -38,7 +39,8 @@ export type CreateBookProposalParams = {
   file: CreateProposalFileInput;
   cover: CreateProposalFileInput;
   audiobook?: CreateProposalFileInput | null;
-  submittedByTelegramUsername: string;
+  submittedByTelegramUserId: string;
+  language?: string | null;
 };
 
 const MAX_HASHTAGS = 8;
@@ -174,9 +176,14 @@ export async function createBookProposal(
   await initializeDataSource();
   const bookProposalRepository = appDataSource.getRepository(BookProposal);
   const walrusFileRepository = appDataSource.getRepository(WalrusFileRecord);
-  const normalizedUploaderUsername = normalizeTelegramUsername(params.submittedByTelegramUsername);
-  if (!normalizedUploaderUsername) {
-    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Telegram username is required' });
+  const normalizedUploaderUserId = normalizeTelegramUserId(params.submittedByTelegramUserId);
+  if (!normalizedUploaderUserId) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'Telegram user id is required' });
+  }
+  const authorRepository = appDataSource.getRepository(Author);
+  const authorExists = await authorRepository.exist({ where: { telegramUserId: normalizedUploaderUserId } });
+  if (!authorExists) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Only approved authors can submit book proposals' });
   }
   const globalCategory = params.globalCategory.trim();
   if (globalCategory.length === 0) {
@@ -236,7 +243,10 @@ export async function createBookProposal(
     fileEncryptionTag: authTag.toString('base64'),
     audiobookFileEncryptionIv: audiobookEncryption?.iv.toString('base64') ?? null,
     audiobookFileEncryptionTag: audiobookEncryption?.authTag.toString('base64') ?? null,
-    submittedByTelegramUsername: normalizedUploaderUsername,
+    submittedByTelegramUserId: normalizedUploaderUserId,
+    language: typeof params.language === 'string' && params.language.trim().length > 0
+      ? params.language.trim()
+      : null,
   });
 
   return bookProposalRepository.save(proposal);

@@ -16,7 +16,8 @@ import {
     handleBookPreviewRequest,
     handleProposalFileDownloadRequest,
 } from './utils/walrus-files.js';
-import { parseTelegramAuth, resolveTelegramUserId, resolveTelegramUsername } from './utils/auth.js';
+import { parseTelegramAuth, resolveTelegramUserId } from './utils/auth.js';
+import { normalizeTelegramUserId } from './utils/telegram.js';
 
 config();
 
@@ -200,12 +201,15 @@ async function handleCreateProposalRequest(
         const category = fields['category'];
         const priceRaw = fields['price'];
         const hashtagsRaw = fields['hashtags'];
-        const telegramUsername = resolveTelegramUsername(telegramAuth, fields['telegramUsername']);
+        const telegramUserId = normalizeTelegramUserId(
+            resolveTelegramUserId(telegramAuth, fields['telegramUserId'] ?? null),
+        );
+        const language = normalizeLanguage(fields['language']);
         const file = files['file'];
         const cover = files['cover'];
         const audiobook = files['audiobook'];
 
-        if (!title || !author || !description || !globalCategory || !category || !telegramUsername) {
+        if (!title || !author || !description || !globalCategory || !category || !telegramUserId) {
             res.statusCode = 400;
             res.end('Missing required fields');
             return;
@@ -252,7 +256,8 @@ async function handleCreateProposalRequest(
             category,
             price: normalizedPrice,
             hashtags: parseHashtagsField(hashtagsRaw),
-            submittedByTelegramUsername: telegramUsername,
+            submittedByTelegramUserId: telegramUserId,
+            language,
             file: {
                 name: file.filename,
                 mimeType: file.mimeType,
@@ -303,13 +308,17 @@ function extractFileIdFromPath(pathname: string): string | null {
     }
 }
 
-function normalizeTelegramUserId(rawValue: string | null): string | null {
+function normalizeLanguage(rawValue: string | undefined): string | null {
     if (typeof rawValue !== 'string') {
         return null;
     }
 
     const trimmed = rawValue.trim();
-    return trimmed.length > 0 ? trimmed : null;
+    if (trimmed.length === 0) {
+        return null;
+    }
+
+    return trimmed.slice(0, 16);
 }
 
 function respondWithError(res: http.ServerResponse, statusCode: number, message: string): void {

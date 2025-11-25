@@ -19,6 +19,8 @@ export type SubmitProposalPayload = {
   file: File;
   coverFile: File;
   audiobookFile?: File | null;
+  language?: string | null;
+  telegramUserId?: string | null;
 };
 
 export async function submitBookProposal(
@@ -35,6 +37,12 @@ export async function submitBookProposal(
   formData.append("hashtags", JSON.stringify(payload.hashtags));
   formData.append("file", payload.file, payload.file.name);
   formData.append("cover", payload.coverFile, payload.coverFile.name);
+  if (payload.language) {
+    formData.append("language", payload.language);
+  }
+  if (payload.telegramUserId) {
+    formData.append("telegramUserId", payload.telegramUserId);
+  }
   if (payload.audiobookFile) {
     formData.append("audiobook", payload.audiobookFile, payload.audiobookFile.name);
   }

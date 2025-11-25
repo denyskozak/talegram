@@ -148,6 +148,8 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     audiobookFileEncryptionIv: entity.audiobookFileEncryptionIv ?? null,
     audiobookFileEncryptionTag: entity.audiobookFileEncryptionTag ?? null,
     globalCategory: entity.globalCategory ?? entity.proposal?.globalCategory ?? null,
+    authorTelegramUserId: entity.authorTelegramUserId ?? entity.proposal?.submittedByTelegramUserId ?? null,
+    language: entity.language ?? entity.proposal?.language ?? null,
   } satisfies CatalogBook;
 }
 

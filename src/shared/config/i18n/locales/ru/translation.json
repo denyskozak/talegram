@@ -227,10 +227,32 @@
   "account": {
     "title": "Личный кабинет",
     "subtitle": "Управляйте своими TON NFT и делитесь новыми историями.",
+    "telegramUserId": "Telegram ID: {{id}}",
+    "telegramUserIdUnavailable": "Telegram ID недоступен",
+    "publishedBooks": "Опубликованные книги",
     "menu": {
       "myBooks": "Мои книги",
       "publish": "Опубликовать книгу",
       "voting": "Голосование"
+    },
+    "published": {
+      "title": "Опубликованные книги",
+      "subtitle": "Следите за своими релизами и продажами.",
+      "back": "Назад в профиль",
+      "loading": "Загрузка опубликованных книг...",
+      "retry": "Повторить",
+      "empty": "Вы ещё не опубликовали книги.",
+      "language": "Язык: {{value}}",
+      "languageUnknown": "Неизвестно",
+      "publishedAt": "Опубликовано {{value}}",
+      "price": "Цена: {{value}} {{currency}}",
+      "viewDetails": "Показать детали",
+      "hideDetails": "Скрыть детали",
+      "noSales": "Продаж пока нет",
+      "saleBuyer": "Покупатель ID: {{id}}",
+      "salePayment": "ID платежа: {{id}}",
+      "salePurchasedAt": "Оплачено {{value}}",
+      "loadError": "Не удалось загрузить опубликованные книги."
     },
     "myBooks": {
       "title": "Моя TON-полка",

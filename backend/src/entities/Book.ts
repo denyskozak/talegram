@@ -153,6 +153,12 @@ export class Book {
     @Column({name: 'published_at', type: 'datetime', nullable: true})
     publishedAt!: Date | null;
 
+    @Column({name: 'author_telegram_user_id', type: 'text', nullable: true})
+    authorTelegramUserId!: string | null;
+
+    @Column({name: 'language', type: 'text', nullable: true})
+    language!: string | null;
+
     @ManyToOne(() => BookProposal, (proposal: BookProposal) => proposal.books, {
         onDelete: 'SET NULL',
     })

@@ -74,7 +74,7 @@ const loginInput = z.object({
 
 const createAuthorInput = z.object({
   name: z.string().trim().min(1).max(128),
-  telegramUsername: z.string().trim().min(3).max(32),
+  telegramUserId: z.string().trim().min(1).max(64),
 });
 
 const getBookInput = z.object({
@@ -130,7 +130,7 @@ export const adminRouter = createRouter({
     return authors.map((author) => ({
       id: author.id,
       name: author.name,
-      telegramUsername: author.telegramUsername,
+      telegramUserId: author.telegramUserId,
     }));
   }),
   createAuthor: adminProcedure.input(createAuthorInput).mutation(async ({ input }) => {
@@ -140,14 +140,14 @@ export const adminRouter = createRouter({
     try {
       const author = repository.create({
         name: input.name,
-        telegramUsername: input.telegramUsername,
+        telegramUserId: input.telegramUserId,
       });
       const saved = await repository.save(author);
 
       return {
         id: saved.id,
         name: saved.name,
-        telegramUsername: saved.telegramUsername,
+        telegramUserId: saved.telegramUserId,
       } as const;
     } catch (error) {
       console.error('Failed to create author', error);
