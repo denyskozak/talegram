@@ -134,6 +134,12 @@ export class BookProposal {
   @Column({ name: 'submitted_by_telegram_username', type: 'text', nullable: true })
   submittedByTelegramUsername!: string | null;
 
+  @Column({ name: 'submitted_by_telegram_user_id', type: 'text', nullable: true })
+  submittedByTelegramUserId!: string | null;
+
+  @Column({ name: 'language', type: 'text', nullable: true })
+  language!: string | null;
+
   @Column({ type: 'text', default: ProposalStatus.PENDING })
   status!: ProposalStatus;
 

@@ -41,6 +41,8 @@ export type Book = {
   audiobookFileEncryptionIv?: string | null;
   audiobookFileEncryptionTag?: string | null;
   globalCategory?: string | null;
+  authorTelegramUserId?: string | null;
+  language?: string | null;
 };
 
 export type Review = {

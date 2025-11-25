@@ -225,10 +225,32 @@
   "account": {
     "title": "My account",
     "subtitle": "Manage your TON collectibles and share new stories.",
+    "telegramUserId": "Telegram ID: {{id}}",
+    "telegramUserIdUnavailable": "Telegram ID is not available",
+    "publishedBooks": "Published books",
     "menu": {
       "myBooks": "My books",
       "publish": "Publish a book",
       "voting": "Voting"
+    },
+    "published": {
+      "title": "Published books",
+      "subtitle": "Track your catalog and sales performance.",
+      "back": "Back to account",
+      "loading": "Loading published books...",
+      "retry": "Try again",
+      "empty": "You haven't published any books yet.",
+      "language": "Language: {{value}}",
+      "languageUnknown": "Unknown",
+      "publishedAt": "Published at {{value}}",
+      "price": "Price: {{value}} {{currency}}",
+      "viewDetails": "View details",
+      "hideDetails": "Hide details",
+      "noSales": "No sales yet",
+      "saleBuyer": "Buyer ID: {{id}}",
+      "salePayment": "Payment ID: {{id}}",
+      "salePurchasedAt": "Purchased at {{value}}",
+      "loadError": "We couldn't load your published books."
     },
     "myBooks": {
       "title": "My TON bookshelf",

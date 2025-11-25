@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { normalizeTelegramUsername } from '../utils/telegram.js';
+import { normalizeTelegramUserId } from '../utils/telegram.js';
 
 @Entity({ name: 'authors' })
 export class Author {
@@ -19,8 +19,8 @@ export class Author {
   @Column({ type: 'text' })
   name!: string;
 
-  @Column({ name: 'telegram_username', type: 'text', unique: true })
-  telegramUsername!: string;
+  @Column({ name: 'telegram_user_id', type: 'text', unique: true })
+  telegramUserId!: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt!: Date;
@@ -37,13 +37,13 @@ export class Author {
 
   @BeforeInsert()
   @BeforeUpdate()
-  normalizeUsername(): void {
-    const normalized = normalizeTelegramUsername(this.telegramUsername);
+  normalizeUserId(): void {
+    const normalized = normalizeTelegramUserId(this.telegramUserId);
     if (!normalized) {
-      throw new Error('Invalid telegram username for author');
+      throw new Error('Invalid telegram user id for author');
     }
 
-    this.telegramUsername = normalized;
+    this.telegramUserId = normalized;
   }
 
   @BeforeInsert()
