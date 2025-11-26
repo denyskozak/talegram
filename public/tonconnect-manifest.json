@@ -1,7 +1,7 @@
 {
-  "url": "https://example.com",
-  "name": "Open Reader",
-  "iconUrl": "https://placehold.co/120x120/171717/FFFFFF?text=OR",
-  "termsOfUseUrl": "https://example.com/terms",
-  "privacyPolicyUrl": "https://example.com/privacy"
+  "url": "https://talegramfrontend.gastroand.me",
+  "name": "Talegram",
+  "iconUrl": "https://talegramfrontend.gastroand.me/logo-v-1.webp",
+  "termsOfUseUrl": "https://talegramfrontend.gastroand.me/terms",
+  "privacyPolicyUrl": "https://talegramfrontend.gastroand.me/privacy"
 }

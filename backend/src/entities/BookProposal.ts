@@ -41,7 +41,7 @@ export class BookProposal {
   @Column({ type: 'integer', default: 0 })
   price!: number;
 
-  @Column({ type: 'text', default: 'stars' })
+  @Column({ type: 'text', default: 'USDT' })
   currency!: string;
 
   @Column({

@@ -53,17 +53,17 @@ export const authorsRouter = createRouter({
       map.set(purchase.bookId, list);
       return map;
     }, new Map<string, Purchase[]>());
-
+      console.log("books: ", books);
     return books.map((book) => ({
       id: book.id,
       title: book.title,
       price: book.price,
       currency: book.currency,
-      publishedAt: book.publishedAt ? book.publishedAt.toISOString() : null,
+      publishedAt: book.publishedAt ? new Date(book.publishedAt).toISOString() : null,
       language: book.language ?? null,
       sales: (purchasesByBook.get(book.id) ?? []).map((purchase) => ({
         paymentId: purchase.paymentId,
-        purchasedAt: purchase.purchasedAt.toISOString(),
+        purchasedAt: new Date(purchase.purchasedAt).toISOString(),
         telegramUserId: purchase.telegramUserId,
         walrusBlobId: purchase.walrusBlobId ?? null,
         walrusFileId: purchase.walrusFileId ?? null,

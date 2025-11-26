@@ -10,7 +10,7 @@ import { writeWalrusFiles } from '../../utils/walrus-files.js';
 import { normalizeTelegramUserId } from '../../utils/telegram.js';
 import { Author } from '../../entities/Author.js';
 
-export const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024;
+export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const WALRUS_STORAGE_EPOCHS = 3;
 const WALRUS_EPOCH_DURATION_SECONDS = 7 * 24 * 60 * 60;

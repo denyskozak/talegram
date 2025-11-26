@@ -33,6 +33,7 @@ import {BookPageSkeleton} from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Button} from "@/shared/ui/Button";
+import {TonConnectButton} from "@tonconnect/ui-react";
 
 export default function BookPage(): JSX.Element {
     const {id} = useParams<{ id: ID }>();
@@ -588,7 +589,7 @@ export default function BookPage(): JSX.Element {
                                     <BookRating value={book.rating.average} votes={book.rating.votes}/>
                                 </div>
                                 <Chip mode="outline" style={{fontWeight: 600}}>
-                                    {book.price} {book.currency === 'stars' ? '⭐' : ''}
+                                    {book.price} {book.currency}
                                 </Chip>
                             </div>
                             <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
@@ -599,6 +600,8 @@ export default function BookPage(): JSX.Element {
                     {hasFullAccess ? (
                         <>
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
+                                <TonConnectButton />
+
                                 <Button size="l" onClick={handleRead}>
                                     {t("book.actions.read")}
                                 </Button>
@@ -627,6 +630,7 @@ export default function BookPage(): JSX.Element {
                                 </Chip>
                             ) : null}
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
+
                                 <Button
                                     size="l"
                                     loading={isActionLoading && activeAction === "buy"}

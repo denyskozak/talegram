@@ -141,7 +141,7 @@
       "linkCopied": "Ссылка скопирована",
       "linkFailed": "Не удалось скопировать ссылку",
       "accessGranted": "Доступ открыт. Ссылка на книгу готова.",
-      "invoiceFailed": "Не удалось создать счёт TON Stars",
+      "invoiceFailed": "Не удалось создать счёт",
       "confirmFailed": "Не удалось подтвердить оплату",
       "paymentCancelled": "Оплата отменена",
       "paymentFailed": "Оплата не прошла",
@@ -162,7 +162,7 @@
       "fileLabel": "Walrus file ID",
       "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Покупка оформлена",
-      "invoiceDescription": "Откройте счёт TON Stars в Telegram, завершите оплату и вернитесь сюда, чтобы открыть книгу.",
+      "invoiceDescription": "Откройте счёт в Telegram, завершите оплату и вернитесь сюда, чтобы открыть книгу.",
       "openInvoice": "Открыть счёт",
       "invoiceIdLabel": "Номер платежа",
       "confirmHelp": "Уже оплатили? Нажмите кнопку ниже, чтобы обновить статус."
@@ -312,9 +312,9 @@
           "hint": "Читатели получат доступ бесплатно."
         },
         "price": {
-          "label": "Цена в Stars ⭐",
+          "label": "Цена в USDT",
           "placeholder": "Укажите цену",
-          "hint": "Это сумма, которую будут платить читатели в Stars ⭐"
+          "hint": "Это сумма, которую будут платить читатели в USDT"
         },
         "hashtags": {
           "label": "Хештеги",
@@ -408,8 +408,8 @@
       "toastMissingCover": "Добавьте изображение обложки.",
       "toastMissingGlobalCategory": "Выберите глобальную категорию.",
       "toastMissingCategory": "Выберите категорию для книги.",
-      "toastMissingPrice": "Укажите цену в Stars.",
-      "toastInvalidPrice": "Введите неотрицательное число Stars.",
+      "toastMissingPrice": "Укажите цену в USDT",
+      "toastInvalidPrice": "Введите неотрицательное число.",
       "toastRestricted": "Публиковать книги могут только авторы из списка.",
       "toastHashtagInvalid": "Введите хештег перед добавлением.",
       "toastHashtagLimit": "Можно добавить не более {{count}} хештегов.",

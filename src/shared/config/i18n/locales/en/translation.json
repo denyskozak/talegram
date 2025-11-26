@@ -146,7 +146,7 @@
       "linkCopied": "Link copied",
       "linkFailed": "Could not copy the link",
       "accessGranted": "Access granted. Your download link is ready.",
-      "invoiceFailed": "Could not create a TON Stars invoice",
+      "invoiceFailed": "Could not create a invoice",
       "confirmFailed": "Could not confirm the payment",
       "paymentCancelled": "Payment was cancelled",
       "paymentFailed": "Payment failed",
@@ -167,7 +167,7 @@
       "fileLabel": "Walrus file ID",
       "blobLabel": "Walrus blob ID",
       "purchasedAtLabel": "Purchased",
-      "invoiceDescription": "Open the TON Stars invoice in Telegram, complete the payment and return here to unlock the book.",
+      "invoiceDescription": "Open invoice in Telegram, complete the payment and return here to unlock the book.",
       "openInvoice": "Open invoice",
       "invoiceIdLabel": "Payment ID",
       "confirmHelp": "Already paid? Tap the button below to refresh the status."
@@ -310,9 +310,9 @@
           "hint": "Readers will access it at no cost."
         },
         "price": {
-          "label": "Price in Stars ⭐",
+          "label": "Price in USDT",
           "placeholder": "Enter the price",
-          "hint": "This is the amount readers will pay in Stars ⭐"
+          "hint": "This is the amount readers will pay in USDT"
         },
         "hashtags": {
           "label": "Hashtags",
@@ -406,8 +406,8 @@
       "toastMissingCover": "Add a cover image.",
       "toastMissingGlobalCategory": "Choose the global category.",
       "toastMissingCategory": "Choose a category for the book.",
-      "toastMissingPrice": "Set the price in Stars.",
-      "toastInvalidPrice": "Enter a non-negative number of Stars.",
+      "toastMissingPrice": "Set the price in USDT.",
+      "toastInvalidPrice": "Enter a non-negative number of USDT.",
       "toastRestricted": "Only approved authors can submit book proposals.",
       "toastHashtagInvalid": "Enter a hashtag before adding it.",
       "toastHashtagLimit": "You can add up to {{count}} hashtags.",

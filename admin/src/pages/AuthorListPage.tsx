@@ -5,7 +5,7 @@ import './AuthorListPage.css';
 type Author = {
   id: string;
   name: string;
-  telegramUsername: string;
+    telegramUserId: string;
 };
 
 type RequestState = 'idle' | 'loading' | 'error';
@@ -18,7 +18,7 @@ export function AuthorListPage(): JSX.Element {
   const [state, setState] = useState<RequestState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
+  const [userId, setUserId] = useState('');
   const [formState, setFormState] = useState<FormState>('idle');
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -62,9 +62,9 @@ export function AuthorListPage(): JSX.Element {
     setFormError(null);
 
     const trimmedName = name.trim();
-    const trimmedUsername = username.trim();
+    const trimmedUserId = userId.trim();
 
-    if (!trimmedName || !trimmedUsername) {
+    if (!trimmedName || !trimmedUserId) {
       setFormError('Both name and Telegram username are required.');
       return;
     }
@@ -73,11 +73,11 @@ export function AuthorListPage(): JSX.Element {
     try {
       const created = await client.admin.createAuthor.mutate({
         name: trimmedName,
-        telegramUsername: trimmedUsername,
+          telegramUserId: trimmedUserId,
       });
       setAuthors((prev) => [...prev, created]);
       setName('');
-      setUsername('');
+        setUserId('');
     } catch (err) {
       console.error('Failed to create author', err);
       setFormError('Failed to create author. Please verify the data and try again.');
@@ -91,7 +91,7 @@ export function AuthorListPage(): JSX.Element {
       <header className="author-list__header">
         <div>
           <h1>Authors</h1>
-          <p>Manage author directory and Telegram usernames.</p>
+          <p>Manage author directory and Telegram user ids.</p>
         </div>
       </header>
 
@@ -109,12 +109,12 @@ export function AuthorListPage(): JSX.Element {
             />
           </label>
           <label className="author-list__field">
-            <span>Telegram username</span>
+            <span>Telegram userId</span>
             <input
               type="text"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="@janedoe"
+              value={userId}
+              onChange={(event) => setUserId(event.target.value)}
+              placeholder="5481897"
               required
             />
           </label>
@@ -150,7 +150,7 @@ export function AuthorListPage(): JSX.Element {
                       <div className="author-list__meta">ID: {author.id}</div>
                     </td>
                     <td>
-                      <span className="author-list__username">{author.telegramUsername}</span>
+                      <span className="author-list__username">{author.telegramUserId}</span>
                     </td>
                   </tr>
                 ))}

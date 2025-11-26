@@ -149,6 +149,7 @@ export const proposalsRouter = createRouter({
   }),
   voteForProposal: authorizedProcedure.input(voteOnProposalInput).mutation(async ({ input, ctx }) => {
     const telegramUserId = ctx.telegramAuth.userId;
+      console.log("ctx.telegramAuth: ", ctx.telegramAuth);
     if (!telegramUserId) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Voting is not available for this Telegram user' });
     }

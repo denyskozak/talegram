@@ -19,7 +19,7 @@ function normalizeTelegramUsername(value: string | null | undefined): string | n
   return prefixed.toLowerCase();
 }
 
-export function normalizeTelegramUserId(value: string | null | undefined): string | null {
+function normalizeTelegramUserId(value: string | null | undefined): string | null {
   if (typeof value !== 'string') {
     return null;
   }
@@ -50,18 +50,6 @@ export function isAllowedTelegramVoter(telegramUsername: string): boolean {
     return false;
   }
   return allowedTelegramUsernames.has(normalized);
-}
-
-export function assertAllowedTelegramVoter(telegramUsername: string): string {
-  const normalized = normalizeTelegramUsername(telegramUsername);
-  if (!normalized || !allowedTelegramUsernames.has(normalized)) {
-    throw new TRPCError({
-      code: 'FORBIDDEN',
-      message: 'Voting is not available for this Telegram user',
-    });
-  }
-
-  return normalized;
 }
 
 export { normalizeTelegramUsername, normalizeTelegramUserId };

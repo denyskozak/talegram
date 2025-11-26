@@ -135,7 +135,7 @@ export class Book {
     @Column({name: 'price', type: 'integer', default: 0})
     price!: number;
 
-    @Column({type: 'text', default: 'stars'})
+    @Column({type: 'text', default: 'USDT'})
     currency!: string;
 
     @Column({name: 'rating_average', type: 'real', default: 0})
