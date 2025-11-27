@@ -33,7 +33,7 @@ import {BookPageSkeleton} from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Button} from "@/shared/ui/Button";
-import {TonConnectButton} from "@tonconnect/ui-react";
+import {TonConnectButton, useTonConnectModal, useTonConnectUI} from "@tonconnect/ui-react";
 
 export default function BookPage(): JSX.Element {
     const {id} = useParams<{ id: ID }>();
@@ -42,6 +42,8 @@ export default function BookPage(): JSX.Element {
     const {showToast} = useToast();
     const {launchParams} = useTMA();
     const theme = useTheme();
+    const [tonconnect] = useTonConnectUI();
+    const { open,  } = useTonConnectModal();
 
     const {t} = useTranslation();
     const reviewsRef = useRef<HTMLDivElement | null>(null);
@@ -49,6 +51,7 @@ export default function BookPage(): JSX.Element {
     const [book, setBook] = useState<Book | null>(null);
     const [similar, setSimilar] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [wantToBuy, setWantToBuy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [isPurchased, setIsPurchased] = useState(false);
@@ -280,6 +283,15 @@ export default function BookPage(): JSX.Element {
             setIsDownloading(false);
         }
     }, [book, hasFullAccess, showToast, t, telegramUserId]);
+    console.log("tonconnect.wallet: ", tonconnect.wallet);
+
+    useEffect(() => {
+        if (tonconnect.connected && wantToBuy) {
+
+            setWantToBuy(false);
+            // buy
+        }
+    }, [tonconnect.connected, wantToBuy]);
 
     const handleStartPurchase = useCallback(
         async (action: "buy" | "subscribe") => {
@@ -289,6 +301,12 @@ export default function BookPage(): JSX.Element {
 
             setActiveAction(action);
             setIsActionLoading(true);
+            console.log("tonconnect: ", tonconnect);
+            if (!tonconnect.connected) {
+                setWantToBuy(true);
+                open();
+                return;
+            }
 
             try {
                 const invoiceResponse = await paymentsApi.createInvoice({bookId: book.id});
@@ -600,7 +618,7 @@ export default function BookPage(): JSX.Element {
                     {hasFullAccess ? (
                         <>
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
-                                <TonConnectButton />
+                                {/*<TonConnectButton />*/}
 
                                 <Button size="l" onClick={handleRead}>
                                     {t("book.actions.read")}
@@ -630,7 +648,7 @@ export default function BookPage(): JSX.Element {
                                 </Chip>
                             ) : null}
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
-
+                              {/*<TonConnectButton />*/}
                                 <Button
                                     size="l"
                                     loading={isActionLoading && activeAction === "buy"}
@@ -639,15 +657,15 @@ export default function BookPage(): JSX.Element {
                                 >
                                     {t("book.actions.buy")}
                                 </Button>
-                                <Button
-                                    size="l"
-                                    mode="outline"
-                                    loading={isActionLoading && activeAction === "subscribe"}
-                                    disabled={isActionLoading}
-                                    onClick={() => handleStartPurchase("subscribe")}
-                                >
-                                    {t("book.actions.subscribe")}
-                                </Button>
+                                {/*<Button*/}
+                                {/*    size="l"*/}
+                                {/*    mode="outline"*/}
+                                {/*    loading={isActionLoading && activeAction === "subscribe"}*/}
+                                {/*    disabled={isActionLoading}*/}
+                                {/*    onClick={() => handleStartPurchase("subscribe")}*/}
+                                {/*>*/}
+                                {/*    {t("book.actions.subscribe")}*/}
+                                {/*</Button>*/}
                                 <Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>
                                     {t("book.actions.preview")}
                                 </Button>

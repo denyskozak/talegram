@@ -91,6 +91,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     const url = safeParseUrl(req.url, req.headers.host);
+
     const previewMatch =
         req.method === 'GET'
             ? url?.pathname.match(/^\/preview\/(books|propsals)\/([^/]+)\/(book|audiobook)\/preview\.(?:epub|mp3)$/)

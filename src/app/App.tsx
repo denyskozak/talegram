@@ -165,6 +165,7 @@ void init();
 export default function App(): JSX.Element {
     const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
 
+    console.log("manifestUrl: ", manifestUrl);
     return (
         <BrowserRouter>
             <TonConnectUIProvider manifestUrl={manifestUrl} uiPreferences={{theme: "SYSTEM"}}>

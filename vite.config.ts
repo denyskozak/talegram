@@ -33,6 +33,7 @@ export default defineConfig({
         // Exposes your dev server and makes it accessible for the devices in the same network.
         host: true,
         allowedHosts: true,
+        cors: true,
     },
     preview: {
         port: 5153
