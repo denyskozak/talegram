@@ -1,24 +1,24 @@
-import { randomUUID } from 'node:crypto';
+import {randomUUID} from 'node:crypto';
 
 export type StarsCurrency = 'XTR';
 
 type InvoiceStatus = 'pending' | 'paid' | 'failed';
 
 type CreateStarsInvoiceParams = {
-  bookId: string;
-  title: string;
-  amountStars: number;
+    bookId: string;
+    title: string;
+    amountStars: number;
 };
 
 type StarsInvoiceRecord = {
-  paymentId: string;
-  bookId: string;
-  title: string;
-  amountStars: number;
-  currency: StarsCurrency;
-  status: InvoiceStatus;
-  invoiceLink: string;
-  createdAt: string;
+    paymentId: string;
+    bookId: string;
+    title: string;
+    amountStars: number;
+    currency: StarsCurrency;
+    status: InvoiceStatus;
+    invoiceLink: string;
+    createdAt: string;
 };
 
 type StarsInvoice = Pick<StarsInvoiceRecord, 'paymentId' | 'invoiceLink' | 'amountStars' | 'currency'>;
@@ -30,89 +30,82 @@ const FALLBACK_INVOICE_BASE_URL = 'https://t.me/stars-payments-demo/app/invoice'
 
 const invoices = new Map<string, StarsInvoiceRecord>();
 
+const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
+
+if (!botToken) throw new Error('No bot token provided');
+
 export async function createStarsInvoice(params: CreateStarsInvoiceParams): Promise<StarsInvoice> {
-  const paymentId = randomUUID();
+    const paymentId = randomUUID();
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
-  const providerToken = process.env.PAYMENT_PROVIDER_TOKEN;
 
-  let invoiceLink: string | null = null;
+    let invoiceLink: string | null = null;
 
-  if (!botToken || !providerToken) {
-    invoiceLink = `${FALLBACK_INVOICE_BASE_URL}/${params.bookId}/${paymentId}`;
-  } else {
+
     const priceInStars = Math.max(1, params.amountStars);
     const priceInMinUnits = priceInStars * 100;
 
     const apiUrl = `${TELEGRAM_API_BASE}${botToken}/createInvoiceLink`;
     const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: params.title,
-        description: `Purchase access to ${params.title}`,
-        payload: JSON.stringify({ paymentId, bookId: params.bookId }),
-        provider_token: providerToken,
-        currency: 'XTR',
-        prices: [{ label: params.title, amount: priceInMinUnits }],
-      }),
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            title: params.title,
+            description: `Purchase access to ${params.title}`,
+            payload: JSON.stringify({paymentId, bookId: params.bookId}),
+            provider_token: '',
+            currency: 'XTR',
+            prices: [{label: params.title, amount: priceInMinUnits}],
+        }),
     });
 
-    const data: unknown = await response.json();
-    invoiceLink =
-      typeof data === 'object' && data !== null && 'ok' in data && (data as { ok: boolean }).ok &&
-      typeof (data as { result?: unknown }).result === 'string'
-        ? ((data as { result: string }).result as string)
-        : null;
-  }
+    if (!response.ok) {
+        throw new Error('Fail to create invoice');
+    }
+    const invoiceData = await response.json() as { result: string};
 
-  if (!invoiceLink) {
-    throw new Error('Failed to create Telegram invoice link');
-  }
+    invoices.set(paymentId, {
+        paymentId,
+        bookId: params.bookId,
+        title: params.title,
+        amountStars: params.amountStars,
+        currency: 'XTR',
+        status: 'pending',
+        invoiceLink: invoiceData.result,
+        createdAt: new Date().toISOString(),
+    });
 
-  invoices.set(paymentId, {
-    paymentId,
-    bookId: params.bookId,
-    title: params.title,
-    amountStars: params.amountStars,
-    currency: 'XTR',
-    status: 'pending',
-    invoiceLink,
-    createdAt: new Date().toISOString(),
-  });
-
-  return {
-    paymentId,
-    invoiceLink,
-    amountStars: params.amountStars,
-    currency: 'XTR',
-  };
+    return {
+        paymentId,
+        invoiceLink: invoiceData.result,
+        amountStars: params.amountStars,
+        currency: 'XTR',
+    };
 }
 
 export async function fetchStarsInvoiceStatus(paymentId: string): Promise<StarsInvoiceStatus> {
-  const invoice = invoices.get(paymentId);
-  if (!invoice) {
-    throw new Error('Invoice not found');
-  }
+    const invoice = invoices.get(paymentId);
+    if (!invoice) {
+        throw new Error('Invoice not found');
+    }
 
-  if (invoice.status === 'pending') {
-    invoice.status = 'paid';
-    invoices.set(paymentId, invoice);
-  }
+    if (invoice.status === 'pending') {
+        invoice.status = 'paid';
+        invoices.set(paymentId, invoice);
+    }
 
-  return {
-    paymentId: invoice.paymentId,
-    status: invoice.status,
-    amountStars: invoice.amountStars,
-    currency: invoice.currency,
-  };
+    return {
+        paymentId: invoice.paymentId,
+        status: invoice.status,
+        amountStars: invoice.amountStars,
+        currency: invoice.currency,
+    };
 }
 
 export function markInvoiceAsFailed(paymentId: string): void {
-  const invoice = invoices.get(paymentId);
-  if (!invoice) {
-    return;
-  }
+    const invoice = invoices.get(paymentId);
+    if (!invoice) {
+        return;
+    }
 
-  invoices.set(paymentId, { ...invoice, status: 'failed' });
+    invoices.set(paymentId, {...invoice, status: 'failed'});
 }

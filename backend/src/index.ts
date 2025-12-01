@@ -32,13 +32,7 @@ const trpcHandler = createHTTPHandler({
 
 // Разрешённые источники. Добавь сюда свои фронтовые домены при необходимости.
 const ALLOWED_ORIGINS = new Set<string>([
-    'https://192.168.1.80:5173',
-    'https://192.168.1.80:5174',
-    'http://localhost:5174',
-    'https://bridgette-nonfertile-nonimmanently.ngrok-free.dev',
-    'https://talegramfrontend.gastroand.me',
-    // если фронт иногда открыт по http в локалке, добавь:
-    // 'http://192.168.1.80:5173',
+    'https://172.20.10.6:5173',
 ]);
 
 const ALLOWED_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
@@ -91,6 +85,15 @@ const server = http.createServer(async (req, res) => {
     }
 
     const url = safeParseUrl(req.url, req.headers.host);
+
+    const webhookMatch =
+        req.method === 'GET'
+            ? url?.pathname.match(/^\/telegram\/web-hook$/)
+            : null;
+
+    if (webhookMatch) {
+      
+    }
 
     const previewMatch =
         req.method === 'GET'

@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 
-import { Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
+import {Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
 
 import {useTranslation} from "react-i18next";
 
@@ -34,6 +34,7 @@ import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNot
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Button} from "@/shared/ui/Button";
 import {TonConnectButton, useTonConnectModal, useTonConnectUI} from "@tonconnect/ui-react";
+import {invoice as invoiceSDK} from '@tma.js/sdk';
 
 export default function BookPage(): JSX.Element {
     const {id} = useParams<{ id: ID }>();
@@ -43,7 +44,7 @@ export default function BookPage(): JSX.Element {
     const {launchParams} = useTMA();
     const theme = useTheme();
     const [tonconnect] = useTonConnectUI();
-    const { open,  } = useTonConnectModal();
+    const {open,} = useTonConnectModal();
 
     const {t} = useTranslation();
     const reviewsRef = useRef<HTMLDivElement | null>(null);
@@ -301,18 +302,14 @@ export default function BookPage(): JSX.Element {
 
             setActiveAction(action);
             setIsActionLoading(true);
-            console.log("tonconnect: ", tonconnect);
-            if (!tonconnect.connected) {
-                setWantToBuy(true);
-                open();
-                return;
-            }
 
             try {
                 const invoiceResponse = await paymentsApi.createInvoice({bookId: book.id});
                 setInvoice(invoiceResponse);
                 invoiceStatusRef.current = null;
-                setPurchaseModalOpen(true);
+                if (invoiceSDK.isSupported()) {
+                    await invoiceSDK.openUrl(invoiceResponse.invoiceLink);
+                }
             } catch (err) {
                 console.error(err);
                 setActiveAction(null);
@@ -550,7 +547,8 @@ export default function BookPage(): JSX.Element {
                                 <Title level="1" weight="2">
                                     {book.title}
                                 </Title>
-                                <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>{book.authors.join(", ")}</div>
+                                <div
+                                    style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>{book.authors.join(", ")}</div>
                             </div>
                             <div style={{display: "flex", gap: 4}}>
                                 <Button aria-label={t("book.share")} mode="plain" onClick={handleShare}>
@@ -648,7 +646,7 @@ export default function BookPage(): JSX.Element {
                                 </Chip>
                             ) : null}
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
-                              {/*<TonConnectButton />*/}
+                                {/*<TonConnectButton />*/}
                                 <Button
                                     size="l"
                                     loading={isActionLoading && activeAction === "buy"}
@@ -670,7 +668,8 @@ export default function BookPage(): JSX.Element {
                                     {t("book.actions.preview")}
                                 </Button>
                                 {hasAudiobook ? (
-                                    <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleListenPreview}>
+                                    <Button size="l" mode="outline" disabled={isActionLoading}
+                                            onClick={handleListenPreview}>
                                         {t("book.actions.previewAudio")}
                                     </Button>
                                 ) : null}
@@ -751,7 +750,11 @@ export default function BookPage(): JSX.Element {
                             <Button mode="outline" onClick={handleOpenInvoice}>
                                 {t("book.purchase.openInvoice")}
                             </Button>
-                            <p style={{margin: 0, lineHeight: 1.5, color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
+                            <p style={{
+                                margin: 0,
+                                lineHeight: 1.5,
+                                color: "var(--tg-theme-subtitle-text-color, #7f7f81)"
+                            }}>
                                 {t("book.purchase.confirmHelp")}
                             </p>
                         </>
