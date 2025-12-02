@@ -3,7 +3,6 @@ import {useEffect, useState, type TransitionEvent} from "react";
 import {useLaunchParams} from '@tma.js/sdk-react';
 
 import {AppRoot} from "@telegram-apps/telegram-ui";
-import {TonConnectUIProvider} from "@tonconnect/ui-react";
 import { init } from '@tma.js/sdk';
 
 import {TMAProvider, useTMA} from "./providers/TMAProvider";
@@ -163,16 +162,12 @@ function AppContent(): JSX.Element {
 void init();
 
 export default function App(): JSX.Element {
-    const manifestUrl = `${window.location.origin}/tonconnect-manifest.json`;
 
-    console.log("manifestUrl: ", manifestUrl);
     return (
         <BrowserRouter>
-            <TonConnectUIProvider manifestUrl={manifestUrl} uiPreferences={{theme: "SYSTEM"}}>
                 <TMAProvider>
                             <AppContent/>
                 </TMAProvider>
-            </TonConnectUIProvider>
         </BrowserRouter>
     );
 }

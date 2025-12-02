@@ -3,7 +3,6 @@ import {useNavigate} from "react-router-dom";
 
 import {Banner, Card, SegmentedControl, Tappable, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
-import {TonConnectButton} from "@tonconnect/ui-react";
 
 import {CategoryTile} from "@/entities/category/components/CategoryTile";
 import type {Category} from "@/entities/category/types";
@@ -142,23 +141,7 @@ export default function HomeCategories(): JSX.Element {
                 subheader={t("homeCategories.alphaBanner.description")}
                 style={{marginBottom: 16}}
             />
-            <Title level="1" weight="2">
-                {t("homeCategories.title")}
-            </Title>
-            <div style={{display: "flex", flexDirection: "column", gap: 8, marginBottom: 16}}>
-                <SegmentedControl
-                >
-                    {GLOBAL_CATEGORIES.map((category) => (
-                        <SegmentedControl.Item key={category}
-                                               onClick={() => setSelectedGlobalCategory(category)}
-                                               value={category} selected={selectedGlobalCategory === category}>
-                            {t(`globalCategories.${category}`, {
-                                defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
-                            })}
-                        </SegmentedControl.Item>
-                    ))}
-                </SegmentedControl>
-            </div>
+
             <Card style={{marginBottom: 16, width: '100%'}}>
                 <Tappable
                     onClick={() => navigate("/search")}
@@ -179,16 +162,13 @@ export default function HomeCategories(): JSX.Element {
                         <Title level="2" weight="2">
                             {t("homeCategories.popularBooksTitle")}
                         </Title>
-                        <TonConnectButton />
                     </div>
                     {topError && <ErrorBanner message={topError} onRetry={handleTopRetry}/>}                    
                     <div style={{overflowX: "auto", paddingBottom: 8}}>
                         <div
                             style={{
                                 display: "grid",
-                                gridAutoFlow: "column",
-                                gridTemplateRows: "repeat(2, minmax(0, 1fr))",
-                                gridAutoColumns: "minmax(0, calc(50% - 8px))",
+                                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
                                 columnGap: 16,
                                 rowGap: 16,
                                 paddingRight: 4,
@@ -199,6 +179,7 @@ export default function HomeCategories(): JSX.Element {
                             {topBooks.map((book) => (
                                 <div key={book.id} style={{minWidth: 0, width: "100%"}}>
                                     <BookCard
+                                        showTags={false}
                                         book={book}
                                         onClick={() => navigate(`/book/${book.id}`)}
                                     />
@@ -247,6 +228,23 @@ export default function HomeCategories(): JSX.Element {
                     )}
                 </section>
             )}
+            <Title level="1" weight="2">
+                {t("homeCategories.title")}
+            </Title>
+            <div style={{display: "flex", flexDirection: "column", gap: 8, marginBottom: 16}}>
+                <SegmentedControl
+                >
+                    {GLOBAL_CATEGORIES.map((category) => (
+                        <SegmentedControl.Item key={category}
+                                               onClick={() => setSelectedGlobalCategory(category)}
+                                               value={category} selected={selectedGlobalCategory === category}>
+                            {t(`globalCategories.${category}`, {
+                                defaultValue: `${category.charAt(0).toUpperCase()}${category.slice(1)}`,
+                            })}
+                        </SegmentedControl.Item>
+                    ))}
+                </SegmentedControl>
+            </div>
             {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
                                    onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
             {selectedGlobalCategory === 'article' || selectedGlobalCategory === 'comics'

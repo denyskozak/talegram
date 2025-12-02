@@ -23,7 +23,7 @@ export async function handleTelegramWebhookRequest(
 ): Promise<void> {
     try {
         const update = await parseJsonRequestBody<TelegramWebhookUpdate>(req);
-
+        console.log("update: ", update);
         if (update?.pre_checkout_query?.id) {
             await approvePreCheckoutQuery(update.pre_checkout_query.id);
             respondWithOk(res);

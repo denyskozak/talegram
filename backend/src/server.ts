@@ -11,10 +11,8 @@ config();
 
 const port = Number(process.env.PORT) || 3000;
 
-function resolveWebhookUrl(): string | null {
-    const nextPublicAppUrl = process.env.NEXT_PUBLIC_APP_URL;
-    return process.env.TELEGRAM_WEBHOOK_URL
-        ?? (nextPublicAppUrl ? `${nextPublicAppUrl.replace(/\/$/, '')}/telegram/web-hook` : null);
+function resolveWebhookUrl(): string | undefined {
+    return process.env.TELEGRAM_WEBHOOK_URL;
 }
 
 export async function startServer(): Promise<http.Server> {

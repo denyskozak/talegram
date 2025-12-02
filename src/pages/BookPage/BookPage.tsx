@@ -33,7 +33,6 @@ import {BookPageSkeleton} from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Button} from "@/shared/ui/Button";
-import {TonConnectButton, useTonConnectModal, useTonConnectUI} from "@tonconnect/ui-react";
 import {invoice as invoiceSDK} from '@tma.js/sdk';
 
 export default function BookPage(): JSX.Element {
@@ -43,8 +42,6 @@ export default function BookPage(): JSX.Element {
     const {showToast} = useToast();
     const {launchParams} = useTMA();
     const theme = useTheme();
-    const [tonconnect] = useTonConnectUI();
-    const {open,} = useTonConnectModal();
 
     const {t} = useTranslation();
     const reviewsRef = useRef<HTMLDivElement | null>(null);
@@ -52,7 +49,6 @@ export default function BookPage(): JSX.Element {
     const [book, setBook] = useState<Book | null>(null);
     const [similar, setSimilar] = useState<Book[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [wantToBuy, setWantToBuy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [isPurchased, setIsPurchased] = useState(false);
@@ -284,15 +280,6 @@ export default function BookPage(): JSX.Element {
             setIsDownloading(false);
         }
     }, [book, hasFullAccess, showToast, t, telegramUserId]);
-    console.log("tonconnect.wallet: ", tonconnect.wallet);
-
-    useEffect(() => {
-        if (tonconnect.connected && wantToBuy) {
-
-            setWantToBuy(false);
-            // buy
-        }
-    }, [tonconnect.connected, wantToBuy]);
 
     const handleStartPurchase = useCallback(
         async (action: "buy" | "subscribe") => {
@@ -616,7 +603,6 @@ export default function BookPage(): JSX.Element {
                     {hasFullAccess ? (
                         <>
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
-                                {/*<TonConnectButton />*/}
 
                                 <Button size="l" onClick={handleRead}>
                                     {t("book.actions.read")}
@@ -646,7 +632,6 @@ export default function BookPage(): JSX.Element {
                                 </Chip>
                             ) : null}
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
-                                {/*<TonConnectButton />*/}
                                 <Button
                                     size="l"
                                     loading={isActionLoading && activeAction === "buy"}

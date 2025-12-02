@@ -2,7 +2,6 @@ import {useEffect, useRef, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 
 import {Card, Input, Title} from "@telegram-apps/telegram-ui";
-import {TonConnectButton} from "@tonconnect/ui-react";
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
@@ -112,7 +111,6 @@ export default function SearchPage(): JSX.Element {
                 <Title level="1" weight="2">
                     {t("search.title")}
                 </Title>
-                <TonConnectButton/>
             </div>
             <Card style={{margin: "16px 0"}}>
                 <Input
