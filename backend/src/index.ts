@@ -18,7 +18,12 @@ import {
 } from './utils/walrus-files.js';
 import { parseTelegramAuth, resolveTelegramUserId } from './utils/auth.js';
 import { normalizeTelegramUserId } from './utils/telegram.js';
-import {handlePaymentWebHook} from "./services/telegram-payments";
+import {
+    approvePreCheckoutQuery,
+    configureTelegramWebhook,
+    recordSuccessfulPayment,
+    type StarsCurrency,
+} from './services/telegram-payments.js';
 
 config();
 
@@ -40,6 +45,20 @@ const ALLOWED_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
 // Базовый список заголовков, если браузер не прислал Access-Control-Request-Headers
 const DEFAULT_ALLOWED_HEADERS =
     'content-type,authorization,x-requested-with,x-test-env,trpc-batch-mode,trpc-batch-partial';
+
+const nextPublicAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+const webhookUrl = process.env.TELEGRAM_WEBHOOK_URL
+    ?? (nextPublicAppUrl ? `${nextPublicAppUrl.replace(/\/$/, '')}/telegram/web-hook` : null);
+
+if (webhookUrl) {
+    configureTelegramWebhook(webhookUrl)
+        .then(() => {
+            console.log('Telegram webhook configured for', webhookUrl);
+        })
+        .catch((error) => {
+            console.error('Failed to configure Telegram webhook', error);
+        });
+}
 
 function applyCors(req: http.IncomingMessage, res: http.ServerResponse) {
     const origin = (req.headers.origin as string) || '';
@@ -87,13 +106,10 @@ const server = http.createServer(async (req, res) => {
 
     const url = safeParseUrl(req.url, req.headers.host);
 
-    const webhookMatch =
-        req.method === 'GET'
-            ? url?.pathname.match(/^\/telegram\/web-hook$/)
-            : null;
-
+    const webhookMatch = req.method === 'POST' && url?.pathname === '/telegram/web-hook';
     if (webhookMatch) {
-       // Codex: continue webhook implementation here
+        await handleTelegramWebhookRequest(req, res);
+        return;
     }
 
     const previewMatch =
@@ -184,6 +200,54 @@ type ParsedFormFile = {
 };
 
 type ParsedFormFileMap = Record<string, ParsedFormFile>;
+
+type TelegramWebhookUpdate = {
+    pre_checkout_query?: { id: string };
+    message?: {
+        text?: string;
+        from?: { id: number };
+        successful_payment?: {
+            total_amount?: number;
+            currency: string;
+            invoice_payload?: string;
+            telegram_payment_charge_id: string;
+        };
+    };
+};
+
+async function handleTelegramWebhookRequest(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+): Promise<void> {
+    try {
+        const update = await parseJsonRequestBody<TelegramWebhookUpdate>(req);
+
+        if (update?.pre_checkout_query?.id) {
+            await approvePreCheckoutQuery(update.pre_checkout_query.id);
+            respondWithOk(res);
+            return;
+        }
+
+        const successfulPayment = update?.message?.successful_payment;
+        if (successfulPayment && update?.message?.from?.id) {
+            const payload = recordSuccessfulPayment({
+                telegramPaymentChargeId: successfulPayment.telegram_payment_charge_id,
+                userId: update.message.from.id,
+                invoicePayload: successfulPayment.invoice_payload,
+                totalAmount: successfulPayment.total_amount,
+                currency: successfulPayment.currency as StarsCurrency,
+            });
+
+            respondWithOk(res, payload?.paymentId);
+            return;
+        }
+
+        respondWithOk(res);
+    } catch (error) {
+        console.error('Failed to process Telegram webhook', error);
+        respondWithError(res, 500, 'Failed to process Telegram webhook');
+    }
+}
 
 async function handleCreateProposalRequest(
     req: http.IncomingMessage,
@@ -312,6 +376,31 @@ function respondWithError(res: http.ServerResponse, statusCode: number, message:
     res.statusCode = statusCode;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: message }));
+}
+
+function respondWithOk(res: http.ServerResponse, paymentId?: string): void {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(
+        JSON.stringify({
+            ok: true,
+            paymentId: paymentId ?? null,
+        }),
+    );
+}
+
+async function parseJsonRequestBody<T>(req: http.IncomingMessage): Promise<T> {
+    const body = await readRequestBody(req);
+    if (body.byteLength === 0) {
+        return {} as T;
+    }
+
+    try {
+        return JSON.parse(body.toString('utf-8')) as T;
+    } catch (error) {
+        console.error('Failed to parse JSON body', error);
+        throw new Error('Invalid JSON payload');
+    }
 }
 
 function parseHashtagsField(rawValue: string | undefined): string[] {
