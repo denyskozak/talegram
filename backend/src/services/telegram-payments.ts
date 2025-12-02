@@ -72,6 +72,10 @@ async function fetchTelegramApi<T>(method: string, payload: Record<string, unkno
     return (json?.result ?? json) as T;
 }
 
+export async function sendTelegramMessage(userId: number, text: string): Promise<void> {
+    await fetchTelegramApi('sendMessage', { chat_id: userId, text });
+}
+
 export async function configureTelegramWebhook(
     webhookUrl: string,
     allowedUpdates: string[] = ['message', 'pre_checkout_query'],
@@ -236,4 +240,24 @@ export function recordSuccessfulPayment(params: {
     }
 
     return payload.paymentId || payload.bookId ? payload : null;
+}
+
+export async function refundStarsPayment(
+    telegramPaymentChargeId: string,
+    userId: number,
+): Promise<boolean> {
+    const payment = paymentReceipts.get(telegramPaymentChargeId);
+    if (!payment || payment.userId !== userId) {
+        return false;
+    }
+
+    await fetchTelegramApi('refundStarPayment', {
+        user_id: userId,
+        telegram_payment_charge_id: telegramPaymentChargeId,
+    });
+
+    paymentReceipts.delete(telegramPaymentChargeId);
+    await sendTelegramMessage(userId, '✅ Stars refunded!');
+
+    return true;
 }
