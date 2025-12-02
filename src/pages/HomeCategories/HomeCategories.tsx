@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 
 import {Banner, Card, Input, SegmentedControl, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
+import {TonConnectButton} from "@tonconnect/ui-react";
 
 import {CategoryTile} from "@/entities/category/components/CategoryTile";
 import type {Category} from "@/entities/category/types";
@@ -12,6 +13,7 @@ import {
     type SpecialCategory,
     isSpecialCategoryId,
 } from "@/entities/category/customCategories";
+import type {Book} from "@/entities/book/types";
 import {catalogApi} from "@/entities/book/api";
 import {useDebouncedValue} from "@/shared/hooks/useDebouncedValue";
 import {useScrollRestoration} from "@/shared/hooks/useScrollRestoration";
@@ -19,6 +21,8 @@ import {EmptyState} from "@/shared/ui/EmptyState";
 import {ErrorBanner} from "@/shared/ui/ErrorBanner";
 import {CategoryTileSkeleton} from "@/shared/ui/Skeletons";
 import {GLOBAL_CATEGORIES, type GlobalCategory} from "@/shared/lib/globalCategories";
+import {BookCard} from "@/entities/book/components/BookCard";
+import {BookCardSkeleton} from "@/shared/ui/Skeletons";
 
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
@@ -29,6 +33,10 @@ export default function HomeCategories(): JSX.Element {
     const [error, setError] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState(0);
     const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
+    const [topBooks, setTopBooks] = useState<Book[]>([]);
+    const [isTopLoading, setIsTopLoading] = useState(false);
+    const [topError, setTopError] = useState<string | null>(null);
+    const [topRefreshToken, setTopRefreshToken] = useState(0);
     const debouncedSearch = useDebouncedValue(search, 250);
     const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
 
@@ -79,6 +87,46 @@ export default function HomeCategories(): JSX.Element {
         };
     }, [debouncedSearch, refreshToken, selectedGlobalCategory, t]);
 
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadTopBooks = async () => {
+            try {
+                setIsTopLoading(true);
+                setTopError(null);
+
+                const response = await catalogApi.listBooks({
+                    sort: "popular",
+                    limit: 10,
+                });
+
+                if (!cancelled) {
+                    setTopBooks(response.items);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    console.error(err);
+                    setTopError(t("errors.loadBooks"));
+                }
+            } finally {
+                if (!cancelled) {
+                    setIsTopLoading(false);
+                }
+            }
+        };
+
+        if (selectedGlobalCategory === "book") {
+            void loadTopBooks();
+        } else {
+            setTopBooks([]);
+            setTopError(null);
+        }
+
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedGlobalCategory, t, topRefreshToken]);
+
     const specialCategories: SpecialCategory[] = normalizedSearch
         ? translatedSpecialCategories.filter((category) =>
             [category.title, category.slug].some((value) =>
@@ -97,6 +145,10 @@ export default function HomeCategories(): JSX.Element {
 
         navigate(`/category/${category.id}`);
     };
+
+    const handleTopRetry = () => setTopRefreshToken((prev) => prev + 1);
+
+    const handleViewAllTopBooks = () => navigate(SPECIAL_CATEGORY_MAP["most-read"].path);
 
     return (
         <main style={{padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720}}>
@@ -133,6 +185,85 @@ export default function HomeCategories(): JSX.Element {
 
                 />
             </Card>
+            {selectedGlobalCategory === 'book' && (
+                <section style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                    margin: "8px 0 20px"
+                }}>
+                    <div style={{display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12}}>
+                        <Title level="2" weight="2">
+                            {t("homeCategories.popularBooksTitle")}
+                        </Title>
+                        <TonConnectButton />
+                    </div>
+                    {topError && <ErrorBanner message={topError} onRetry={handleTopRetry}/>}                    
+                    <div style={{overflowX: "auto", paddingBottom: 8}}>
+                        <div
+                            style={{
+                                display: "grid",
+                                gridAutoFlow: "column",
+                                gridTemplateRows: "repeat(2, minmax(0, 1fr))",
+                                gridAutoColumns: "minmax(0, calc(50% - 8px))",
+                                columnGap: 16,
+                                rowGap: 16,
+                                paddingRight: 4,
+                                paddingBottom: 4,
+                                alignItems: "stretch"
+                            }}
+                        >
+                            {topBooks.map((book) => (
+                                <div key={book.id} style={{minWidth: 0, width: "100%"}}>
+                                    <BookCard
+                                        book={book}
+                                        onClick={() => navigate(`/book/${book.id}`)}
+                                    />
+                                </div>
+                            ))}
+                            {isTopLoading && topBooks.length === 0 && (
+                                <>
+                                    {Array.from({length: 4}).map((_, index) => (
+                                        <div key={index} style={{minWidth: 0, width: "100%"}}>
+                                            <BookCardSkeleton />
+                                        </div>
+                                    ))}
+                                </>
+                            )}
+                            {isTopLoading && topBooks.length > 0 && (
+                                <div style={{minWidth: 0, width: "100%"}}>
+                                    <BookCardSkeleton />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    {!isTopLoading && topBooks.length === 0 && !topError && (
+                        <EmptyState
+                            title={t("homeCategories.popularBooksEmptyTitle")}
+                            description={t("homeCategories.popularBooksEmptyDescription")}
+                        />
+                    )}
+                    {topBooks.length > 0 && (
+                        <div style={{display: "flex", justifyContent: "flex-end"}}>
+                            <button
+                                type="button"
+                                onClick={handleViewAllTopBooks}
+                                style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    color: "var(--tg-theme-link-color, #3390ff)",
+                                    cursor: "pointer",
+                                    fontSize: 16,
+                                    fontWeight: 600,
+                                    padding: 8,
+                                }}
+                            >
+                                {t("homeCategories.popularBooksShowAll")}
+                            </button>
+                        </div>
+                    )}
+                </section>
+            )}
             {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
                                    onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
             {selectedGlobalCategory === 'article' || selectedGlobalCategory === 'comics'

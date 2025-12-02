@@ -52,7 +52,11 @@
       "description": "Most functions disabled."
     },
     "emptyTitle": "Nothing found",
-    "emptyDescription": "Try changing the query"
+    "emptyDescription": "Try changing the query",
+    "popularBooksTitle": "Popular books",
+    "popularBooksEmptyTitle": "No popular books yet",
+    "popularBooksEmptyDescription": "Check back soon for fresh picks",
+    "popularBooksShowAll": "View all popular"
   },
   "filters": {
     "searchPlaceholder": "Search books",
