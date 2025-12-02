@@ -1,5 +1,10 @@
 import http from 'node:http';
-import { approvePreCheckoutQuery, recordSuccessfulPayment, type StarsCurrency } from '../../services/telegram-payments.js';
+import {
+    approvePreCheckoutQuery,
+    recordSuccessfulPayment,
+    refundStarsPayment,
+    type StarsCurrency,
+} from '../../services/telegram-payments.js';
 import { parseJsonRequestBody } from '../parsers.js';
 import { respondWithError, respondWithOk } from '../responses.js';
 
@@ -24,6 +29,23 @@ export async function handleTelegramWebhookRequest(
     try {
         const update = await parseJsonRequestBody<TelegramWebhookUpdate>(req);
         console.log("update: ", update);
+        if (update?.message?.text?.startsWith('/refund')) {
+            if (process.env.NODE_ENV !== 'development') {
+                respondWithOk(res);
+                return;
+            }
+
+            const receiptId = update.message.text.split(' ')[1];
+            const userId = update.message.from?.id;
+
+            if (receiptId && userId) {
+                await refundStarsPayment(receiptId, userId);
+            }
+
+            respondWithOk(res);
+            return;
+        }
+
         if (update?.pre_checkout_query?.id) {
             await approvePreCheckoutQuery(update.pre_checkout_query.id);
             respondWithOk(res);
