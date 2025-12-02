@@ -331,9 +331,9 @@
           "hint": "Readers will access it at no cost."
         },
         "price": {
-          "label": "Price in USDT",
+          "label": "Price in Stars",
           "placeholder": "Enter the price",
-          "hint": "This is the amount readers will pay in USDT"
+          "hint": "This is the amount readers will pay in Stars"
         },
         "hashtags": {
           "label": "Hashtags",
@@ -427,8 +427,8 @@
       "toastMissingCover": "Add a cover image.",
       "toastMissingGlobalCategory": "Choose the global category.",
       "toastMissingCategory": "Choose a category for the book.",
-      "toastMissingPrice": "Set the price in USDT.",
-      "toastInvalidPrice": "Enter a non-negative number of USDT.",
+      "toastMissingPrice": "Set the price in Stars.",
+      "toastInvalidPrice": "Enter a non-negative number of Stars.",
       "toastRestricted": "Only approved authors can submit book proposals.",
       "toastHashtagInvalid": "Enter a hashtag before adding it.",
       "toastHashtagLimit": "You can add up to {{count}} hashtags.",

@@ -333,9 +333,9 @@
           "hint": "Читатели получат доступ бесплатно."
         },
         "price": {
-          "label": "Цена в USDT",
+          "label": "Цена в Stars",
           "placeholder": "Укажите цену",
-          "hint": "Это сумма, которую будут платить читатели в USDT"
+          "hint": "Это сумма, которую будут платить читатели в Stars"
         },
         "hashtags": {
           "label": "Хештеги",
@@ -429,7 +429,7 @@
       "toastMissingCover": "Добавьте изображение обложки.",
       "toastMissingGlobalCategory": "Выберите глобальную категорию.",
       "toastMissingCategory": "Выберите категорию для книги.",
-      "toastMissingPrice": "Укажите цену в USDT",
+      "toastMissingPrice": "Укажите цену в Stars",
       "toastInvalidPrice": "Введите неотрицательное число.",
       "toastRestricted": "Публиковать книги могут только авторы из списка.",
       "toastHashtagInvalid": "Введите хештег перед добавлением.",
