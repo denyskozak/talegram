@@ -37,18 +37,22 @@
     "categoryNotFound": "Категория не найдена",
     "bookNotFound": "Книга не найдена"
   },
-  "homeCategories": {
-    "title": "Категории",
-    "comingSoon": "Скоро появиться",
-    "searchPlaceholder": "Поиск по категориям",
-    "alphaBanner": {
-      "title": "Альфа-версия",
-      "description": "Многие функции не доступны."
+    "homeCategories": {
+      "title": "Категории",
+      "comingSoon": "Скоро появиться",
+      "searchPlaceholder": "Поиск по категориям",
+      "alphaBanner": {
+        "title": "Альфа-версия",
+        "description": "Многие функции не доступны."
+      },
+      "globalCategoryLabel": "Глобальная категория",
+      "emptyTitle": "Ничего не найдено",
+      "emptyDescription": "Попробуйте изменить запрос",
+      "popularBooksTitle": "Популярные книги",
+      "popularBooksEmptyTitle": "Пока нет популярных книг",
+      "popularBooksEmptyDescription": "Загляните позже — мы обновим подборку",
+      "popularBooksShowAll": "Все популярные"
     },
-    "globalCategoryLabel": "Глобальная категория",
-    "emptyTitle": "Ничего не найдено",
-    "emptyDescription": "Попробуйте изменить запрос"
-  },
   "filters": {
     "searchPlaceholder": "Поиск по книгам",
     "sort": {
