@@ -18,6 +18,7 @@ import {
 } from './utils/walrus-files.js';
 import { parseTelegramAuth, resolveTelegramUserId } from './utils/auth.js';
 import { normalizeTelegramUserId } from './utils/telegram.js';
+import {handlePaymentWebHook} from "./services/telegram-payments";
 
 config();
 
@@ -92,7 +93,7 @@ const server = http.createServer(async (req, res) => {
             : null;
 
     if (webhookMatch) {
-      
+       // Codex: continue webhook implementation here
     }
 
     const previewMatch =
@@ -291,24 +292,6 @@ async function handleCreateProposalRequest(
         console.error('Failed to handle proposal upload', error);
         res.statusCode = 500;
         res.end('Failed to process proposal upload');
-    }
-}
-
-function extractFileIdFromPath(pathname: string): string | null {
-    const prefix = '/file/download/';
-    if (!pathname.startsWith(prefix)) {
-        return null;
-    }
-
-    const encodedId = pathname.slice(prefix.length);
-
-    try {
-        const decoded = decodeURIComponent(encodedId);
-        const trimmed = decoded.trim();
-        return trimmed.length > 0 ? trimmed : null;
-    } catch (error) {
-        console.warn('Failed to decode file id from download path', error);
-        return null;
     }
 }
 
@@ -554,3 +537,4 @@ function safeParseUrl(requestUrl: string | undefined, hostHeader: string | undef
         return null;
     }
 }
+

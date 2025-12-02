@@ -1,4 +1,6 @@
 import {randomUUID} from 'node:crypto';
+import {appDataSource} from "../utils/data-source";
+import {Purchase} from "../entities/Purchase";
 
 export type StarsCurrency = 'XTR';
 
@@ -108,4 +110,67 @@ export function markInvoiceAsFailed(paymentId: string): void {
     }
 
     invoices.set(paymentId, {...invoice, status: 'failed'});
+}
+
+export type TelegramPaymentWebHookUpdate = { pre_checkout_query: boolean, message: { successful_payment: boolean }};
+
+export const handlePaymentWebHook = async (update:  TelegramPaymentWebHookUpdate): boolean => {
+    const apiUrl = `${TELEGRAM_API_BASE}${botToken}`;
+
+    if (update.pre_checkout_query) {
+        await fetch(
+            `${apiUrl}/answerPreCheckoutQuery`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pre_checkout_query_id: update.pre_checkout_query.id,
+                    ok: true
+                })
+            }
+        )
+        return true;
+    }
+
+    // Step 2: Handle successful payment
+    if (update.message?.successful_payment) {
+        const payment = update.message.successful_payment
+        const userId = update.message.from.id
+        const payload = JSON.parse(payment.invoice_payload)
+
+        const repository = appDataSource.getRepository(Purchase);
+
+        const purchase = repository.create({
+            bookId,
+            telegramUserId,
+            paymentId: details.paymentId,
+            purchasedAt: new Date(details.purchasedAt),
+            walrusBlobId: details.walrusBlobId ?? null,
+            walrusFileId: details.walrusFileId ?? null,
+        });
+        // Send confirmation
+        await sendTelegramMessage(
+            userId,
+            `✅ Payment Successful!\n\n` +
+            `Receipt ID: \`${payment.telegram_payment_charge_id}\``,
+            { parse_mode: 'Markdown' }
+        )
+
+        // Deliver the goods!
+        console.log(`Delivering points to user ${userId}`)
+
+        return true
+    }
+
+    // Mandatory /paysupport handler
+    if (update.message?.text === '/paysupport') {
+        await sendTelegramMessage(
+            update.message.from.id,
+            '🛟 For payment support, contact @your_support',
+            { parse_mode: 'Markdown' }
+        )
+        return true
+    }
+
+    return false
 }
