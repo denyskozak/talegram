@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
-import {Banner, Card, Input, SegmentedControl, Title} from "@telegram-apps/telegram-ui";
+import {Banner, Card, SegmentedControl, Tappable, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 import {TonConnectButton} from "@tonconnect/ui-react";
 
@@ -15,7 +15,6 @@ import {
 } from "@/entities/category/customCategories";
 import type {Book} from "@/entities/book/types";
 import {catalogApi} from "@/entities/book/api";
-import {useDebouncedValue} from "@/shared/hooks/useDebouncedValue";
 import {useScrollRestoration} from "@/shared/hooks/useScrollRestoration";
 import {EmptyState} from "@/shared/ui/EmptyState";
 import {ErrorBanner} from "@/shared/ui/ErrorBanner";
@@ -27,7 +26,6 @@ import {BookCardSkeleton} from "@/shared/ui/Skeletons";
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
     const {t} = useTranslation();
-    const [search, setSearch] = useState("");
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -37,10 +35,8 @@ export default function HomeCategories(): JSX.Element {
     const [isTopLoading, setIsTopLoading] = useState(false);
     const [topError, setTopError] = useState<string | null>(null);
     const [topRefreshToken, setTopRefreshToken] = useState(0);
-    const debouncedSearch = useDebouncedValue(search, 250);
-    const normalizedSearch = debouncedSearch.trim().toLocaleLowerCase();
 
-    useScrollRestoration(`home-categories-${normalizedSearch || "all"}`);
+    useScrollRestoration("home-categories");
 
     const translatedSpecialCategories = useMemo<SpecialCategory[]>(
         () =>
@@ -57,14 +53,9 @@ export default function HomeCategories(): JSX.Element {
                 setIsLoading(true);
                 setError(null);
 
-                const query: { search?: string; globalCategory?: string } = {
+                const items = await catalogApi.listCategories({
                     globalCategory: selectedGlobalCategory,
-                };
-                if (debouncedSearch) {
-                    query.search = debouncedSearch;
-                }
-
-                const items = await catalogApi.listCategories(query);
+                });
                 if (!cancelled) {
                     setCategories(items);
                 }
@@ -85,7 +76,7 @@ export default function HomeCategories(): JSX.Element {
         return () => {
             cancelled = true;
         };
-    }, [debouncedSearch, refreshToken, selectedGlobalCategory, t]);
+    }, [refreshToken, selectedGlobalCategory, t]);
 
     useEffect(() => {
         let cancelled = false;
@@ -127,13 +118,7 @@ export default function HomeCategories(): JSX.Element {
         };
     }, [selectedGlobalCategory, t, topRefreshToken]);
 
-    const specialCategories: SpecialCategory[] = normalizedSearch
-        ? translatedSpecialCategories.filter((category) =>
-            [category.title, category.slug].some((value) =>
-                value.toLocaleLowerCase().includes(normalizedSearch),
-            ),
-        )
-        : translatedSpecialCategories;
+    const specialCategories: SpecialCategory[] = translatedSpecialCategories;
 
     const displayedCategories: Category[] = [...specialCategories, ...categories];
 
@@ -175,15 +160,13 @@ export default function HomeCategories(): JSX.Element {
                 </SegmentedControl>
             </div>
             <Card style={{marginBottom: 16, width: '100%'}}>
-                <Input
-                    type="search"
-                    className="input-wrapper"
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder={t("homeCategories.searchPlaceholder")}
-                    aria-label={t("homeCategories.searchPlaceholder")}
-
-                />
+                <Tappable
+                    onClick={() => navigate("/search")}
+                    style={{ padding: "12px 16px", textAlign: "center", fontWeight: 600 }}
+                    aria-label={t("buttons.search")}
+                >
+                    {t("buttons.search")}
+                </Tappable>
             </Card>
             {selectedGlobalCategory === 'book' && (
                 <section style={{

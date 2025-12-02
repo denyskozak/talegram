@@ -8,7 +8,6 @@ import { catalogApi, getCategoryTags } from "@/entities/book/api";
 import type { Book, ID } from "@/entities/book/types";
 import type { Category } from "@/entities/category/types";
 import { BookCard } from "@/entities/book/components/BookCard";
-import { useDebouncedValue } from "@/shared/hooks/useDebouncedValue";
 import { useIntersectionObserver } from "@/shared/hooks/useIntersectionObserver";
 import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
 import type { BookSort } from "@/shared/lib/bookSort";
@@ -26,11 +25,9 @@ export default function CategoryBooks(): JSX.Element {
   const [cursor, setCursor] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
   const [sort, setSort] = useState<BookSort>("popular");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const debouncedSearch = useDebouncedValue(search, 250);
 
   useScrollRestoration(`category-${id ?? "unknown"}`);
 
@@ -63,7 +60,6 @@ export default function CategoryBooks(): JSX.Element {
         const response = await catalogApi.listBooks({
           categoryId: id,
           cursor: reset ? undefined : cursorRef.current,
-          search: debouncedSearch || undefined,
           sort,
           tags: selectedTags.length > 0 ? selectedTags : undefined,
         });
@@ -76,7 +72,7 @@ export default function CategoryBooks(): JSX.Element {
         setIsLoading(false);
       }
     },
-    [debouncedSearch, id, selectedTags, sort, t],
+    [id, selectedTags, sort, t],
   );
 
   useEffect(() => {
@@ -120,7 +116,7 @@ export default function CategoryBooks(): JSX.Element {
     setBooks([]);
     setCursor(undefined);
     void loadBooks(true);
-  }, [debouncedSearch, id, loadBooks, selectedTags, sort]);
+  }, [id, loadBooks, selectedTags, sort]);
 
   const handleIntersect = useCallback(() => {
     if (!isLoading && cursorRef.current) {
@@ -140,8 +136,6 @@ export default function CategoryBooks(): JSX.Element {
         {category?.title ?? t("book.fallbackCategoryTitle")}
       </Title>
       <FiltersBar
-        search={search}
-        onSearchChange={setSearch}
         sort={sort}
         onSortChange={setSort}
         tags={availableTags}
@@ -151,6 +145,8 @@ export default function CategoryBooks(): JSX.Element {
             current.includes(tag) ? current.filter((item) => item !== tag) : [...current, tag],
           )
         }
+        searchButtonLabel={t("buttons.search")}
+        onSearchClick={() => navigate("/search")}
       />
       {error && <ErrorBanner message={error} onRetry={() => loadBooks(true)} />}
       <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 16 }}>
