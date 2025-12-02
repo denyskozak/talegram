@@ -66,6 +66,22 @@
       "new": "New"
     }
   },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search books and categories",
+    "error": "Could not complete the search",
+    "empty": {
+      "title": "Start typing",
+      "description": "We will show matching books and categories"
+    },
+    "results": {
+      "categories": "Categories",
+      "books": "Books",
+      "noCategories": "No categories match your request",
+      "noBooks": "No books match your request",
+      "adjustQuery": "Try another query"
+    }
+  },
   "categoryBooks": {
     "emptyDescription": "Adjust the filters or try a different query"
   },
@@ -80,6 +96,7 @@
     "download": "Download",
     "buy": "Buy",
     "subscribe": "Subscribe",
+    "search": "Search",
     "collapse": "Show less",
     "expand": "Show more",
     "confirm": "Complete",

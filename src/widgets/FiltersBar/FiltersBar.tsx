@@ -1,7 +1,6 @@
-import type { ChangeEvent } from "react";
 import { useMemo } from "react";
 
-import {Card, Chip, Input, SegmentedControl} from "@telegram-apps/telegram-ui";
+import {Card, Chip, SegmentedControl, Tappable} from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import type { BookSort } from "@/shared/lib/bookSort";
@@ -13,23 +12,23 @@ const SORT_OPTION_KEYS: Array<{ labelKey: string; value: BookSort }> = [
 ];
 
 interface FiltersBarProps {
-  search: string;
-  onSearchChange: (value: string) => void;
   sort: BookSort;
   onSortChange: (sort: BookSort) => void;
   tags: string[];
   selectedTags: string[];
   onToggleTag: (tag: string) => void;
+  searchButtonLabel?: string;
+  onSearchClick?: () => void;
 }
 
 export function FiltersBar({
-  search,
-  onSearchChange,
   sort,
   onSortChange,
   tags,
   selectedTags,
   onToggleTag,
+  searchButtonLabel,
+  onSearchClick,
 }: FiltersBarProps): JSX.Element {
   const { t } = useTranslation();
   const sortOptions = useMemo(
@@ -37,21 +36,19 @@ export function FiltersBar({
     [t],
   );
 
-  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
-    onSearchChange(event.target.value);
-  };
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {onSearchClick && (
         <Card>
-            <Input
-                type="search"
-                value={search}
-                onChange={handleSearch}
-                placeholder={t("filters.searchPlaceholder")}
-                aria-label={t("filters.searchPlaceholder")}
-            />
+          <Tappable
+            onClick={onSearchClick}
+            style={{ padding: "12px 16px", textAlign: "center", fontWeight: 600 }}
+            aria-label={searchButtonLabel ?? t("buttons.search")}
+          >
+            {searchButtonLabel ?? t("buttons.search")}
+          </Tappable>
         </Card>
+      )}
       <SegmentedControl>
         {sortOptions.map((option) => (
           <SegmentedControl.Item
