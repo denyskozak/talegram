@@ -1,6 +1,4 @@
-import {randomUUID} from 'node:crypto';
-import {appDataSource} from "../utils/data-source";
-import {Purchase} from "../entities/Purchase";
+import { randomUUID } from 'node:crypto';
 
 export type StarsCurrency = 'XTR';
 
@@ -27,43 +25,85 @@ type StarsInvoice = Pick<StarsInvoiceRecord, 'paymentId' | 'invoiceLink' | 'amou
 
 type StarsInvoiceStatus = Pick<StarsInvoiceRecord, 'paymentId' | 'status' | 'amountStars' | 'currency'>;
 
+type InvoicePayload = {
+    paymentId?: string;
+    bookId?: string;
+};
+
+type TelegramStarsTransaction = {
+    id: string;
+    amount?: number;
+    total_amount?: number;
+    currency: StarsCurrency;
+    status: InvoiceStatus | 'pending' | 'active' | 'cancelled';
+    invoice_payload?: string;
+};
+
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
-const FALLBACK_INVOICE_BASE_URL = 'https://t.me/stars-payments-demo/app/invoice';
 
 const invoices = new Map<string, StarsInvoiceRecord>();
+const paymentReceipts = new Map<
+    string,
+    { userId: number; productId?: string; paymentId?: string; timestamp: number }
+>();
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
 
 if (!botToken) throw new Error('No bot token provided');
 
+const telegramApiBase = `${TELEGRAM_API_BASE}${botToken}`;
+
+async function fetchTelegramApi<T>(method: string, payload: Record<string, unknown>): Promise<T> {
+    const response = await fetch(`${telegramApiBase}/${method}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        throw new Error(`Telegram API call failed: ${method}`);
+    }
+
+    const json = await response.json();
+    if (json?.ok === false) {
+        throw new Error(`Telegram API returned error for ${method}`);
+    }
+
+    return (json?.result ?? json) as T;
+}
+
+export async function configureTelegramWebhook(
+    webhookUrl: string,
+    allowedUpdates: string[] = ['message', 'pre_checkout_query'],
+): Promise<void> {
+    await fetchTelegramApi('deleteWebhook', {});
+    await fetchTelegramApi('setWebhook', {
+        url: webhookUrl,
+        allowed_updates: allowedUpdates,
+    });
+}
+
+export async function approvePreCheckoutQuery(preCheckoutQueryId: string): Promise<void> {
+    await fetchTelegramApi('answerPreCheckoutQuery', {
+        pre_checkout_query_id: preCheckoutQueryId,
+        ok: true,
+    });
+}
+
 export async function createStarsInvoice(params: CreateStarsInvoiceParams): Promise<StarsInvoice> {
     const paymentId = randomUUID();
-
-
-    let invoiceLink: string | null = null;
-
 
     const priceInStars = Math.max(1, params.amountStars);
     const priceInMinUnits = priceInStars * 100;
 
-    const apiUrl = `${TELEGRAM_API_BASE}${botToken}/createInvoiceLink`;
-    const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            title: params.title,
-            description: `Purchase access to ${params.title}`,
-            payload: JSON.stringify({paymentId, bookId: params.bookId}),
-            provider_token: '',
-            currency: 'XTR',
-            prices: [{label: params.title, amount: priceInMinUnits}],
-        }),
+    const invoiceLink = await fetchTelegramApi<string>('createInvoiceLink', {
+        title: params.title,
+        description: `Purchase access to ${params.title}`,
+        payload: JSON.stringify({ paymentId, bookId: params.bookId }),
+        provider_token: '',
+        currency: 'XTR',
+        prices: [{ label: params.title, amount: priceInMinUnits }],
     });
-
-    if (!response.ok) {
-        throw new Error('Fail to create invoice');
-    }
-    const invoiceData = await response.json() as { result: string};
 
     invoices.set(paymentId, {
         paymentId,
@@ -72,16 +112,56 @@ export async function createStarsInvoice(params: CreateStarsInvoiceParams): Prom
         amountStars: params.amountStars,
         currency: 'XTR',
         status: 'pending',
-        invoiceLink: invoiceData.result,
+        invoiceLink,
         createdAt: new Date().toISOString(),
     });
 
     return {
         paymentId,
-        invoiceLink: invoiceData.result,
+        invoiceLink,
         amountStars: params.amountStars,
         currency: 'XTR',
     };
+}
+
+function mapTransactionStatus(status: TelegramStarsTransaction['status']): InvoiceStatus {
+    if (status === 'paid') return 'paid';
+    if (status === 'failed' || status === 'cancelled') return 'failed';
+    return 'pending';
+}
+
+async function fetchStarsTransactions(): Promise<TelegramStarsTransaction[]> {
+    const result = await fetchTelegramApi<{ transactions?: TelegramStarsTransaction[] } | TelegramStarsTransaction[]>(
+        'getStarTransactions',
+        { offset: 0, limit: 100 },
+    );
+
+    if (Array.isArray(result)) {
+        return result;
+    }
+
+    return result.transactions ?? [];
+}
+
+function parseInvoicePayload(payload: string | undefined): InvoicePayload {
+    if (!payload) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(payload);
+    } catch (error) {
+        console.warn('Failed to parse invoice payload', error);
+        return {};
+    }
+}
+
+function mapStarsAmountToCurrencyUnits(amount: number | undefined): number {
+    if (!amount || Number.isNaN(amount)) {
+        return 0;
+    }
+
+    return Math.max(1, Math.round(amount / 100));
 }
 
 export async function fetchStarsInvoiceStatus(paymentId: string): Promise<StarsInvoiceStatus> {
@@ -90,16 +170,30 @@ export async function fetchStarsInvoiceStatus(paymentId: string): Promise<StarsI
         throw new Error('Invoice not found');
     }
 
-    if (invoice.status === 'pending') {
-        invoice.status = 'paid';
-        invoices.set(paymentId, invoice);
-    }
+    const transactions = await fetchStarsTransactions();
+    const matchingTransaction = transactions.find((transaction) => {
+        const payload = parseInvoicePayload(transaction.invoice_payload);
+        return payload.paymentId === paymentId;
+    });
+
+    const status = matchingTransaction ? mapTransactionStatus(matchingTransaction.status) : invoice.status;
+    const amountStars = matchingTransaction
+        ? mapStarsAmountToCurrencyUnits(matchingTransaction.total_amount ?? matchingTransaction.amount)
+        : invoice.amountStars;
+
+    const updatedInvoice: StarsInvoiceRecord = {
+        ...invoice,
+        status,
+        amountStars,
+    };
+
+    invoices.set(paymentId, updatedInvoice);
 
     return {
-        paymentId: invoice.paymentId,
-        status: invoice.status,
-        amountStars: invoice.amountStars,
-        currency: invoice.currency,
+        paymentId: updatedInvoice.paymentId,
+        status: updatedInvoice.status,
+        amountStars: updatedInvoice.amountStars,
+        currency: updatedInvoice.currency,
     };
 }
 
@@ -109,68 +203,37 @@ export function markInvoiceAsFailed(paymentId: string): void {
         return;
     }
 
-    invoices.set(paymentId, {...invoice, status: 'failed'});
+    invoices.set(paymentId, { ...invoice, status: 'failed' });
 }
 
-export type TelegramPaymentWebHookUpdate = { pre_checkout_query: boolean, message: { successful_payment: boolean }};
+export function recordSuccessfulPayment(params: {
+    telegramPaymentChargeId: string;
+    userId: number;
+    invoicePayload?: string;
+    totalAmount?: number;
+    currency: StarsCurrency;
+}): InvoicePayload | null {
+    const payload = parseInvoicePayload(params.invoicePayload);
+    const amountStars = mapStarsAmountToCurrencyUnits(params.totalAmount);
 
-export const handlePaymentWebHook = async (update:  TelegramPaymentWebHookUpdate): boolean => {
-    const apiUrl = `${TELEGRAM_API_BASE}${botToken}`;
+    paymentReceipts.set(params.telegramPaymentChargeId, {
+        userId: params.userId,
+        productId: payload.bookId,
+        paymentId: payload.paymentId,
+        timestamp: Date.now(),
+    });
 
-    if (update.pre_checkout_query) {
-        await fetch(
-            `${apiUrl}/answerPreCheckoutQuery`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    pre_checkout_query_id: update.pre_checkout_query.id,
-                    ok: true
-                })
-            }
-        )
-        return true;
+    if (payload.paymentId) {
+        const invoice = invoices.get(payload.paymentId);
+        if (invoice) {
+            invoices.set(payload.paymentId, {
+                ...invoice,
+                status: 'paid',
+                amountStars: amountStars || invoice.amountStars,
+                currency: params.currency,
+            });
+        }
     }
 
-    // Step 2: Handle successful payment
-    if (update.message?.successful_payment) {
-        const payment = update.message.successful_payment
-        const userId = update.message.from.id
-        const payload = JSON.parse(payment.invoice_payload)
-
-        const repository = appDataSource.getRepository(Purchase);
-
-        const purchase = repository.create({
-            bookId,
-            telegramUserId,
-            paymentId: details.paymentId,
-            purchasedAt: new Date(details.purchasedAt),
-            walrusBlobId: details.walrusBlobId ?? null,
-            walrusFileId: details.walrusFileId ?? null,
-        });
-        // Send confirmation
-        await sendTelegramMessage(
-            userId,
-            `✅ Payment Successful!\n\n` +
-            `Receipt ID: \`${payment.telegram_payment_charge_id}\``,
-            { parse_mode: 'Markdown' }
-        )
-
-        // Deliver the goods!
-        console.log(`Delivering points to user ${userId}`)
-
-        return true
-    }
-
-    // Mandatory /paysupport handler
-    if (update.message?.text === '/paysupport') {
-        await sendTelegramMessage(
-            update.message.from.id,
-            '🛟 For payment support, contact @your_support',
-            { parse_mode: 'Markdown' }
-        )
-        return true
-    }
-
-    return false
+    return payload.paymentId || payload.bookId ? payload : null;
 }
