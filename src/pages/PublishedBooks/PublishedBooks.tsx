@@ -24,6 +24,7 @@ export default function PublishedBooks(): JSX.Element {
   const [books, setBooks] = useState<PublishedBook[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const payoutBalance = books[0]?.payoutBalance ?? 0;
 
   useEffect(() => {
     let isMounted = true;
@@ -77,6 +78,14 @@ export default function PublishedBooks(): JSX.Element {
           </Button>
         </div>
       </header>
+
+      {!isLoading && !error && (
+        <Card style={{ padding: 16 }}>
+          <Text style={{ color: theme.subtitle }}>
+            {t("account.published.payoutBalance", { value: payoutBalance })}
+          </Text>
+        </Card>
+      )}
 
       {isLoading ? (
         <Card style={{ padding: 16 }}>
