@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { getBook } from '../data/catalog.js';
+import { Author } from '../entities/Author.js';
 import { deletePurchaseByPaymentId, getPurchaseByPaymentId, setPurchased } from '../stores/purchasesStore.js';
+import { appDataSource, initializeDataSource } from '../utils/data-source.js';
+import { normalizeTelegramUserId } from '../utils/telegram.js';
 
 export type StarsCurrency = 'XTR';
 
@@ -214,6 +217,7 @@ export async function recordSuccessfulPayment(params: {
     totalAmount?: number;
     currency: StarsCurrency;
 }): Promise<InvoicePayload | null> {
+    await initializeDataSource();
     const payload = parseInvoicePayload(params.invoicePayload);
     const amountStars = mapStarsAmountToCurrencyUnits(params.totalAmount);
 
@@ -234,6 +238,18 @@ export async function recordSuccessfulPayment(params: {
         if (book) {
             const purchasedAt = new Date().toISOString();
             const paymentId = payload.paymentId ?? params.telegramPaymentChargeId;
+            const authorTelegramUserId = normalizeTelegramUserId(book.authorTelegramUserId);
+            const payoutAmount = amountStars > 0 ? amountStars : Math.max(0, book.price ?? 0);
+            if (authorTelegramUserId && payoutAmount > 0) {
+                const authorRepository = appDataSource.getRepository(Author);
+                const author = await authorRepository.findOne({ where: { telegramUserId: authorTelegramUserId } });
+
+                if (author) {
+                    author.payoutBalance = (author.payoutBalance ?? 0) + payoutAmount;
+                    await authorRepository.save(author);
+                }
+            }
+
             await setPurchased(book.id, params.userId.toString(), {
                 paymentId,
                 purchasedAt,

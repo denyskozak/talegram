@@ -100,6 +100,11 @@ export default function PublishedBook(): JSX.Element {
     [book, t],
   );
 
+  const payoutBalanceLabel = useMemo(
+    () => (book ? t("account.published.details.payoutBalance", { value: book.payoutBalance }) : ""),
+    [book, t],
+  );
+
   return (
     <div
       style={{
@@ -157,6 +162,7 @@ export default function PublishedBook(): JSX.Element {
             <Text style={{ color: theme.subtitle }}>
               {t("account.published.price", { value: book.price, currency: book.currency })}
             </Text>
+            <Text style={{ color: theme.subtitle }}>{payoutBalanceLabel}</Text>
             <Text style={{ color: theme.subtitle }}>{salesCountLabel}</Text>
             <Text style={{ color: theme.subtitle }}>{earningsLabel}</Text>
           </Card>

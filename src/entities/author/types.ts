@@ -2,6 +2,7 @@ export type Author = {
   id: string;
   name: string;
   telegramUserId: string;
+  payoutBalance: number;
 };
 
 export type PublishedBookSale = {
@@ -17,6 +18,7 @@ export type PublishedBook = {
   title: string;
   price: number;
   currency: string;
+  payoutBalance: number;
   publishedAt: string | null;
   language: string | null;
   sales: PublishedBookSale[];

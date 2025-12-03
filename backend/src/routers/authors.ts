@@ -22,6 +22,7 @@ export const authorsRouter = createRouter({
       id: author.id,
       name: author.name,
       telegramUserId: author.telegramUserId,
+      payoutBalance: author.payoutBalance,
     }));
   }),
   myPublishedBooks: authorizedProcedure.query(async ({ ctx }) => {
@@ -32,8 +33,8 @@ export const authorsRouter = createRouter({
     }
 
     const authorRepository = appDataSource.getRepository(Author);
-    const isAuthor = await authorRepository.exist({ where: { telegramUserId } });
-    if (!isAuthor) {
+    const author = await authorRepository.findOne({ where: { telegramUserId } });
+    if (!author) {
       throw new TRPCError({ code: 'FORBIDDEN', message: 'User is not registered as an author' });
     }
 
@@ -63,6 +64,7 @@ export const authorsRouter = createRouter({
       title: book.title,
       price: book.price,
       currency: book.currency,
+      payoutBalance: author.payoutBalance,
       publishedAt: book.publishedAt ? new Date(book.publishedAt).toISOString() : null,
       language: book.language ?? null,
       sales: (purchasesByBook.get(book.id) ?? []).map((purchase) => ({
@@ -85,8 +87,8 @@ export const authorsRouter = createRouter({
       }
 
       const authorRepository = appDataSource.getRepository(Author);
-      const isAuthor = await authorRepository.exist({ where: { telegramUserId } });
-      if (!isAuthor) {
+      const author = await authorRepository.findOne({ where: { telegramUserId } });
+      if (!author) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'User is not registered as an author' });
       }
 
@@ -110,6 +112,7 @@ export const authorsRouter = createRouter({
         title: book.title,
         price: book.price,
         currency: book.currency,
+        payoutBalance: author.payoutBalance,
         publishedAt: book.publishedAt ? new Date(book.publishedAt).toISOString() : null,
         language: book.language ?? null,
         sales: purchases.map((purchase) => ({

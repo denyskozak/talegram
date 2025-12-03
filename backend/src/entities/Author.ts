@@ -22,6 +22,9 @@ export class Author {
   @Column({ name: 'telegram_user_id', type: 'text', unique: true })
   telegramUserId!: string;
 
+  @Column({ name: 'payout_balance', type: 'integer', default: 0 })
+  payoutBalance!: number;
+
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt!: Date;
 

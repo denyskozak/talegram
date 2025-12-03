@@ -267,6 +267,7 @@
       "languageUnknown": "Unknown",
       "publishedAt": "Published at {{value}}",
       "price": "Price: {{value}} {{currency}}",
+      "payoutBalance": "Payout balance: {{value}} stars",
       "viewDetails": "View details",
       "hideDetails": "Hide details",
       "noSales": "No sales yet",
@@ -284,6 +285,7 @@
         "info": "Book info",
         "buyers": "Buyers",
         "earnings": "Total earned: {{value}} {{currency}}",
+        "payoutBalance": "Payout balance: {{value}} stars",
         "salesCount": "{{count}} sale",
         "salesCount_plural": "{{count}} sales"
       }
