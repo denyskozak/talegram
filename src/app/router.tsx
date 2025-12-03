@@ -10,6 +10,7 @@ const TopBooksPage = lazy(() => import("@/pages/TopBooks/TopBooks"));
 const SearchPage = lazy(() => import("@/pages/Search/SearchPage"));
 const MyAccountPage = lazy(() => import("@/pages/MyAccount/MyAccount"));
 const PublishedBooksPage = lazy(() => import("@/pages/PublishedBooks/PublishedBooks"));
+const PublishedBookPage = lazy(() => import("@/pages/PublishedBook/PublishedBook"));
 const ProposalDetailsPage = lazy(() => import("@/pages/ProposalDetails/ProposalDetails"));
 const ContactPage = lazy(() => import("@/pages/Contact/ContactPage"));
 const ReaderPage = lazy(() => import("@/pages/Reader/ReaderPage"));
@@ -23,6 +24,7 @@ export function AppRouter(): JSX.Element {
     { path: "/category/:id", element: <CategoryBooksPage /> },
     { path: "/account", element: <MyAccountPage /> },
     { path: "/account/published", element: <PublishedBooksPage /> },
+    { path: "/account/published/:id", element: <PublishedBookPage /> },
     { path: "/proposals/:id", element: <ProposalDetailsPage /> },
     { path: "/book/:id", element: <BookPage /> },
     { path: "/reader/:id/:type", element: <ReaderPage /> },

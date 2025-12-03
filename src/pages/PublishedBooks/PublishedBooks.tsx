@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { fetchMyPublishedBooks } from "@/entities/author/api";
-import type { PublishedBook, PublishedBookSale } from "@/entities/author/types";
+import type { PublishedBook } from "@/entities/author/types";
 import { Button } from "@/shared/ui/Button";
 
 function formatDate(value: string | null): string {
@@ -17,34 +17,11 @@ function formatDate(value: string | null): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
-type SaleDetailsProps = {
-  sale: PublishedBookSale;
-  theme: ReturnType<typeof useTheme>;
-  t: ReturnType<typeof useTranslation>["t"];
-};
-
-function SaleDetails({ sale, theme, t }: SaleDetailsProps): JSX.Element {
-  return (
-    <Card style={{ padding: 12, display: "flex", flexDirection: "column", gap: 4 }}>
-      <Text style={{ color: theme.subtitle }}>
-        {t("account.published.saleBuyer", { id: sale.telegramUserId })}
-      </Text>
-      <Text style={{ color: theme.subtitle }}>
-        {t("account.published.salePayment", { id: sale.paymentId })}
-      </Text>
-      <Text style={{ color: theme.hint }}>
-        {t("account.published.salePurchasedAt", { value: formatDate(sale.purchasedAt) })}
-      </Text>
-    </Card>
-  );
-}
-
 export default function PublishedBooks(): JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
   const [books, setBooks] = useState<PublishedBook[]>([]);
-  const [expandedBookId, setExpandedBookId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -148,30 +125,11 @@ export default function PublishedBooks(): JSX.Element {
                 type="button"
                 size="m"
                 mode="outline"
-                onClick={() => setExpandedBookId((current) => (current === book.id ? null : book.id))}
+                onClick={() => navigate(`/account/published/${book.id}`)}
               >
-                {expandedBookId === book.id
-                  ? t("account.published.hideDetails")
-                  : t("account.published.viewDetails")}
+                {t("account.published.viewDetails")}
               </Button>
             </div>
-
-            {expandedBookId === book.id && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {book.sales.length === 0 ? (
-                  <Text style={{ color: theme.subtitle }}>{t("account.published.noSales")}</Text>
-                ) : (
-                  book.sales.map((sale) => (
-                    <SaleDetails
-                      key={`${sale.paymentId}-${sale.telegramUserId}-${sale.purchasedAt}`}
-                      sale={sale}
-                      theme={theme}
-                      t={t}
-                    />
-                  ))
-                )}
-              </div>
-            )}
           </Card>
         ))
       )}

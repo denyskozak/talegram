@@ -21,3 +21,10 @@ export type PublishedBook = {
   language: string | null;
   sales: PublishedBookSale[];
 };
+
+export type PublishedBookDetails = PublishedBook & {
+  earnings: {
+    total: number;
+    currency: string;
+  };
+};
