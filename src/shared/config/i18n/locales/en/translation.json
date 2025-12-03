@@ -273,7 +273,20 @@
       "saleBuyer": "Buyer ID: {{id}}",
       "salePayment": "Payment ID: {{id}}",
       "salePurchasedAt": "Purchased at {{value}}",
-      "loadError": "We couldn't load your published books."
+      "loadError": "We couldn't load your published books.",
+      "details": {
+        "title": "Published book details",
+        "subtitle": "View performance and buyer information for this book.",
+        "back": "Back to published books",
+        "loading": "Loading book details...",
+        "loadError": "We couldn't load this book.",
+        "notFound": "This book is not available.",
+        "info": "Book info",
+        "buyers": "Buyers",
+        "earnings": "Total earned: {{value}} {{currency}}",
+        "salesCount": "{{count}} sale",
+        "salesCount_plural": "{{count}} sales"
+      }
     },
     "myBooks": {
       "title": "My TON bookshelf",
