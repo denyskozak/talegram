@@ -54,7 +54,7 @@ export async function handleTelegramWebhookRequest(
 
         const successfulPayment = update?.message?.successful_payment;
         if (successfulPayment && update?.message?.from?.id) {
-            const payload = recordSuccessfulPayment({
+            const payload = await recordSuccessfulPayment({
                 telegramPaymentChargeId: successfulPayment.telegram_payment_charge_id,
                 userId: update.message.from.id,
                 invoicePayload: successfulPayment.invoice_payload,
