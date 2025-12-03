@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { getBook } from '../data/catalog.js';
+import { deletePurchaseByPaymentId, getPurchaseByPaymentId, setPurchased } from '../stores/purchasesStore.js';
 
 export type StarsCurrency = 'XTR';
 
@@ -42,10 +44,6 @@ type TelegramStarsTransaction = {
 const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
 const invoices = new Map<string, StarsInvoiceRecord>();
-const paymentReceipts = new Map<
-    string,
-    { userId: number; productId?: string; paymentId?: string; timestamp: number }
->();
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
 
@@ -210,22 +208,15 @@ export function markInvoiceAsFailed(paymentId: string): void {
     invoices.set(paymentId, { ...invoice, status: 'failed' });
 }
 
-export function recordSuccessfulPayment(params: {
+export async function recordSuccessfulPayment(params: {
     telegramPaymentChargeId: string;
     userId: number;
     invoicePayload?: string;
     totalAmount?: number;
     currency: StarsCurrency;
-}): InvoicePayload | null {
+}): Promise<InvoicePayload | null> {
     const payload = parseInvoicePayload(params.invoicePayload);
     const amountStars = mapStarsAmountToCurrencyUnits(params.totalAmount);
-
-    paymentReceipts.set(params.telegramPaymentChargeId, {
-        userId: params.userId,
-        productId: payload.bookId,
-        paymentId: payload.paymentId,
-        timestamp: Date.now(),
-    });
 
     if (payload.paymentId) {
         const invoice = invoices.get(payload.paymentId);
@@ -239,6 +230,21 @@ export function recordSuccessfulPayment(params: {
         }
     }
 
+    if (payload.bookId) {
+        const book = await getBook(payload.bookId);
+        if (book) {
+            const purchasedAt = new Date().toISOString();
+            const paymentId = payload.paymentId ?? params.telegramPaymentChargeId;
+            await setPurchased(book.id, params.userId.toString(), {
+                paymentId,
+                purchasedAt,
+                walrusBlobId: book.walrusBlobId ?? null,
+                walrusFileId: book.walrusFileId ?? null,
+                telegramChargeId: params.telegramPaymentChargeId,
+            });
+        }
+    }
+
     return payload.paymentId || payload.bookId ? payload : null;
 }
 
@@ -246,8 +252,8 @@ export async function refundStarsPayment(
     telegramPaymentChargeId: string,
     userId: number,
 ): Promise<boolean> {
-    const payment = paymentReceipts.get(telegramPaymentChargeId);
-    if (!payment || payment.userId !== userId) {
+    const payment = await getPurchaseByPaymentId(telegramPaymentChargeId);
+    if (!payment || payment.telegramUserId !== userId.toString()) {
         return false;
     }
 
@@ -256,7 +262,7 @@ export async function refundStarsPayment(
         telegram_payment_charge_id: telegramPaymentChargeId,
     });
 
-    paymentReceipts.delete(telegramPaymentChargeId);
+    await deletePurchaseByPaymentId(telegramPaymentChargeId);
     await sendTelegramMessage(userId, '✅ Stars refunded!');
 
     return true;

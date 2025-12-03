@@ -6,6 +6,7 @@ export type PurchaseDetails = {
   purchasedAt: string;
   walrusBlobId: string | null;
   walrusFileId: string | null;
+  telegramChargeId?: string | null;
 };
 
 function mapEntityToDetails(entity: Purchase): PurchaseDetails {
@@ -14,6 +15,7 @@ function mapEntityToDetails(entity: Purchase): PurchaseDetails {
     purchasedAt: entity.purchasedAt.toISOString(),
     walrusBlobId: entity.walrusBlobId ?? null,
     walrusFileId: entity.walrusFileId ?? null,
+    telegramChargeId: entity.telegramChargeId ?? null,
   };
 }
 
@@ -30,6 +32,7 @@ export const setPurchased = async (
     existing.purchasedAt = new Date(details.purchasedAt);
     existing.walrusBlobId = details.walrusBlobId ?? null;
     existing.walrusFileId = details.walrusFileId ?? null;
+    existing.telegramChargeId = details.telegramChargeId ?? null;
     await repository.save(existing);
     return;
   }
@@ -41,6 +44,7 @@ export const setPurchased = async (
     purchasedAt: new Date(details.purchasedAt),
     walrusBlobId: details.walrusBlobId ?? null,
     walrusFileId: details.walrusFileId ?? null,
+    telegramChargeId: details.telegramChargeId ?? null,
   });
 
   await repository.save(purchase);
@@ -57,6 +61,27 @@ export const getPurchaseDetails = async (
   }
 
   return mapEntityToDetails(entity);
+};
+
+export const getPurchaseByPaymentId = async (
+  paymentId: string,
+): Promise<(PurchaseDetails & { bookId: string; telegramUserId: string }) | undefined> => {
+  const repository = appDataSource.getRepository(Purchase);
+  const entity = await repository.findOne({ where: [{ paymentId }, { telegramChargeId: paymentId }] });
+  if (!entity) {
+    return undefined;
+  }
+
+  return {
+    bookId: entity.bookId,
+    telegramUserId: entity.telegramUserId,
+    ...mapEntityToDetails(entity),
+  };
+};
+
+export const deletePurchaseByPaymentId = async (paymentId: string): Promise<void> => {
+  const repository = appDataSource.getRepository(Purchase);
+  await repository.delete([{ paymentId }, { telegramChargeId: paymentId }]);
 };
 
 export const listPurchasedBooks = async (

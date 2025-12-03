@@ -24,6 +24,9 @@ export class Purchase {
   @Column({ name: 'payment_id', type: 'text' })
   paymentId!: string;
 
+  @Column({ name: 'telegram_charge_id', type: 'text', nullable: true })
+  telegramChargeId!: string | null;
+
   @Column({ name: 'purchased_at', type: 'datetime' })
   purchasedAt!: Date;
 

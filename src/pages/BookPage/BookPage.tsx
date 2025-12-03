@@ -53,12 +53,15 @@ export default function BookPage(): JSX.Element {
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [isPurchased, setIsPurchased] = useState(false);
     const [isActionLoading, setIsActionLoading] = useState(false);
+    const [isPollingPurchase, setIsPollingPurchase] = useState(false);
     const [activeAction, setActiveAction] = useState<"buy" | "subscribe" | null>(null);
     const [isPurchaseModalOpen, setPurchaseModalOpen] = useState(false);
     const [invoice, setInvoice] = useState<Invoice | null>(null);
     const [isConfirmingPurchase, setIsConfirmingPurchase] = useState(false);
     const invoiceStatusRef = useRef<'paid' | 'failed' | 'cancelled' | null>(null);
     const likedBookIdsRef = useRef<Set<string>>(new Set());
+    const purchasePollingTimeoutRef = useRef<number | null>(null);
+    const purchasePollingStartRef = useRef<number | null>(null);
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
@@ -114,6 +117,66 @@ export default function BookPage(): JSX.Element {
             console.error(err);
         }
     }, [id, telegramUserId]);
+
+    const stopPurchasePolling = useCallback(() => {
+        if (purchasePollingTimeoutRef.current) {
+            window.clearTimeout(purchasePollingTimeoutRef.current);
+            purchasePollingTimeoutRef.current = null;
+        }
+        purchasePollingStartRef.current = null;
+        setIsPollingPurchase(false);
+        setIsActionLoading(false);
+    }, []);
+
+    const pollPurchaseStatus = useCallback(async () => {
+        if (!id || !telegramUserId) {
+            stopPurchasePolling();
+            return;
+        }
+
+        try {
+            const status = await purchasesApi.getStatus({bookId: id});
+            if (status.purchased) {
+                setIsPurchased(true);
+                stopPurchasePolling();
+                setPurchaseModalOpen(false);
+                setActiveAction(null);
+                setInvoice(null);
+                alert(t("book.toast.purchaseSuccess"));
+                return;
+            }
+        } catch (err) {
+            console.error("Failed to poll purchase status", err);
+        }
+
+        const startedAt = purchasePollingStartRef.current ?? Date.now();
+        if (!purchasePollingStartRef.current) {
+            purchasePollingStartRef.current = startedAt;
+        }
+        const elapsed = Date.now() - startedAt;
+
+        if (elapsed >= 60000) {
+            stopPurchasePolling();
+            alert(t("book.toast.purchaseTimeout"));
+            return;
+        }
+
+        purchasePollingTimeoutRef.current = window.setTimeout(() => {
+            void pollPurchaseStatus();
+        }, 2000);
+    }, [id, stopPurchasePolling, t, telegramUserId]);
+
+    const startPurchasePolling = useCallback(() => {
+        if (isPollingPurchase || !id || !telegramUserId) {
+            return false;
+        }
+
+        purchasePollingStartRef.current = Date.now();
+        setIsPollingPurchase(true);
+        setIsActionLoading(true);
+        void pollPurchaseStatus();
+        return true;
+    }, [id, isPollingPurchase, pollPurchaseStatus, telegramUserId]);
 
     const handleShare = useCallback(async () => {
         if (!book) {
@@ -289,6 +352,7 @@ export default function BookPage(): JSX.Element {
 
             setActiveAction(action);
             setIsActionLoading(true);
+            let pollingStarted = false;
 
             try {
                 const invoiceResponse = await paymentsApi.createInvoice({bookId: book.id});
@@ -297,15 +361,18 @@ export default function BookPage(): JSX.Element {
                 if (invoiceSDK.isSupported()) {
                     await invoiceSDK.openUrl(invoiceResponse.invoiceLink);
                 }
+                pollingStarted = startPurchasePolling();
             } catch (err) {
                 console.error(err);
                 setActiveAction(null);
                 showToast(t("book.toast.invoiceFailed"));
             } finally {
-                setIsActionLoading(false);
+                if (!pollingStarted) {
+                    setIsActionLoading(false);
+                }
             }
         },
-        [book, isActionLoading, showToast, t],
+        [book, isActionLoading, showToast, startPurchasePolling, t],
     );
 
     const handleConfirmPurchase = useCallback(async () => {
@@ -326,6 +393,7 @@ export default function BookPage(): JSX.Element {
             });
 
             setIsPurchased(true);
+            stopPurchasePolling();
             setPurchaseModalOpen(false);
             setActiveAction(null);
             setInvoice(null);
@@ -344,7 +412,7 @@ export default function BookPage(): JSX.Element {
             setIsConfirmingPurchase(false);
             setIsActionLoading(false);
         }
-    }, [book, invoice, isConfirmingPurchase, showToast, t, telegramUserId]);
+    }, [book, invoice, isConfirmingPurchase, showToast, stopPurchasePolling, t, telegramUserId]);
 
     const handleModalOpenChange = useCallback(
         (open: boolean) => {
@@ -384,14 +452,16 @@ export default function BookPage(): JSX.Element {
             if (loaderTimeoutRef.current) {
                 window.clearTimeout(loaderTimeoutRef.current);
             }
+            stopPurchasePolling();
         };
-    }, []);
+    }, [stopPurchasePolling]);
 
     useEffect(() => {
         if (loaderTimeoutRef.current) {
             window.clearTimeout(loaderTimeoutRef.current);
         }
 
+        stopPurchasePolling();
         setIsPurchased(false);
         setActiveAction(null);
         setPurchaseModalOpen(false);
@@ -400,7 +470,7 @@ export default function BookPage(): JSX.Element {
         setIsConfirmingPurchase(false);
         invoiceStatusRef.current = null;
         autoReadTriggeredRef.current = false;
-    }, [id]);
+    }, [id, stopPurchasePolling]);
 
     useEffect(() => {
         if (!invoice) {
@@ -459,6 +529,12 @@ export default function BookPage(): JSX.Element {
     useEffect(() => {
         void refreshPurchaseStatus();
     }, [refreshPurchaseStatus]);
+
+    useEffect(() => {
+        if (isPurchased) {
+            stopPurchasePolling();
+        }
+    }, [isPurchased, stopPurchasePolling]);
 
     useEffect(() => {
         const likedSet = loadLikedBookIds(telegramUserId);

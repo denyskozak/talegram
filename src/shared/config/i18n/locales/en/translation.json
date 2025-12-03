@@ -171,6 +171,8 @@
       "confirmFailed": "Could not confirm the payment",
       "paymentCancelled": "Payment was cancelled",
       "paymentFailed": "Payment failed",
+      "purchaseSuccess": "Purchase completed successfully",
+      "purchaseTimeout": "We could not confirm your purchase. Please try again.",
       "readAccessRequired": "Purchase the book to read it.",
       "listenAccessRequired": "Purchase the book to listen to the audiobook.",
       "downloadFailed": "Could not load the book file. Try again later."
