@@ -1,6 +1,5 @@
 import {BrowserRouter, useLocation, useNavigate} from "react-router-dom";
 import {useEffect, useState, type TransitionEvent} from "react";
-import {useLaunchParams} from '@tma.js/sdk-react';
 
 import {AppRoot} from "@telegram-apps/telegram-ui";
 import { init } from '@tma.js/sdk';
@@ -113,7 +112,6 @@ function NavigationControls(): null {
 function AppContent(): JSX.Element {
     const {isTelegram} = useTMA();
     const theme = useTheme();
-    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
     const [isSplashVisible, setIsSplashVisible] = useState(true);
 
     useEffect(() => {
@@ -129,7 +127,6 @@ function AppContent(): JSX.Element {
 
         <AppRoot
             style={{
-                paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0,
                 background: theme.background,
                 color: theme.text,
             }}

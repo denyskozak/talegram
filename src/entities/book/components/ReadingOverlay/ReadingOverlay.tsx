@@ -5,6 +5,7 @@ import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {type Rendition} from 'epubjs'
 import {Button} from "@/shared/ui/Button.tsx";
+import {useTranslation} from "react-i18next";
 
 type ReadingOverlayProps = {
     fileUrl: string;
@@ -32,10 +33,11 @@ function updateTheme(rendition: Rendition, theme: ITheme) {
 
 export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
+    const {t} = useTranslation();
 
     const rendition = useRef<Rendition | undefined>(undefined)
     const [theme, setTheme] = useState<ITheme>('light')
-    const [largeText, setLargeText] = useState(false);
+    const [largeText, setLargeText] = useState(true);
 
     useEffect(() => {
         if (rendition.current) {
@@ -57,16 +59,16 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         <div style={{height: '90vh', position: 'relative'}}>
             <div style={{
                 position: "absolute",
-                right: '0',
-                top: '0',
+                right: '4px',
+                bottom: '4px',
                 zIndex: '10',
-                width: '100%',
+                width: 'fit-content',
                 gap: '5px',
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-                <Button mode="bezeled" onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
-                <Button mode="bezeled" onClick={() => setLargeText(!largeText)}>Toggle font-size</Button>
+                <Button mode="bezeled" size="s" onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
+                <Button mode="bezeled" size="s" onClick={() => setLargeText(!largeText)}>{t('reading-overlay.toggle-font-size')}</Button>
             </div>
             <ReactReader
                 readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
@@ -92,6 +94,10 @@ const lightReaderTheme: IReactReaderStyle = {
     readerArea: {
         ...ReactReaderStyle.readerArea,
         transition: undefined,
+    },
+    tocButtonBar: {
+        ...ReactReaderStyle.tocButtonBar,
+        background: 'black',
     },
 }
 

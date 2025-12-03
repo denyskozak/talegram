@@ -510,5 +510,8 @@
     "subtitle": "Need help? We're just a message away.",
     "description": "Reach our support team on Telegram and we'll get back to you shortly.",
     "telegramCta": "Open @lawyerdsupport"
+  },
+  "reading-overlay": {
+    "toggle-font-size": "Font-size"
   }
 }

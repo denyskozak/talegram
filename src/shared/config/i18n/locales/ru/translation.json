@@ -507,5 +507,8 @@
       "noAudiobook": "Аудиоверсия не прикладывалась.",
       "audiobookAvailable": "К заявке прикреплена аудиоверсия."
     }
+  },
+  "reading-overlay": {
+    "toggle-font-size": "Шрифт"
   }
 }

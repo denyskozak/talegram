@@ -120,7 +120,7 @@ export default function SearchPage(): JSX.Element {
                     placeholder={t("search.placeholder")}
                     aria-label={t("search.placeholder")}
                     autoFocus
-                    getRef={(ref) => {
+                    ref={(ref) => {
                         inputRef.current = ref;
                     }}
                 />

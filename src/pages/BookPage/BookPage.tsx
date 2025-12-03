@@ -627,7 +627,7 @@ export default function BookPage(): JSX.Element {
                                 </Button>
                             </div>
                         </div>
-                        <Card style={{borderRadius: 24, margin: "0 auto", overflow: "hidden", width: "80vw"}}>
+                        <Card style={{borderRadius: 24, margin: "0 auto", overflow: "hidden", width: "60vw"}}>
                             <div style={{position: "relative", aspectRatio: "10 / 12"}}>
                                 <img
                                     src={coverSrc}
@@ -668,7 +668,7 @@ export default function BookPage(): JSX.Element {
                                     <BookRating value={book.rating.average} votes={book.rating.votes}/>
                                 </div>
                                 <Chip mode="outline" style={{fontWeight: 600}}>
-                                    {book.price} {book.currency}
+                                    {book.price} {book.currency} ⭐
                                 </Chip>
                             </div>
                             <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>

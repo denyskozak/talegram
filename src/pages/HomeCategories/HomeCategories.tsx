@@ -168,12 +168,14 @@ export default function HomeCategories(): JSX.Element {
                         <div
                             style={{
                                 display: "grid",
-                                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                                gridAutoFlow: "column", // новые элементы добавляются в новые колонки
+                                gridTemplateRows: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
+                                gridAutoColumns: "calc(30% - 8px)", // ширина одной колонки ~ половина контейнера
+                                overflowX: "auto", // горизонтальный скролл
                                 columnGap: 16,
                                 rowGap: 16,
                                 paddingRight: 4,
                                 paddingBottom: 4,
-                                alignItems: "stretch"
                             }}
                         >
                             {topBooks.map((book) => (
@@ -185,15 +187,12 @@ export default function HomeCategories(): JSX.Element {
                                     />
                                 </div>
                             ))}
-                            {isTopLoading && topBooks.length === 0 && (
-                                <>
-                                    {Array.from({length: 4}).map((_, index) => (
-                                        <div key={index} style={{minWidth: 0, width: "100%"}}>
-                                            <BookCardSkeleton />
-                                        </div>
-                                    ))}
-                                </>
-                            )}
+
+                            {isTopLoading && topBooks.length === 0 && Array.from({length: 4}).map((_, index) => (
+                                <div key={index} style={{minWidth: 0, width: "100%"}}>
+                                    <BookCardSkeleton />
+                                </div>
+                            ))}
                             {isTopLoading && topBooks.length > 0 && (
                                 <div style={{minWidth: 0, width: "100%"}}>
                                     <BookCardSkeleton />

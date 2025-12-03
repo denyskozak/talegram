@@ -96,7 +96,6 @@ export async function createStarsInvoice(params: CreateStarsInvoiceParams): Prom
     const paymentId = randomUUID();
 
     const priceInStars = Math.max(1, params.amountStars);
-    const priceInMinUnits = priceInStars * 100;
 
     const invoiceLink = await fetchTelegramApi<string>('createInvoiceLink', {
         title: params.title,
@@ -104,7 +103,7 @@ export async function createStarsInvoice(params: CreateStarsInvoiceParams): Prom
         payload: JSON.stringify({ paymentId, bookId: params.bookId }),
         provider_token: '',
         currency: 'XTR',
-        prices: [{ label: params.title, amount: priceInMinUnits }],
+        prices: [{ label: params.title, amount: priceInStars }],
     });
 
     invoices.set(paymentId, {
