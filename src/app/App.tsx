@@ -1,5 +1,6 @@
 import {BrowserRouter, useLocation, useNavigate} from "react-router-dom";
 import {useEffect, useState, type TransitionEvent} from "react";
+import {useTranslation} from "react-i18next";
 
 import {AppRoot} from "@telegram-apps/telegram-ui";
 import { init } from '@tma.js/sdk';
@@ -16,6 +17,7 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
     const [shouldRender, setShouldRender] = useState(visible);
     const {theme} = useTMA();
     const backgroundColor = theme?.bg_color ?? "#fdfdfd";
+    const {t} = useTranslation();
 
     useEffect(() => {
         if (visible) {
@@ -62,15 +64,50 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
             {/*    justifyContent: "center",*/}
             {/*  }}*/}
             {/*>*/}
-            <img
-                src="/logo-v-1.webp"
-                alt="Open Reader logo"
+            <div
                 style={{
-                    width: 96,
-                    height: 96,
-                    objectFit: "contain",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 12,
+                    textAlign: "center",
                 }}
-            />
+            >
+                <img
+                    src="/logo-v-1.webp"
+                    alt="Open Reader logo"
+                    style={{
+                        width: 96,
+                        height: 96,
+                        objectFit: "contain",
+                    }}
+                />
+                <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                    <span style={{fontSize: 18, fontWeight: 600}}>
+                        {t("splashScreen.titleRu")}
+                    </span>
+                    <span style={{fontSize: 16, color: "#606060"}}>
+                        {t("splashScreen.titleEn")}
+                    </span>
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginTop: 8,
+                        color: "#606060",
+                        fontSize: 14,
+                    }}
+                >
+                    <span>{t("splashScreen.decentralizedBy")}</span>
+                    <img
+                        src="/walrus_logo.svg"
+                        alt="Walrus logo"
+                        style={{height: 24, objectFit: "contain"}}
+                    />
+                </div>
+            </div>
             {/*</div>*/}
         </div>
     );
