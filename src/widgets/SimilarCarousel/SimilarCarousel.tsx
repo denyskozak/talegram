@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { handleBookCoverError } from "@/entities/book/lib";
 import {useMemo} from "react";
+import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 
 interface SimilarCarouselProps {
   books: Book[];
@@ -44,12 +45,12 @@ function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): J
 
 
     const coverSrc = useMemo(() => {
-        if (book?.coverImageData) {
-            const mimeType = book.coverMimeType ?? "image/jpeg";
-            return `data:${mimeType};base64,${book.coverImageData}`;
+        if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+            return buildBookFileDownloadUrl(book.id, "cover");
         }
-        return '';
-    }, [book]);
+
+        return book.coverUrl ?? '';
+    }, [book.coverWalrusFileId, book.coverWalrusBlobId, book.coverUrl, book.id]);
   return (
     <Tappable
       onClick={() => onSelect(book.id)}

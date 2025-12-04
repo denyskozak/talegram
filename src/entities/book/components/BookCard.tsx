@@ -6,6 +6,7 @@ import {Card, Chip, Tappable, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {handleBookCoverError} from "@/entities/book/lib";
+import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {BookRating} from "./BookRating";
 
 interface BookCardProps {
@@ -18,13 +19,12 @@ export function BookCard({book, showTags = true, onClick}: BookCardProps): JSX.E
     const {t} = useTranslation();
 
     const coverSrc = useMemo(() => {
-        if (book.coverImageData) {
-            const mimeType = book.coverMimeType ?? "image/jpeg";
-            return `data:${mimeType};base64,${book.coverImageData}`;
+        if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+            return buildBookFileDownloadUrl(book.id, "cover");
         }
 
-        return '';
-    }, [book.coverImageData, book.coverMimeType, book.coverUrl, book.id]);
+        return book.coverUrl ?? '';
+    }, [book.coverWalrusFileId, book.coverWalrusBlobId, book.coverUrl, book.id]);
 
     return (
         <Tappable

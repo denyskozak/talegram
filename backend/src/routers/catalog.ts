@@ -11,7 +11,6 @@ import {
   listReviews,
 } from '../data/catalog.js';
 import { getPurchaseDetails } from '../stores/purchasesStore.js';
-import { fetchWalrusFilesBase64 } from '../utils/walrus-files.js';
 
 const listCategoriesInput = z.object({
   search: z.string().trim().optional(),
@@ -59,17 +58,6 @@ export const catalogRouter = createRouter({
     .query(async ({ input }) => {
       const result = await listBooks(input ?? {});
 
-      const coverWalrusFileIds = Array.from(
-        new Set(
-          result.items
-            .map((book) => book.coverWalrusFileId)
-            .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
-        ),
-      );
-      const coverDataById =
-        coverWalrusFileIds.length > 0
-          ? await fetchWalrusFilesBase64(coverWalrusFileIds)
-          : new Map<string, string | null>();
       const items = result.items.map((book) => {
         const {
           fileEncryptionIv,
@@ -78,12 +66,8 @@ export const catalogRouter = createRouter({
           audiobookFileEncryptionTag,
           ...bookForClient
         } = book;
-        const coverImageData =
-          book.coverWalrusFileId && coverDataById.has(book.coverWalrusFileId)
-            ? coverDataById.get(book.coverWalrusFileId) ?? null
-            : null;
 
-        return { ...bookForClient, coverImageData };
+        return bookForClient;
       });
 
       return { ...result, items };
@@ -109,11 +93,7 @@ export const catalogRouter = createRouter({
       ...bookForClient
     } = book;
 
-    const coverImageData = book.coverWalrusFileId
-      ? (await fetchWalrusFilesBase64([book.coverWalrusFileId])).get(book.coverWalrusFileId) ?? null
-      : null;
-
-    return { ...bookForClient, coverImageData };
+    return bookForClient;
   }),
   listReviews: procedure
     .input(listReviewsInput)
