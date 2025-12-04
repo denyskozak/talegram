@@ -6,7 +6,6 @@ import {Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
-import {handleBookCoverError} from "@/entities/book/lib";
 import type {Book, ID, Review} from "@/entities/book/types";
 import {downloadFile} from "@tma.js/sdk-react";
 import {copyTextToClipboard} from "@tma.js/sdk";
@@ -636,7 +635,6 @@ export default function BookPage(): JSX.Element {
                                 <img
                                     src={coverSrc}
                                     alt={t("book.coverAlt", {title: book.title})}
-                                    onError={handleBookCoverError}
                                     style={{width: "100%", height: "100%", objectFit: "cover"}}
                                 />
                             </div>

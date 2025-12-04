@@ -4,7 +4,6 @@ import type { Book } from "@/entities/book/types";
 import { Card, Tappable, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
-import { handleBookCoverError } from "@/entities/book/lib";
 import {useMemo} from "react";
 import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 
@@ -64,7 +63,6 @@ function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): J
             src={coverSrc}
             alt={t("images.bookCover", { title: book.title })}
             loading="lazy"
-            onError={handleBookCoverError}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         </div>

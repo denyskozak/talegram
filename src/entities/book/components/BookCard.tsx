@@ -5,7 +5,6 @@ import type {Book} from "@/entities/book/types";
 import {Card, Chip, Tappable, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
-import {handleBookCoverError} from "@/entities/book/lib";
 import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {BookRating} from "./BookRating";
 
@@ -19,7 +18,7 @@ export function BookCard({book, showTags = true, onClick}: BookCardProps): JSX.E
     const {t} = useTranslation();
 
     const coverSrc = useMemo(() => {
-        if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+        if (book.coverWalrusFileId) {
             return buildBookFileDownloadUrl(book.id, "cover");
         }
 
@@ -39,7 +38,6 @@ export function BookCard({book, showTags = true, onClick}: BookCardProps): JSX.E
                         src={coverSrc}
                         alt={t("book.coverAlt", {title: book.title})}
                         loading="lazy"
-                        onError={handleBookCoverError}
                         style={{width: "100%", height: "100%", objectFit: "contain"}}
                     />
                 </div>

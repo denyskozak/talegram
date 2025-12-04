@@ -11,6 +11,7 @@ import { decryptBookFile } from '../services/encryption.js';
 import { suiClient } from '../services/walrus-storage.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
 import { buildAudioPreview, buildEpubPreview } from './preview.js';
+import {resolveDecryptedFile} from "../services/storage/files";
 
 type WriteWalrusFilesParams = Parameters<typeof suiClient.walrus.writeFiles>[0];
 type WriteWalrusFilesResult = Awaited<ReturnType<typeof suiClient.walrus.writeFiles>>;

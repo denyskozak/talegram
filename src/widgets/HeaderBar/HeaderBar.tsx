@@ -1,24 +1,15 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTheme } from "@/app/providers/ThemeProvider";
-import { Button } from "@/shared/ui/Button";
 
 export function HeaderBar(): JSX.Element {
   const navigate = useNavigate();
-  const location = useLocation();
   const theme = useTheme();
   const { t } = useTranslation();
 
-  const isAccountActive = location.pathname.startsWith("/account");
-
-  const handleAccountClick = () => {
-    if (!isAccountActive) {
-      navigate("/account");
-    }
-  };
 
   return (
     <header
@@ -37,7 +28,7 @@ export function HeaderBar(): JSX.Element {
           padding: "12px 16px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
+          justifyContent: "center",
           gap: 16,
         }}
       >
@@ -65,13 +56,6 @@ export function HeaderBar(): JSX.Element {
             {t("app.name")}
           </Title>
         </div>
-        <Button
-          size="s"
-          mode={isAccountActive ? "filled" : "outline"}
-          onClick={handleAccountClick}
-        >
-          {t("header.account.button")}
-        </Button>
       </div>
     </header>
   );
