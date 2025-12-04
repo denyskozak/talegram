@@ -27,6 +27,12 @@
       "select": "Choose a wallet"
     }
   },
+  "navigation": {
+    "label": "Primary navigation",
+    "account": "My account",
+    "books": "Books",
+    "settings": "Settings"
+  },
   "footer": {
     "languageLabel": "Language to",
     "contact": "Contact",
@@ -107,6 +113,12 @@
     "confirm": "Complete",
     "showMore": "Show more",
     "cancel": "Cancel"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "App language",
+    "languageNote": "Use the toggle below to switch languages instantly.",
+    "description": "More options are on the way — stay tuned for additional settings."
   },
   "book": {
     "cardAria": "Book {{title}}",
