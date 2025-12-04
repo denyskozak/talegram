@@ -6,6 +6,11 @@
       "description": "You are outside Telegram. Some features are limited."
     }
   },
+  "splashScreen": {
+    "titleRu": "Цифровая Александри́йская библиоте́ка",
+    "titleEn": "Digital Library of Alexandria",
+    "decentralizedBy": "decentralized by"
+  },
   "languages": {
     "en": "English",
     "ru": "Russian"
