@@ -1,0 +1,42 @@
+import { Text, Title } from "@telegram-apps/telegram-ui";
+import { useTranslation } from "react-i18next";
+
+import { LanguageToggle } from "@/shared/ui/LanguageToggle";
+import { useTheme } from "@/app/providers/ThemeProvider";
+
+export default function SettingsPage(): JSX.Element {
+  const { t } = useTranslation();
+  const theme = useTheme();
+
+  return (
+    <div
+      style={{
+        padding: "16px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 16,
+        color: theme.text,
+      }}
+    >
+      <Title level="1">{t("settings.title")}</Title>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          padding: "12px",
+          borderRadius: 12,
+          background: theme.section,
+          border: `1px solid ${theme.separator}`,
+        }}
+      >
+        <Text weight="2" style={{ color: theme.subtitle }}>
+          {t("settings.language")}
+        </Text>
+        <LanguageToggle />
+        <Text style={{ color: theme.subtitle }}>{t("settings.languageNote")}</Text>
+      </div>
+      <Text style={{ color: theme.subtitle }}>{t("settings.description")}</Text>
+    </div>
+  );
+}
