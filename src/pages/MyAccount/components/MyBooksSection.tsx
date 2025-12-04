@@ -8,6 +8,7 @@ import type { ThemeColors } from "@/app/providers/ThemeProvider";
 import type { MyBook, MyBooksFilter } from "../types";
 
 import { Button } from "@/shared/ui/Button";
+import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 
 export type MyBooksSectionProps = {
   books: MyBook[];
@@ -55,13 +56,12 @@ function MyBookCard({
   const { book, purchase } = item;
 
   const coverUrl = useMemo(() => {
-    if (book.coverImageData) {
-      const mimeType = book.coverMimeType ?? "image/jpeg";
-      return `data:${mimeType};base64,${book.coverImageData}`;
+    if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+      return buildBookFileDownloadUrl(book.id, "cover");
     }
 
-    return '';
-  }, [book.coverImageData, book.coverMimeType]);
+    return book.coverUrl ?? '';
+  }, [book.coverWalrusFileId, book.coverWalrusBlobId, book.coverUrl, book.id]);
   const author = book.authors.join(", ");
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);

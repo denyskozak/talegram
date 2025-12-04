@@ -574,11 +574,15 @@ export default function BookPage(): JSX.Element {
     }
 
     const coverSrc = useMemo(() => {
-        if (book?.coverImageData) {
-            const mimeType = book.coverMimeType ?? "image/jpeg";
-            return `data:${mimeType};base64,${book.coverImageData}`;
+        if (!book) {
+            return '';
         }
-        return '';
+
+        if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+            return buildBookFileDownloadUrl(book.id, "cover");
+        }
+
+        return book.coverUrl ?? '';
     }, [book]);
 
     if (isLoading || !book) {
