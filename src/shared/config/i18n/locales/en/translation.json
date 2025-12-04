@@ -7,8 +7,7 @@
     }
   },
   "splashScreen": {
-    "titleRu": "Цифровая Александри́йская библиоте́ка",
-    "titleEn": "Digital Library of Alexandria",
+    "title": "Digital Library of Alexandria",
     "decentralizedBy": "decentralized by"
   },
   "languages": {

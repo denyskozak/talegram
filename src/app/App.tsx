@@ -84,10 +84,7 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                 />
                 <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                     <span style={{fontSize: 18, fontWeight: 600}}>
-                        {t("splashScreen.titleRu")}
-                    </span>
-                    <span style={{fontSize: 16, color: "#606060"}}>
-                        {t("splashScreen.titleEn")}
+                        {t("splashScreen.title")}
                     </span>
                 </div>
                 <div
