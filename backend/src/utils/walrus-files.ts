@@ -11,7 +11,6 @@ import { decryptBookFile } from '../services/encryption.js';
 import { suiClient } from '../services/walrus-storage.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
 import { buildAudioPreview, buildEpubPreview } from './preview.js';
-import {resolveDecryptedFile} from "../services/storage/files";
 
 type WriteWalrusFilesParams = Parameters<typeof suiClient.walrus.writeFiles>[0];
 type WriteWalrusFilesResult = Awaited<ReturnType<typeof suiClient.walrus.writeFiles>>;
@@ -637,26 +636,62 @@ export async function handleBookPreviewRequest(
     return;
   }
 
-  const walrusId =
+  const storageId =
     params.fileKind === 'audiobook'
-      ? book.audiobookWalrusFileId ?? book.audiobookWalrusBlobId
-      : book.walrusFileId ?? book.walrusBlobId;
+      ? resolveWalrusStorageId(book.audiobookWalrusFileId, book.audiobookWalrusBlobId)
+      : resolveWalrusStorageId(book.walrusFileId, book.walrusBlobId);
 
-  if (!walrusId) {
+  if (!storageId) {
     respondWithError(res, 404, 'Book file not available for preview');
     return;
   }
 
   try {
-    const resolved = await resolveDecryptedFile(walrusId);
+    const walrusBuffer = await fetchWalrusFileBuffer(storageId);
+    if (!walrusBuffer) {
+      respondWithError(res, 404, 'Book file not available for preview');
+      return;
+    }
+
+    let decryptedBuffer = walrusBuffer;
+    const mimeType = params.fileKind === 'audiobook' ? book.audiobookMimeType ?? null : book.mimeType ?? null;
+
+    if (params.fileKind === 'book' || params.fileKind === 'audiobook') {
+      const iv = decodeBase64Buffer(
+        params.fileKind === 'audiobook' ? book.audiobookFileEncryptionIv : book.fileEncryptionIv,
+      );
+      const authTag = decodeBase64Buffer(
+        params.fileKind === 'audiobook' ? book.audiobookFileEncryptionTag : book.fileEncryptionTag,
+      );
+
+      if (iv && iv.byteLength === AES_GCM_IV_LENGTH && authTag && authTag.byteLength === AES_GCM_TAG_LENGTH) {
+        try {
+          decryptedBuffer = decryptBookFile(walrusBuffer, iv, authTag);
+        } catch (error) {
+          console.warn('Failed to decrypt Walrus file for preview, falling back to encrypted payload', {
+            bookId: normalizedBookId,
+            storageId,
+            error,
+          });
+        }
+      } else {
+        console.warn('Missing or invalid encryption metadata for Walrus file', {
+          bookId: normalizedBookId,
+          storageId,
+        });
+      }
+    }
+
     const previewBuffer =
-      params.fileKind === 'audiobook'
-        ? buildAudioPreview(resolved.buffer)
-        : await buildEpubPreview(resolved.buffer);
+      params.fileKind === 'audiobook' ? buildAudioPreview(decryptedBuffer) : await buildEpubPreview(decryptedBuffer);
+
+    const resolvedMimeType = mimeType ?? (params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
+    const fileName = determineDownloadFileName(book, params.fileKind);
 
     res.statusCode = 200;
-    res.setHeader('Content-Type', resolved.mimeType ?? 'application/octet-stream');
-    res.setHeader('Content-Disposition', `inline; filename="${resolved.fileName ?? 'preview'}"`);
+    res.setHeader('Content-Type', resolvedMimeType);
+    res.setHeader('Content-Length', previewBuffer.byteLength.toString(10));
+    res.setHeader('Content-Disposition', `inline; filename="${sanitizeForHeader(fileName)}"`);
     res.end(previewBuffer);
   } catch (error) {
     console.error('Failed to prepare preview file', { bookId: normalizedBookId, error });
