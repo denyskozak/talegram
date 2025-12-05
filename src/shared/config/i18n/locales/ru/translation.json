@@ -8,7 +8,7 @@
   },
   "splashScreen": {
     "title": "Цифровая Александри́йская библиоте́ка",
-    "decentralizedBy": "децентрализовано через"
+    "decentralizedBy": "децентрализовано через Варлус"
   },
   "languages": {
     "en": "Английский",
@@ -142,13 +142,13 @@
       "subscribe": "Подписка"
     },
     "actions": {
-      "read": "Читать",
+      "read": "Читать \uD83D\uDCD6",
       "download": "Скачать",
       "buy": "Купить",
       "subscribe": "Подписаться",
-      "listen": "Слушать",
-      "preview": "Прочитать фрагмент",
-      "previewAudio": "Прослушать отрывок",
+      "listen": "Слушать \uD83D\uDC42",
+      "preview": "Прочитать фрагмент \uD83D\uDCD6",
+      "previewAudio": "Прослушать отрывок \uD83D\uDC42",
       "confirm": "Оформить",
       "like": "Поставить лайк «{{title}}»",
       "unlike": "Убрать лайк с «{{title}}»"

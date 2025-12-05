@@ -2,7 +2,7 @@ import http from 'node:http';
 
 // Разрешённые источники. Добавь сюда свои фронтовые домены при необходимости.
 const ALLOWED_ORIGINS = new Set<string>([
-    'https://172.20.10.6:5173',
+    'https://172.20.10.7:5173',
 ]);
 
 const ALLOWED_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';

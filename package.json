@@ -19,7 +19,6 @@
     "predeploy": "npm run build"
   },
   "dependencies": {
-    "@mysten/walrus": "^0.8.3",
     "@react-pdf-viewer/core": "^3.12.0",
     "@react-pdf-viewer/default-layout": "^3.12.0",
     "@react-pdf/renderer": "^4.3.1",

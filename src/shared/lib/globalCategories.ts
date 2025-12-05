@@ -1,4 +1,4 @@
-export const GLOBAL_CATEGORIES = ["book", "article", "comics"] as const;
+export const GLOBAL_CATEGORIES = [ "article", "book", "comics"] as const;
 
 export type GlobalCategory = (typeof GLOBAL_CATEGORIES)[number];
 

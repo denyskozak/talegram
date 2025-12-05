@@ -9,8 +9,8 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@mysten/sui": "^1.44.0",
-    "@mysten/walrus": "^0.8.3",
+    "@mysten/sui": "^1.45.2",
+    "@mysten/walrus": "^0.8.6",
     "@telegram-apps/init-data-node": "^2.0.10",
     "@tma.js/init-data-node": "2.0.0",
     "@trpc/server": "^11.7.1",

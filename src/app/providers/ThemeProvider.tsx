@@ -42,6 +42,5 @@ function mapTheme(theme?: ThemeParamsState | null): ThemeColors {
 
 export function useTheme(): ThemeColors {
     const {theme} = useTMA();
-    console.log("theme: ", theme?.bg_color);
     return useMemo(() => mapTheme(theme), [theme]);
 }

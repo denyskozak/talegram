@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 
-const PREVIEW_CHAPTER_LIMIT = 10;
+const PREVIEW_CHAPTER_LIMIT = 3;
 
 const META_CONTAINER_PATH = 'META-INF/container.xml';
 

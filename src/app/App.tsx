@@ -15,8 +15,7 @@ import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
 
 function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
     const [shouldRender, setShouldRender] = useState(visible);
-    const {theme} = useTMA();
-    const backgroundColor = theme?.bg_color ?? "#fdfdfd";
+    const theme = useTheme();
     const {t} = useTranslation();
 
     useEffect(() => {
@@ -44,7 +43,7 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                backgroundColor,
+                backgroundColor: theme.background,
                 zIndex: 9999,
                 width: "100%",
                 height: "100%",
@@ -69,7 +68,7 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    gap: 12,
+                    gap: 20,
                     textAlign: "center",
                 }}
             >
@@ -83,25 +82,27 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                     }}
                 />
                 <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                    <span style={{fontSize: 18, fontWeight: 600}}>
+                    <span style={{fontSize: 24, fontWeight: 600,      color: theme.text,}}>
                         {t("splashScreen.title")}
                     </span>
                 </div>
                 <div
                     style={{
+                        position: "absolute",
+                        bottom: '5%',
                         display: "flex",
                         alignItems: "center",
                         gap: 8,
                         marginTop: 8,
-                        color: "#606060",
-                        fontSize: 14,
+                        color: theme.text,
+                        fontSize: 20,
                     }}
                 >
                     <span>{t("splashScreen.decentralizedBy")}</span>
                     <img
                         src="/walrus_logo.svg"
                         alt="Walrus logo"
-                        style={{height: 24, objectFit: "contain"}}
+                        style={{height: 52, objectFit: "contain"}}
                     />
                 </div>
             </div>
@@ -151,7 +152,7 @@ function AppContent(): JSX.Element {
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
             setIsSplashVisible(false);
-        }, 1500);
+        }, 2000);
         return () => {
             clearTimeout(timeoutId);
         };
