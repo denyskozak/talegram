@@ -103,7 +103,7 @@
     "retry": "Retry",
     "goHome": "Go home",
     "read": "Read \uD83D\uDCD6",
-    "download": "Download",
+    "download": "Download ⬇\uFE0F",
     "buy": "Buy",
     "subscribe": "Subscribe",
     "search": "Search",
@@ -148,7 +148,7 @@
     },
     "actions": {
       "read": "Read \uD83D\uDCD6",
-      "download": "Download",
+      "download": "Download ⬇\uFE0F",
       "buy": "Buy",
       "subscribe": "Subscribe",
       "listen": "Listen \uD83D\uDC42",
@@ -329,7 +329,7 @@
       },
       "actions": {
         "read": "Read \uD83D\uDCD6",
-        "download": "Download"
+        "download": "Download ⬇\uFE0F"
       },
       "like": "Like \"{{title}}\"",
       "unlike": "Remove like from \"{{title}}\"",
@@ -490,7 +490,7 @@
         "approve": "Approve",
         "reject": "Reject",
         "viewDetails": "View details",
-        "download": "Download book"
+        "download": "Download book ⬇\uFE0F"
       },
       "downloadError": "Could not download the manuscript. Try again later.",
       "price": "Price: {{value}} ⭐",
@@ -527,7 +527,7 @@
       "manuscript": "Manuscript",
       "cover": "Cover image",
       "audiobook": "Audiobook",
-      "download": "Download manuscript",
+      "download": "Download manuscript ⬇\uFE0F",
       "read": "Read in the app",
       "listen": "Listen in the app",
       "noDownload": "File stored on Walrus decentralized storage",

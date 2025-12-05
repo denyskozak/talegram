@@ -11,7 +11,7 @@ type NavItem = {
   path: string;
 };
 
-function BooksIcon({ active }: { active: boolean }): JSX.Element {
+function BooksIcon(): JSX.Element {
   return (
       <svg
           height="32px"
@@ -23,7 +23,7 @@ function BooksIcon({ active }: { active: boolean }): JSX.Element {
       >
           <style type="text/css">
               {
-                  "\n\t.st0{fill:#77B3D4;}\n\t.st1{opacity:0.2;}\n\t.st2{fill:#231F20;}\n\t.st3{fill:#E0995E;}\n\t.st4{fill:#C75C5C;}\n\t.st5{fill:#E0E0D1;}\n\t.st6{fill:#FFFFFF;}\n\t.st7{fill:#4F5D73;}\n\t.st8{fill:#76C2AF;}\n"
+                  "\n\t.st4{fill:#C75C5C;}\n\t.st5{fill:#E0E0D1;}\n\t.st6{fill:#FFFFFF;}\n\t.st7{fill:#4F5D73;}\n\t.st8{fill:#31a6ed;}\n"
               }
           </style>
           <g id="Layer_1">
@@ -98,7 +98,7 @@ function BooksIcon({ active }: { active: boolean }): JSX.Element {
   );
 }
 
-function AccountIcon({ active }: { active: boolean }): JSX.Element {
+function AccountIcon(): JSX.Element {
   return (
       <svg
           height="32px"
@@ -108,16 +108,12 @@ function AccountIcon({ active }: { active: boolean }): JSX.Element {
           viewBox="0 0 64 64"
           xmlSpace="preserve"
       >
-          <style type="text/css">
-              {
-                  "\n\t.st0{fill:#4F5D73;}\n\t.st1{opacity:0.2;}\n\t.st2{fill:#231F20;}\n\t.st3{fill:#FFFFFF;}\n"
-              }
-          </style>
+
           <g id="Layer_1">
               <g>
                   <circle className="st0" cx={32} cy={32} r={32} />
               </g>
-              <g className="st1">
+              <g className="st4">
                   <g>
                       <path
                           className="st2"
@@ -128,7 +124,7 @@ function AccountIcon({ active }: { active: boolean }): JSX.Element {
               <g>
                   <g>
                       <path
-                          className="st3"
+                          className="st4"
                           d="M43.9,45.5c-3.8-1.7-5.2-4.2-5.6-6.5c2.8-2.2,4.9-5.8,6.1-9.6c1.2-1.6,2-3.2,2-4.6c0-1-0.3-1.6-1-2.2 c-0.2-8.1-5.9-14.6-13-14.7c-0.1,0-0.1,0-0.2,0c0,0,0,0-0.1,0C25.1,8,19.4,14.4,19,22.4c-0.9,0.5-1.4,1.3-1.4,2.5 c0,1.6,1,3.6,2.7,5.4c1.2,3.3,3.1,6.4,5.5,8.4c-0.4,2.3-1.7,5-5.7,6.8c-2.2,0.9-6.1,1.8-7.8,2.6C16.6,53,24.9,56,31.9,56l0.1,0 c0,0,0,0,0,0c7,0,15.3-3,19.7-7.8C50,47.3,46.1,46.5,43.9,45.5z"
                       />
                   </g>
@@ -139,7 +135,7 @@ function AccountIcon({ active }: { active: boolean }): JSX.Element {
   );
 }
 
-function SettingsIcon({ active }: { active: boolean }): JSX.Element {
+function SettingsIcon(): JSX.Element {
   return (
       <svg
           height="32px"
@@ -151,7 +147,7 @@ function SettingsIcon({ active }: { active: boolean }): JSX.Element {
       >
           <style type="text/css">
               {
-                  "\n\t.st0{fill:#76C2AF;}\n\t.st1{opacity:0.2;}\n\t.st2{fill:#231F20;}\n\t.st3{fill:#4F5D73;}\n\t.st4{fill:#FFFFFF;}\n"
+                  "\n\t.st0{fill:#31a6ed;}\n\t.st1{opacity:0.2;}\n\t.st2{fill:#231F20;}\n\t.st3{fill:#4F5D73;}\n\t.st4{fill:#FFFFFF;}\n"
               }
           </style>
           <g id="Layer_1">
@@ -244,17 +240,17 @@ export function FooterBar(): JSX.Element {
   const navItems: NavItem[] = useMemo(
     () => [
       {
-        icon: <AccountIcon active={isActive("/account")} />,
+        icon: <AccountIcon />,
         label: t("navigation.account"),
         path: "/account",
       },
       {
-        icon: <BooksIcon active={isActive("/")} />,
+        icon: <BooksIcon />,
         label: t("navigation.books"),
         path: "/",
       },
       {
-        icon: <SettingsIcon active={isActive("/settings")} />,
+        icon: <SettingsIcon />,
         label: t("navigation.settings"),
         path: "/settings",
       },
