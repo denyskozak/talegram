@@ -12,6 +12,7 @@ import {ToastProvider} from "@/shared/ui/ToastProvider";
 import {DemoBanner} from "@/shared/ui/DemoBanner";
 import {FooterBar} from "@/widgets/FooterBar/FooterBar";
 import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
+import {useFooterVisibility} from "@/shared/hooks/useFooterVisibility";
 
 function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
     const [shouldRender, setShouldRender] = useState(visible);
@@ -148,6 +149,7 @@ function AppContent(): JSX.Element {
     const {isTelegram} = useTMA();
     const theme = useTheme();
     const [isSplashVisible, setIsSplashVisible] = useState(true);
+    const isFooterVisible = useFooterVisibility();
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
@@ -181,7 +183,7 @@ function AppContent(): JSX.Element {
                             <AppRouter/>
                         </div>
                     </main>
-                    <FooterBar/>
+                    {isFooterVisible && <FooterBar/>}
                 </div>
                 <NavigationControls/>
             </ToastProvider>
