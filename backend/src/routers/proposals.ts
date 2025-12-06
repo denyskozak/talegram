@@ -39,16 +39,14 @@ export const proposalsRouter = createRouter({
 
     await initializeDataSource();
     const communityMemberRepository = appDataSource.getRepository(CommunityMember);
-    const communityMember = telegramUserId
-      ? await communityMemberRepository.findOne({ where: { telegramUserId } })
-      : null;
+
     const isAllowedToViewVotes = true;
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposals = await bookProposalRepository.find({
       where: { status: ProposalStatus.PENDING, isDeleted: false },
       order: { createdAt: 'DESC' },
-      relations: { votes: true, books: true },
+      relations: { votes: true},
     });
 
     const coverFileIds = Array.from(
@@ -73,8 +71,7 @@ export const proposalsRouter = createRouter({
           ? votes.find((vote: ProposalVote) => vote.telegramUserId === telegramUserId)
           : undefined;
 
-      const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
-      const { votes: _votes, books: _books, ...rest } = proposal;
+      const { votes: _votes, ...rest } = proposal;
 
       const coverImageData =
         proposal.coverWalrusFileId && coverDataByFileId.has(proposal.coverWalrusFileId)
@@ -83,7 +80,6 @@ export const proposalsRouter = createRouter({
 
       return {
         ...rest,
-        bookId: firstBook ? firstBook.id : null,
         coverImageData,
         votes: {
           positiveVotes,
@@ -104,16 +100,16 @@ export const proposalsRouter = createRouter({
     const telegramUserId = ctx.telegramAuth.userId;
 
     await initializeDataSource();
-    const communityMemberRepository = appDataSource.getRepository(CommunityMember);
-    const communityMember = telegramUserId
-      ? await communityMemberRepository.findOne({ where: { telegramUserId } })
-      : null;
+    // const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+    // const communityMember = telegramUserId
+    //   ? await communityMemberRepository.findOne({ where: { telegramUserId } })
+    //   : null;
     const isAllowedToViewVotes = true;
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
     const proposal = await bookProposalRepository.findOne({
       where: { id: input.proposalId, isDeleted: false },
-      relations: { votes: true, books: true },
+      relations: { votes: true },
     });
     if (!proposal) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
@@ -133,12 +129,10 @@ export const proposalsRouter = createRouter({
         ? votes.find((vote: ProposalVote) => vote.telegramUserId === telegramUserId)
         : undefined;
 
-    const firstBook = Array.isArray(proposal.books) ? proposal.books[0] ?? null : null;
-    const { votes: _votes, books: _books, ...rest } = proposal;
+    const { votes: _votes, ...rest } = proposal;
 
     return {
       ...rest,
-      bookId: firstBook ? firstBook.id : null,
       coverImageData,
       votes: {
         positiveVotes,
@@ -275,7 +269,6 @@ export const proposalsRouter = createRouter({
         await bookRepository.save(book);
 
         proposal.status = ProposalStatus.APPROVED;
-        proposal.books = [book];
       }
 
       if (negativeVotes >= REQUIRED_REJECTIONS) {
@@ -296,9 +289,6 @@ export const proposalsRouter = createRouter({
       positiveVotes: result.positiveVotes,
       negativeVotes: result.negativeVotes,
       userVote: result.userVote,
-      approvedBookId: result.proposal.status === ProposalStatus.APPROVED && result.proposal.books?.[0]
-        ? result.proposal.books[0].id
-        : null,
     };
   }),
 });

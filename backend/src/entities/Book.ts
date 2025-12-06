@@ -4,13 +4,10 @@ import {
     Column,
     CreateDateColumn,
     Entity,
-    JoinColumn,
-    ManyToOne,
     PrimaryColumn,
     UpdateDateColumn,
     type ValueTransformer,
 } from 'typeorm';
-import {BookProposal} from './BookProposal.js';
 
 const stringArrayTransformer: ValueTransformer = {
     to(value: string[] | null): string {
@@ -158,12 +155,6 @@ export class Book {
 
     @Column({name: 'language', type: 'text', nullable: true})
     language!: string | null;
-
-    @ManyToOne(() => BookProposal, (proposal: BookProposal) => proposal.books, {
-        onDelete: 'SET NULL',
-    })
-    @JoinColumn({name: 'proposal_id'})
-    proposal!: BookProposal | null;
 
     @CreateDateColumn({name: 'created_at', type: 'datetime'})
     createdAt!: Date;

@@ -1,5 +1,3 @@
-import { TRPCError } from '@trpc/server';
-
 const DEFAULT_ALLOWED_TELEGRAM_USERNAMES: readonly string[] = [
   '@lawyerdsupport',
   '@oxfrrdd',

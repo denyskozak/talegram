@@ -18,7 +18,6 @@ export type ProposalForVoting = BookProposal & {
 export type ProposalVotingListResponse = Awaited<ReturnType<typeof trpc.proposals.listForVoting.query>>;
 
 export type SubmitProposalVoteResult = {
-    approvedBookId: string | null;
     status: ProposalStatus;
     positiveVotes: number;
     negativeVotes: number;

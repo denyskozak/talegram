@@ -9,7 +9,6 @@ import {
   UpdateDateColumn,
   type ValueTransformer,
 } from 'typeorm';
-import { Book } from './Book.js';
 import { ProposalVote } from './ProposalVote.js';
 
 export enum ProposalStatus {
@@ -154,9 +153,6 @@ export class BookProposal {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'datetime' })
   updatedAt!: Date;
-
-  @OneToMany(() => Book, (book: Book) => book.proposal)
-  books!: Book[];
 
   @OneToMany(() => ProposalVote, (vote: ProposalVote) => vote.proposal)
   votes!: ProposalVote[];

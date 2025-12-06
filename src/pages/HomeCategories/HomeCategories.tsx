@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate} from "react-router-dom";
 
-import {Banner, Card, SegmentedControl, Tappable, Title} from "@telegram-apps/telegram-ui";
+import {Card, SegmentedControl, Tappable, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {CategoryTile} from "@/entities/category/components/CategoryTile";
