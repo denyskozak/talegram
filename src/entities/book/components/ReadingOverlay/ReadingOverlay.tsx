@@ -6,6 +6,8 @@ import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 import {type Rendition} from 'epubjs'
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
+import {useTMA} from "@/app/providers/TMAProvider.tsx";
+import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 
 type ReadingOverlayProps = {
     fileUrl: string;
@@ -34,10 +36,14 @@ function updateTheme(rendition: Rendition, theme: ITheme) {
 export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
+    const data = useTMA();
+    const themeSetting = useTheme();
 
+    console.log("themeSetting: ", themeSetting);
+    console.log("data: ", data);
     const rendition = useRef<Rendition | undefined>(undefined)
-    const [theme, setTheme] = useState<ITheme>('light')
-    const [largeText, setLargeText] = useState(true);
+    const [theme, setTheme] = useState<ITheme>(themeSetting.text === '#ffffff' ? 'dark' : 'light');
+    const [textSize, setTextSize] = useState(1);
 
     useEffect(() => {
         if (rendition.current) {
@@ -46,14 +52,78 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     }, [theme])
 
     useEffect(() => {
-        rendition.current?.themes.fontSize(largeText ? '140%' : '100%')
-    }, [largeText])
+        const textSizes: Record<number, string> = {
+            1: '100%',
+            2: '140%',
+            3: '160%',
+        }
+        rendition.current?.themes.fontSize(textSizes[textSize])
+    }, [textSize])
+
+    const handleNextTextSize = () => {
+        const next = textSize + 1 > 3 ? 1 : textSize + 1;
+        setTextSize(next);
+    }
 
     useEffect(() => {
         onLocationChange?.(location)
     }, [location]);
 
-    const nextThemeTitle = theme === 'dark' ? 'Light': 'Dark';
+    const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+
+
+    const lightReaderTheme: IReactReaderStyle = {
+        ...ReactReaderStyle,
+        arrow: {
+            ...ReactReaderStyle.arrow,
+            color: 'black',
+        },
+        readerArea: {
+            ...ReactReaderStyle.readerArea,
+            transition: undefined,
+        },
+        tocButtonBar: {
+            ...ReactReaderStyle.tocButtonBar,
+            background: 'black',
+        },
+    }
+
+    const darkReaderTheme: IReactReaderStyle = {
+        ...ReactReaderStyle,
+        arrow: {
+            ...ReactReaderStyle.arrow,
+            color: 'white',
+        },
+        arrowHover: {
+            ...ReactReaderStyle.arrowHover,
+            color: '#ccc',
+        },
+        readerArea: {
+            ...ReactReaderStyle.readerArea,
+            backgroundColor: '#212121',
+            transition: undefined,
+        },
+        titleArea: {
+            ...ReactReaderStyle.titleArea,
+            color: '#ccc',
+        },
+        tocArea: {
+            ...ReactReaderStyle.tocArea,
+            background: '#111',
+        },
+        tocButtonExpanded: {
+            ...ReactReaderStyle.tocButtonExpanded,
+            background: '#222',
+        },
+        tocButtonBar: {
+            ...ReactReaderStyle.tocButtonBar,
+            background: '#fff',
+        },
+        tocButton: {
+            ...ReactReaderStyle.tocButton,
+            color: 'white',
+        },
+    }
 
     return (
         <div style={{height: '90vh', position: 'relative'}}>
@@ -67,8 +137,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-                <Button mode="bezeled" size="s" onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
-                <Button mode="bezeled" size="s" onClick={() => setLargeText(!largeText)}>{t('reading-overlay.toggle-font-size')}</Button>
+                <Button mode="bezeled" size="s"
+                        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
+                <Button mode="bezeled" size="s"
+                        onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize === 1 || textSize === 2 ? '🔼' : '⬇️'}`}</Button>
             </div>
             <ReactReader
                 readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
@@ -84,56 +156,3 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     );
 }
 
-
-const lightReaderTheme: IReactReaderStyle = {
-    ...ReactReaderStyle,
-    arrow: {
-        ...ReactReaderStyle.arrow,
-        color: 'black',
-    },
-    readerArea: {
-        ...ReactReaderStyle.readerArea,
-        transition: undefined,
-    },
-    tocButtonBar: {
-        ...ReactReaderStyle.tocButtonBar,
-        background: 'black',
-    },
-}
-
-const darkReaderTheme: IReactReaderStyle = {
-    ...ReactReaderStyle,
-    arrow: {
-        ...ReactReaderStyle.arrow,
-        color: 'white',
-    },
-    arrowHover: {
-        ...ReactReaderStyle.arrowHover,
-        color: '#ccc',
-    },
-    readerArea: {
-        ...ReactReaderStyle.readerArea,
-        backgroundColor: '#000',
-        transition: undefined,
-    },
-    titleArea: {
-        ...ReactReaderStyle.titleArea,
-        color: '#ccc',
-    },
-    tocArea: {
-        ...ReactReaderStyle.tocArea,
-        background: '#111',
-    },
-    tocButtonExpanded: {
-        ...ReactReaderStyle.tocButtonExpanded,
-        background: '#222',
-    },
-    tocButtonBar: {
-        ...ReactReaderStyle.tocButtonBar,
-        background: '#fff',
-    },
-    tocButton: {
-        ...ReactReaderStyle.tocButton,
-        color: 'white',
-    },
-}

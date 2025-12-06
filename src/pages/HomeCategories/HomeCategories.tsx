@@ -136,11 +136,11 @@ export default function HomeCategories(): JSX.Element {
 
     return (
         <main style={{padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720}}>
-            <Banner
-                header={t("homeCategories.alphaBanner.title")}
-                subheader={t("homeCategories.alphaBanner.description")}
-                style={{marginBottom: 16}}
-            />
+            {/*<Banner*/}
+            {/*    header={t("homeCategories.alphaBanner.title")}*/}
+            {/*    subheader={t("homeCategories.alphaBanner.description")}*/}
+            {/*    style={{marginBottom: 16}}*/}
+            {/*/>*/}
 
             <Card style={{marginBottom: 16, width: '100%'}}>
                 <Tappable
