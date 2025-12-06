@@ -10,8 +10,8 @@ import {useToast} from "@/shared/ui/ToastProvider";
 import {fetchProposalById, submitProposalVote} from "@/entities/proposal/api";
 import type {BookProposal} from "@/entities/proposal/types";
 import type {VoteDirection} from "@/pages/MyAccount/types";
-import {HARDCODED_ALLOWED_VOTER_USERNAMES, REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
-import {getAllowedTelegramVoterUsernames, normalizeTelegramUsername} from "@/shared/lib/telegram";
+import {REQUIRED_APPROVALS} from "@/pages/MyAccount/constants";
+import {getTelegramUserId} from "@/shared/lib/telegram";
 import {buildBookFileDownloadUrl} from "@/shared/api/storage";
 import {downloadFile} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button";
@@ -41,27 +41,14 @@ export default function ProposalDetails(): JSX.Element {
         const user = launchParams?.tgWebAppData?.user;
         const rawId = user?.id;
 
-
-        return String(rawId);
+        return getTelegramUserId(rawId);
     }, [launchParams]);
-    const allowedVoterUsernames = useMemo(
-        () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
-        [],
-    );
-
-    const telegramUsername = useMemo(() => {
-        const rawUsername = launchParams?.tgWebAppData?.user?.username ?? null;
-        return normalizeTelegramUsername(rawUsername);
-    }, [launchParams]);
+    const [allowedVotersCount, setAllowedVotersCount] = useState<number>(0);
+    const [isCommunityMember, setIsCommunityMember] = useState(false);
     const canVote = useMemo(
-        () => Boolean(telegramUsername && allowedVoterUsernames.has(telegramUsername)),
-        [allowedVoterUsernames, telegramUsername],
+        () => Boolean(telegramUserId && isCommunityMember),
+        [isCommunityMember, telegramUserId],
     );
-    const [allowedVotersCount, setAllowedVotersCount] = useState<number>(() => allowedVoterUsernames.size);
-
-    useEffect(() => {
-        setAllowedVotersCount(allowedVoterUsernames.size);
-    }, [allowedVoterUsernames]);
 
     useEffect(() => {
         if (!id) {
@@ -79,6 +66,10 @@ export default function ProposalDetails(): JSX.Element {
                 const data = await fetchProposalById(id);
                 if (!isCancelled) {
                     setProposal(data);
+                    setIsCommunityMember(Boolean(data.isCommunityMember));
+                    setAllowedVotersCount(
+                        typeof data.allowedVotersCount === "number" ? data.allowedVotersCount : 0,
+                    );
                 }
             } catch (loadError) {
                 console.error("Failed to load proposal", loadError);
@@ -97,7 +88,7 @@ export default function ProposalDetails(): JSX.Element {
         return () => {
             isCancelled = true;
         };
-    }, [id, t, telegramUsername]);
+    }, [id, t]);
 
     const formattedCreatedAt = useMemo(
         () => (proposal ? formatDate(proposal.createdAt) : ""),
@@ -151,6 +142,11 @@ export default function ProposalDetails(): JSX.Element {
             return;
         }
 
+        if (!telegramUserId || !isCommunityMember) {
+            showToast(t("account.voting.notAllowed"));
+            return;
+        }
+
         setIsDownloading(true);
         try {
             const resolvedFileName = proposal.fileName ?? `${proposal.title}.epub`;
@@ -173,23 +169,33 @@ export default function ProposalDetails(): JSX.Element {
         } finally {
             setIsDownloading(false);
         }
-    }, [proposal, showToast, t, telegramUserId]);
+    }, [isCommunityMember, proposal, showToast, t, telegramUserId]);
 
     const handleStartReading = useCallback(() => {
         if (!proposal?.id) {
             return;
         }
 
+        if (!telegramUserId || !isCommunityMember) {
+            showToast(t("account.voting.notAllowed"));
+            return;
+        }
+
         navigate(`/reader/${encodeURIComponent(proposal.id)}/proposals`);
-    }, [navigate, proposal]);
+    }, [isCommunityMember, navigate, proposal, showToast, t, telegramUserId]);
 
     const handleStartListening = useCallback(() => {
         if (!proposal?.id) {
             return;
         }
 
+        if (!telegramUserId || !isCommunityMember) {
+            showToast(t("account.voting.notAllowed"));
+            return;
+        }
+
         navigate(`/listen/${encodeURIComponent(proposal.id)}/proposals`);
-    }, [navigate, proposal]);
+    }, [isCommunityMember, navigate, proposal, showToast, t, telegramUserId]);
 
     const handleVote = useCallback(
         async (direction: VoteDirection) => {
@@ -197,7 +203,7 @@ export default function ProposalDetails(): JSX.Element {
                 return;
             }
 
-            if (!telegramUsername || !canVote) {
+            if (!telegramUserId || !canVote) {
                 showToast(t("account.voting.notAllowed"));
                 return;
             }
@@ -212,7 +218,7 @@ export default function ProposalDetails(): JSX.Element {
                 setAllowedVotersCount(
                     typeof result.allowedVotersCount === "number"
                         ? result.allowedVotersCount
-                        : allowedVoterUsernames.size,
+                        : allowedVotersCount,
                 );
 
                 setProposal((prev) => {
@@ -247,7 +253,7 @@ export default function ProposalDetails(): JSX.Element {
                 setPendingVote(null);
             }
         },
-        [allowedVoterUsernames, canVote, proposal, showToast, t, telegramUsername],
+        [allowedVotersCount, canVote, proposal, showToast, t, telegramUserId],
     );
 
     return (
@@ -410,15 +416,23 @@ export default function ProposalDetails(): JSX.Element {
                                 <Text weight="2">{t("account.proposalDetails.manuscript")}</Text>
                                 <Text style={{color: theme.subtitle}}>{proposal.fileName}</Text>
                                 {proposal.walrusFileId ? (
-                                    <Button
-                                        type="button"
-                                        mode="outline"
-                                        size="s"
-                                        onClick={handleDownload}
-                                        loading={isDownloading}
-                                    >
-                                        {t("account.proposalDetails.download")}
-                                    </Button>
+                                    <>
+                                        <Button
+                                            type="button"
+                                            mode="outline"
+                                            size="s"
+                                            onClick={handleDownload}
+                                            loading={isDownloading}
+                                            disabled={!isCommunityMember}
+                                        >
+                                            {t("account.proposalDetails.download")}
+                                        </Button>
+                                        {!isCommunityMember ? (
+                                            <Text style={{color: theme.hint}}>
+                                                {t("account.voting.notAllowed")}
+                                            </Text>
+                                        ) : null}
+                                    </>
                                 ) : (
                                     <Text style={{color: theme.hint}}>{t("account.proposalDetails.noDownload")}</Text>
                                 )}

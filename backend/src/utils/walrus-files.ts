@@ -719,6 +719,7 @@ export async function handleProposalFileDownloadRequest(
   }
 
   const proposalRepository = appDataSource.getRepository(BookProposal);
+  const communityMemberRepository = appDataSource.getRepository(CommunityMember);
   let proposal: BookProposal | null = null;
 
   try {
@@ -732,6 +733,32 @@ export async function handleProposalFileDownloadRequest(
   if (!proposal) {
     respondWithError(res, 404, 'Proposal not found');
     return;
+  }
+
+  if (params.fileKind !== 'cover') {
+    if (!params.telegramUserId) {
+      respondWithError(res, 401, 'Telegram user id is required to download this proposal file');
+      return;
+    }
+
+    try {
+      const communityMember = await communityMemberRepository.findOne({
+        where: { telegramUserId: params.telegramUserId },
+      });
+
+      if (!communityMember) {
+        respondWithError(res, 403, 'Community membership required to download this proposal file');
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to verify community membership before proposal download', {
+        proposalId: normalizedProposalId,
+        telegramUserId: params.telegramUserId,
+        error,
+      });
+      respondWithError(res, 500, 'Failed to process file download');
+      return;
+    }
   }
 
   const storageId =
