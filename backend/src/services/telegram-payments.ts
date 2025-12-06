@@ -50,7 +50,7 @@ const invoices = new Map<string, StarsInvoiceRecord>();
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
 
-if (!botToken) throw new Error('No bot token provided');
+if (!botToken) console.error('No bot token provided');
 
 const telegramApiBase = `${TELEGRAM_API_BASE}${botToken}`;
 
