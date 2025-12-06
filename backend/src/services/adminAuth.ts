@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? 'admin123';
+console.log("ADMIN_PASSWORD: ", ADMIN_PASSWORD);
 const TOKEN_TTL_MS = Number.parseInt(process.env.ADMIN_TOKEN_TTL_MS ?? '', 10);
 const DEFAULT_TOKEN_TTL_MS = 1000 * 60 * 60 * 12; // 12 hours
 

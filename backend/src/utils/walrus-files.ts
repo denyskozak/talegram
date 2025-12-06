@@ -8,7 +8,7 @@ import { BookProposal, ProposalStatus } from '../entities/BookProposal.js';
 import { Purchase } from '../entities/Purchase.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 import { decryptBookFile } from '../services/encryption.js';
-import { suiClient } from '../services/walrus-storage.js';
+import { suiClient} from '../services/walrus-storage.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
 import { buildAudioPreview, buildEpubPreview } from './preview.js';
 

@@ -13,6 +13,7 @@ import {DemoBanner} from "@/shared/ui/DemoBanner";
 import {FooterBar} from "@/widgets/FooterBar/FooterBar";
 import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
 import {useFooterVisibility} from "@/shared/hooks/useFooterVisibility";
+import {useLaunchParams} from "@tma.js/sdk-react";
 
 function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
     const [shouldRender, setShouldRender] = useState(visible);
@@ -148,6 +149,7 @@ function NavigationControls(): null {
 function AppContent(): JSX.Element {
     const {isTelegram} = useTMA();
     const theme = useTheme();
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
     const [isSplashVisible, setIsSplashVisible] = useState(true);
     const isFooterVisible = useFooterVisibility();
 
@@ -164,6 +166,7 @@ function AppContent(): JSX.Element {
 
         <AppRoot
             style={{
+                paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0,
                 background: theme.background,
                 color: theme.text,
             }}

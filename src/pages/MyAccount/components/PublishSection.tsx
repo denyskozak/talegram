@@ -3,7 +3,7 @@ import type { ChangeEvent, FormEvent, KeyboardEvent, RefObject } from "react";
 import type { TFunction } from "i18next";
 
 import type { ThemeColors } from "@/app/providers/ThemeProvider";
-import { GLOBAL_CATEGORIES, isGlobalCategory, type GlobalCategory } from "@/shared/lib/globalCategories";
+import { isGlobalCategory, type GlobalCategory } from "@/shared/lib/globalCategories";
 import { Button } from "@/shared/ui/Button";
 
 import { HASHTAG_MAX_LENGTH, MAX_HASHTAGS } from "../constants";
@@ -167,7 +167,7 @@ export function PublishSection({
               <option value="" disabled>
                 {t("account.publish.form.globalCategory.placeholder")}
               </option>
-              {GLOBAL_CATEGORIES.map((option) => (
+              {['book'].map((option) => (
                 <option key={option} value={option}>
                   {t(`globalCategories.${option}`)}
                 </option>

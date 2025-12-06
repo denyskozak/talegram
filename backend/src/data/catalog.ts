@@ -174,11 +174,11 @@ export async function listCategories(params: {
 } = {}): Promise<Category[]> {
   const repository = await getBookRepository();
   const normalizedGlobalCategory = normalizeGlobalCategory(params.globalCategory);
-  const queryBuilder = repository.createQueryBuilder('book').leftJoin('book.proposal', 'proposal');
+  const queryBuilder = repository.createQueryBuilder('book');
 
   if (normalizedGlobalCategory) {
     queryBuilder.andWhere(
-      'LOWER(book.global_category) = :globalCategory OR (book.global_category IS NULL AND LOWER(proposal.global_category) = :globalCategory)',
+      'LOWER(book.global_category) = :globalCategory',
       { globalCategory: normalizedGlobalCategory },
     );
   }

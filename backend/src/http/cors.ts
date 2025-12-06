@@ -4,6 +4,7 @@ import http from 'node:http';
 const ALLOWED_ORIGINS = new Set<string>([
     'https://talegramfrontend.gastroand.me',
     'https://talegrafrontendadmin.gastroand.me',
+    'http://localhost:5174',
     'https://172.20.10.7:5173',
 ]);
 
