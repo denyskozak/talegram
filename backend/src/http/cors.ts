@@ -2,6 +2,8 @@ import http from 'node:http';
 
 // Разрешённые источники. Добавь сюда свои фронтовые домены при необходимости.
 const ALLOWED_ORIGINS = new Set<string>([
+    'https://talegramfrontend.gastroand.me',
+    'https://talegrafrontendadmin.gastroand.me',
     'https://172.20.10.7:5173',
 ]);
 
