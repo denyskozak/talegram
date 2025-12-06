@@ -39,7 +39,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
     const rendition = useRef<Rendition | undefined>(undefined)
     const [theme, setTheme] = useState<ITheme>(themeSetting.text === '#ffffff' ? 'dark' : 'light');
-    const [textSize, setTextSize] = useState(1);
+    const [textSize, setTextSize] = useState(2);
 
     useEffect(() => {
         if (rendition.current) {
@@ -66,7 +66,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     }, [location]);
 
     const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
-
 
     const lightReaderTheme: IReactReaderStyle = {
         ...ReactReaderStyle,
@@ -105,11 +104,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         },
         tocArea: {
             ...ReactReaderStyle.tocArea,
-            background: '#111',
+            background: '#212121',
         },
         tocButtonExpanded: {
             ...ReactReaderStyle.tocButtonExpanded,
-            background: '#222',
+            background: '#212121',
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
