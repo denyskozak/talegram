@@ -28,7 +28,6 @@ export async function handleTelegramWebhookRequest(
 ): Promise<void> {
     try {
         const update = await parseJsonRequestBody<TelegramWebhookUpdate>(req);
-        console.log("update: ", update);
         if (update?.message?.text?.startsWith('/refund')) {
             if (process.env.NODE_ENV !== 'development') {
                 respondWithOk(res);

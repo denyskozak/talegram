@@ -7,15 +7,15 @@ import { Purchase } from '../entities/Purchase.js';
 import { WalrusFileRecord } from '../entities/WalrusFileRecord.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 
-const databasePath = process.env.DATABASE_URL ?? 'database.sqlite';
+const getDatabasePath = () => process.env.DATABASE_URL ?? 'database.sqlite';
+const getNodeEnv = () => process.env.NODE_ENV;
 
-console.log("databasePath: ", databasePath);
 export const appDataSource = new DataSource({
   type: 'sqlite',
-  database: databasePath,
+  database: getDatabasePath(),
   entities: [Author, BookProposal, Book, ProposalVote, Purchase, WalrusFileRecord, CommunityMember],
   synchronize: true,
-  logging: process.env.NODE_ENV === 'development',
+  logging: getNodeEnv() === 'development',
 });
 
 let initializePromise: Promise<DataSource> | null = null;

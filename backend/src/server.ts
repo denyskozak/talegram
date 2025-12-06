@@ -1,5 +1,4 @@
 import http from 'node:http';
-import { config } from 'dotenv';
 import { createHTTPHandler } from '@trpc/server/adapters/standalone';
 import { appRouter } from './trpc/root.js';
 import { createTRPCContext } from './trpc/context.js';
@@ -7,9 +6,7 @@ import { initializeDataSource } from './utils/data-source.js';
 import { configureTelegramWebhook } from './services/telegram-payments.js';
 import { createRequestHandler } from './http/router.js';
 
-config();
-
-const port = Number(process.env.PORT) || 3000;
+const getPort = () => Number(process.env.PORT) || 3000;
 
 function resolveWebhookUrl(): string | undefined {
     return process.env.TELEGRAM_WEBHOOK_URL;
@@ -36,8 +33,8 @@ export async function startServer(): Promise<http.Server> {
 
     const server = http.createServer(createRequestHandler(trpcHandler));
 
-    server.listen(port, () => {
-        console.log(`tRPC server listening on http://localhost:${port}`);
+    server.listen(getPort(), () => {
+        console.log(`tRPC server listening on http://localhost:${getPort()}`);
     });
 
     return server;

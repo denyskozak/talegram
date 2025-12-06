@@ -48,13 +48,11 @@ const TELEGRAM_API_BASE = 'https://api.telegram.org/bot';
 
 const invoices = new Map<string, StarsInvoiceRecord>();
 
-const botToken = process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
-
-if (!botToken) console.error('No bot token provided');
-
-const telegramApiBase = `${TELEGRAM_API_BASE}${botToken}`;
+const getBotToken = () => process.env.TELEGRAM_BOT_TOKEN ?? process.env.BOT_TOKEN;
 
 async function fetchTelegramApi<T>(method: string, payload: Record<string, unknown>): Promise<T> {
+    const telegramApiBase = `${TELEGRAM_API_BASE}${getBotToken()}`;
+
     const response = await fetch(`${telegramApiBase}/${method}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

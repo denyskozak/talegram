@@ -6,7 +6,6 @@ import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 import {type Rendition} from 'epubjs'
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
-import {useTMA} from "@/app/providers/TMAProvider.tsx";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 
 type ReadingOverlayProps = {
@@ -36,11 +35,8 @@ function updateTheme(rendition: Rendition, theme: ITheme) {
 export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
-    const data = useTMA();
     const themeSetting = useTheme();
 
-    console.log("themeSetting: ", themeSetting);
-    console.log("data: ", data);
     const rendition = useRef<Rendition | undefined>(undefined)
     const [theme, setTheme] = useState<ITheme>(themeSetting.text === '#ffffff' ? 'dark' : 'light');
     const [textSize, setTextSize] = useState(1);
