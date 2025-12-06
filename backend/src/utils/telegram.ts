@@ -1,4 +1,4 @@
-function normalizeTelegramUserId(value: string | null | undefined): string | null {
+export function normalizeTelegramUserId(value: string | null | undefined): string | null {
   if (typeof value !== 'string') {
     return null;
   }
