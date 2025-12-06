@@ -13,7 +13,6 @@ import { fetchAuthors } from "@/entities/author/api";
 
 import {
   BOOK_SECTION,
-  HARDCODED_ALLOWED_VOTER_USERNAMES,
   PUBLISH_SECTION,
   REQUIRED_APPROVALS,
   VOTE_SECTION,
@@ -31,9 +30,7 @@ import type {
   VotingProposal,
 } from "./types";
 import {
-  getAllowedTelegramVoterUsernames,
   getTelegramUserId,
-  normalizeTelegramUsername,
 } from "@/shared/lib/telegram";
 import { isGlobalCategory } from "@/shared/lib/globalCategories";
 import { purchasesApi } from "@/entities/purchase/api";
@@ -72,25 +69,14 @@ export default function MyAccount(): JSX.Element {
     collectSubmissionHashtags,
     resetForm,
   } = usePublishForm({ showToast, t });
-  const allowedVoterUsernames = useMemo(
-    () => getAllowedTelegramVoterUsernames(HARDCODED_ALLOWED_VOTER_USERNAMES),
-    [],
-  );
-  const telegramUsername = useMemo(() => {
-    const rawUsername = launchParams?.tgWebAppData?.user?.username ?? null;
-
-    return normalizeTelegramUsername(rawUsername);
-  }, [launchParams]);
   const telegramUserId = useMemo(() => {
     const rawId = launchParams?.tgWebAppData?.user?.id;
     return getTelegramUserId(rawId);
   }, [launchParams]);
-  const isAllowedVoter = telegramUsername ? allowedVoterUsernames.has(telegramUsername) : false;
-  const canVote = Boolean(telegramUsername && isAllowedVoter);
+  const [isCommunityMember, setIsCommunityMember] = useState(false);
+  const canVote = Boolean(telegramUserId && isCommunityMember);
   const [votingProposals, setVotingProposals] = useState<VotingProposal[]>([]);
-  const [allowedVotersCount, setAllowedVotersCount] = useState<number>(
-    () => allowedVoterUsernames.size,
-  );
+  const [allowedVotersCount, setAllowedVotersCount] = useState<number>(0);
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
   const [myBooks, setMyBooks] = useState<MyBook[]>([]);
@@ -314,12 +300,13 @@ export default function MyAccount(): JSX.Element {
     setVotingError(null);
     try {
       const response = await fetchProposalsForVoting();
+      setIsCommunityMember(Boolean(response.isCommunityMember));
       const proposalsWithCovers = await enhanceProposalsWithCovers(response.proposals);
       setVotingProposals(proposalsWithCovers);
       setAllowedVotersCount(
         typeof response.allowedVotersCount === "number"
           ? response.allowedVotersCount
-          : allowedVoterUsernames.size,
+          : 0,
       );
     } catch (error) {
       console.error("Failed to load proposals for voting", error);
@@ -327,11 +314,7 @@ export default function MyAccount(): JSX.Element {
     } finally {
       setIsVotingLoading(false);
     }
-  }, [allowedVoterUsernames, enhanceProposalsWithCovers, t, telegramUsername]);
-
-  useEffect(() => {
-    setAllowedVotersCount(allowedVoterUsernames.size);
-  }, [allowedVoterUsernames]);
+  }, [enhanceProposalsWithCovers, t, telegramUserId]);
 
   useEffect(() => {
     if (activeSection === VOTE_SECTION) {
@@ -445,8 +428,7 @@ export default function MyAccount(): JSX.Element {
     }
   };
 
-  const displayedAllowedVoters =
-    allowedVotersCount > 0 ? allowedVotersCount : allowedVoterUsernames.size;
+  const displayedAllowedVoters = Math.max(0, allowedVotersCount);
 
   return (
     <>
@@ -536,7 +518,7 @@ export default function MyAccount(): JSX.Element {
             isLoading={isVotingLoading}
             error={votingError}
             canVote={canVote}
-            isTelegramUser={Boolean(telegramUsername)}
+            isTelegramUser={Boolean(telegramUserId)}
             allowedVotersCount={displayedAllowedVoters}
             requiredApprovals={REQUIRED_APPROVALS}
             onViewDetails={(proposalId) => navigate(`/proposals/${proposalId}`)}

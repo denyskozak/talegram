@@ -39,6 +39,9 @@ export const proposalsRouter = createRouter({
 
     await initializeDataSource();
     const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+    const communityMember = telegramUserId
+      ? await communityMemberRepository.findOne({ where: { telegramUserId } })
+      : null;
 
     const isAllowedToViewVotes = true;
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
@@ -93,6 +96,7 @@ export const proposalsRouter = createRouter({
 
     return {
       allowedVotersCount,
+      isCommunityMember: Boolean(communityMember),
       proposals: normalized,
     };
   }),
@@ -100,10 +104,10 @@ export const proposalsRouter = createRouter({
     const telegramUserId = ctx.telegramAuth.userId;
 
     await initializeDataSource();
-    // const communityMemberRepository = appDataSource.getRepository(CommunityMember);
-    // const communityMember = telegramUserId
-    //   ? await communityMemberRepository.findOne({ where: { telegramUserId } })
-    //   : null;
+    const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+    const communityMember = telegramUserId
+      ? await communityMemberRepository.findOne({ where: { telegramUserId } })
+      : null;
     const isAllowedToViewVotes = true;
     const bookProposalRepository = appDataSource.getRepository(BookProposal);
 
@@ -131,6 +135,8 @@ export const proposalsRouter = createRouter({
 
     const { votes: _votes, ...rest } = proposal;
 
+    const allowedVotersCount = await communityMemberRepository.count();
+
     return {
       ...rest,
       coverImageData,
@@ -139,6 +145,8 @@ export const proposalsRouter = createRouter({
         negativeVotes,
         userVote: userVote ? (userVote.isPositive ? 'positive' : 'negative') : null,
       },
+      allowedVotersCount,
+      isCommunityMember: Boolean(communityMember),
     };
   }),
   voteForProposal: authorizedProcedure.input(voteOnProposalInput).mutation(async ({ input, ctx }) => {
