@@ -107,7 +107,7 @@ export function WalrusTreasuryCard(): JSX.Element {
   }, [client]);
 
   const balances = useMemo(() => wallet?.coins ?? [], [wallet]);
-
+    console.log("balances: ", balances);
   return (
     <section className="settings__card walrus">
       <div className="walrus__header">

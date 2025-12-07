@@ -38,7 +38,8 @@ async function resolveWalrusCoinType(): Promise<string> {
         throw new Error('Failed to resolve Walrus package id');
       }
 
-      return `${packageId}::wal::WAL`;
+      // TODO Walrus Package Address
+      return `0x8270feb7375eee355e64fdb69c50abb6b5f9393a722883c1cf45f8e26048810a::wal::WAL`;
     })().catch((error) => {
       walrusCoinTypePromise = null;
       throw error;
