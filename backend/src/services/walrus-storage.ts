@@ -1,6 +1,7 @@
 import {  SuiJsonRpcClient } from '@mysten/sui/jsonRpc';
 import {walrus,} from '@mysten/walrus';
 import {getFullnodeUrl} from "@mysten/sui/client";
+import {Agent} from "node:http";
 
 export const suiClient = new SuiJsonRpcClient({
     url: getFullnodeUrl('testnet'),
@@ -8,7 +9,13 @@ export const suiClient = new SuiJsonRpcClient({
     network: 'testnet',
 }).$extend(walrus({
     storageNodeClientOptions: {
-        timeout: 60_000,
         onError: (error) => console.log(error),
+    },
+    uploadRelay: {
+        host: 'https://upload-relay.testnet.walrus.space',
+        timeout: 60_000,
+        sendTip: {
+            max: 1_000,
+        },
     },
 }));

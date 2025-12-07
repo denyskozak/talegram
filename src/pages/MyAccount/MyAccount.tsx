@@ -446,7 +446,6 @@ export default function MyAccount(): JSX.Element {
           <Title level="1" weight="2">
             {t("account.title")}
           </Title>
-          <Text style={{ color: theme.subtitle }}>{t("account.subtitle")}</Text>
           <Text style={{ color: theme.hint }}>
             {telegramUserId
               ? t("account.telegramUserId", { id: telegramUserId })

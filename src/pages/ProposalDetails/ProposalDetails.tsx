@@ -318,12 +318,8 @@ export default function ProposalDetails(): JSX.Element {
                         ) : null}
                         <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
                             <Button
-                                size="s"
-                                mode={
-                                    proposal.votes?.userVote === "positive" && canVote
-                                        ? "filled"
-                                        : "outline"
-                                }
+                                size="m"
+                                mode="filled"
                                 disabled={!canVote || pendingVote !== null}
                                 loading={pendingVote === "positive"}
                                 onClick={() => handleVote("positive")}
@@ -331,12 +327,8 @@ export default function ProposalDetails(): JSX.Element {
                                 {t("account.voting.actions.approve")}
                             </Button>
                             <Button
-                                size="s"
-                                mode={
-                                    proposal.votes?.userVote === "negative" && canVote
-                                        ? "filled"
-                                        : "outline"
-                                }
+                                size="m"
+                                mode="filled"
                                 disabled={!canVote || pendingVote !== null}
                                 loading={pendingVote === "negative"}
                                 onClick={() => handleVote("negative")}

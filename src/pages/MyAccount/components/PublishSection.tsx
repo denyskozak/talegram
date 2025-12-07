@@ -9,7 +9,7 @@ import {Button} from "@/shared/ui/Button";
 import {HASHTAG_MAX_LENGTH, MAX_HASHTAGS} from "../constants";
 import type {PublishFormState} from "../types";
 import {QuoteCarouselNotice} from "./QuoteCarouselNotice";
-import {MAX_FILE_SIZE_BYTES} from "../../../../backend/src/services/proposals/create.ts";
+export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
 const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategory, Array<{ value: string; label: string }>> = {
     book: [

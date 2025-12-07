@@ -263,7 +263,6 @@
   },
   "account": {
     "title": "My account",
-    "subtitle": "Manage your TON collectibles and share new stories.",
     "telegramUserId": "Telegram ID: {{id}}",
     "telegramUserIdUnavailable": "Telegram ID is not available",
     "publishedBooks": "Published books",
@@ -340,7 +339,7 @@
     },
     "publish": {
       "title": "Publish a new book",
-      "description": "Prepare your manuscript and submit it for the TON marketplace.",
+      "description": "Prepare your manuscript and submit it for the marketplace.",
       "restrictedAlert": "Only approved authors can submit book proposals \uD83D\uDEAB",
       "form": {
         "name": {
@@ -477,7 +476,7 @@
       "title": "Editorial voting",
       "description": "Review incoming book proposals and decide their future.",
       "threshold": "{{required}} approvals are required. Authorized voters: {{count}}.",
-      "notAllowed": "Voting is limited to @lawyerdsupport and @oxfrrdd.",
+      "notAllowed": "Voting is limited to Community member.",
       "empty": "No book proposals are waiting for your vote.",
       "loading": "Loading proposals...",
       "loadError": "Failed to load proposals.",
