@@ -356,7 +356,46 @@
         },
         "category": {
           "label": "Category",
-          "placeholder": "Select the genre or collection"
+          "placeholder": "Select the genre or collection",
+          "options": {
+            "book": {
+              "novels": "Novels / Literary Fiction",
+              "philosophy": "Philosophy",
+              "scienceFiction": "Science Fiction",
+              "fantasy": "Fantasy",
+              "mystery": "Mystery & Thrillers",
+              "nonFiction": "Non-Fiction",
+              "selfHelp": "Self-Help & Psychology",
+              "history": "History",
+              "biographies": "Biographies & Memoirs",
+              "business": "Business & Finance",
+              "children": "Children’s Literature"
+            },
+            "article": {
+              "news": "News & Politics",
+              "scienceTech": "Science & Technology",
+              "business": "Business & Economics",
+              "education": "Education",
+              "sports": "Sports",
+              "entertainment": "Entertainment (movies, music, showbiz)",
+              "travel": "Travel",
+              "lifestyle": "Lifestyle",
+              "health": "Health & Medicine",
+              "culture": "Culture & Arts"
+            },
+            "comics": {
+              "superheroes": "Superheroes",
+              "manga": "Manga",
+              "fantasy": "Fantasy",
+              "scienceFiction": "Science Fiction",
+              "horror": "Horror",
+              "adventure": "Adventure",
+              "comedy": "Comedy / Satire",
+              "crime": "Crime / Noir",
+              "romance": "Romance",
+              "historical": "Historical Comics"
+            }
+          }
         },
         "free": {
           "label": "Free?",

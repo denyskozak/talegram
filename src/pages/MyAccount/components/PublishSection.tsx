@@ -3,7 +3,7 @@ import type {ChangeEvent, FormEvent, KeyboardEvent, RefObject} from "react";
 import type {TFunction} from "i18next";
 
 import type {ThemeColors} from "@/app/providers/ThemeProvider";
-import {isGlobalCategory, type GlobalCategory} from "@/shared/lib/globalCategories";
+import {GLOBAL_CATEGORIES, isGlobalCategory, type GlobalCategory} from "@/shared/lib/globalCategories";
 import {Button} from "@/shared/ui/Button";
 
 import {HASHTAG_MAX_LENGTH, MAX_HASHTAGS} from "../constants";
@@ -11,43 +11,43 @@ import type {PublishFormState} from "../types";
 import {QuoteCarouselNotice} from "./QuoteCarouselNotice";
 export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
 
-const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategory, Array<{ value: string; label: string }>> = {
+const CATEGORY_OPTIONS_BY_GLOBAL: Record<GlobalCategory, Array<{ value: string; labelKey: string }>> = {
     book: [
-        {value: "Novels / Literary Fiction", label: "Novels / Literary Fiction"},
-        {value: "Philosophy", label: "Philosophy"},
-        {value: "Science Fiction", label: "Science Fiction"},
-        {value: "Fantasy", label: "Fantasy"},
-        {value: "Mystery & Thrillers", label: "Mystery & Thrillers"},
-        {value: "Non-Fiction", label: "Non-Fiction"},
-        {value: "Self-Help & Psychology", label: "Self-Help & Psychology"},
-        {value: "History", label: "History"},
-        {value: "Biographies & Memoirs", label: "Biographies & Memoirs"},
-        {value: "Business & Finance", label: "Business & Finance"},
-        {value: "Children’s Literature", label: "Children’s Literature"},
+        {value: "Novels / Literary Fiction", labelKey: "account.publish.form.category.options.book.novels"},
+        {value: "Philosophy", labelKey: "account.publish.form.category.options.book.philosophy"},
+        {value: "Science Fiction", labelKey: "account.publish.form.category.options.book.scienceFiction"},
+        {value: "Fantasy", labelKey: "account.publish.form.category.options.book.fantasy"},
+        {value: "Mystery & Thrillers", labelKey: "account.publish.form.category.options.book.mystery"},
+        {value: "Non-Fiction", labelKey: "account.publish.form.category.options.book.nonFiction"},
+        {value: "Self-Help & Psychology", labelKey: "account.publish.form.category.options.book.selfHelp"},
+        {value: "History", labelKey: "account.publish.form.category.options.book.history"},
+        {value: "Biographies & Memoirs", labelKey: "account.publish.form.category.options.book.biographies"},
+        {value: "Business & Finance", labelKey: "account.publish.form.category.options.book.business"},
+        {value: "Children’s Literature", labelKey: "account.publish.form.category.options.book.children"},
     ],
     article: [
-        {value: "News & Politics", label: "News & Politics"},
-        {value: "Science & Technology", label: "Science & Technology"},
-        {value: "Business & Economics", label: "Business & Economics"},
-        {value: "Education", label: "Education"},
-        {value: "Sports", label: "Sports"},
-        {value: "Entertainment (movies, music, showbiz)", label: "Entertainment (movies, music, showbiz)"},
-        {value: "Travel", label: "Travel"},
-        {value: "Lifestyle", label: "Lifestyle"},
-        {value: "Health & Medicine", label: "Health & Medicine"},
-        {value: "Culture & Arts", label: "Culture & Arts"},
+        {value: "News & Politics", labelKey: "account.publish.form.category.options.article.news"},
+        {value: "Science & Technology", labelKey: "account.publish.form.category.options.article.scienceTech"},
+        {value: "Business & Economics", labelKey: "account.publish.form.category.options.article.business"},
+        {value: "Education", labelKey: "account.publish.form.category.options.article.education"},
+        {value: "Sports", labelKey: "account.publish.form.category.options.article.sports"},
+        {value: "Entertainment (movies, music, showbiz)", labelKey: "account.publish.form.category.options.article.entertainment"},
+        {value: "Travel", labelKey: "account.publish.form.category.options.article.travel"},
+        {value: "Lifestyle", labelKey: "account.publish.form.category.options.article.lifestyle"},
+        {value: "Health & Medicine", labelKey: "account.publish.form.category.options.article.health"},
+        {value: "Culture & Arts", labelKey: "account.publish.form.category.options.article.culture"},
     ],
     comics: [
-        {value: "Superheroes", label: "Superheroes"},
-        {value: "Manga", label: "Manga"},
-        {value: "Fantasy", label: "Fantasy"},
-        {value: "Science Fiction", label: "Science Fiction"},
-        {value: "Horror", label: "Horror"},
-        {value: "Adventure", label: "Adventure"},
-        {value: "Comedy / Satire", label: "Comedy / Satire"},
-        {value: "Crime / Noir", label: "Crime / Noir"},
-        {value: "Romance", label: "Romance"},
-        {value: "Historical Comics", label: "Historical Comics"},
+        {value: "Superheroes", labelKey: "account.publish.form.category.options.comics.superheroes"},
+        {value: "Manga", labelKey: "account.publish.form.category.options.comics.manga"},
+        {value: "Fantasy", labelKey: "account.publish.form.category.options.comics.fantasy"},
+        {value: "Science Fiction", labelKey: "account.publish.form.category.options.comics.scienceFiction"},
+        {value: "Horror", labelKey: "account.publish.form.category.options.comics.horror"},
+        {value: "Adventure", labelKey: "account.publish.form.category.options.comics.adventure"},
+        {value: "Comedy / Satire", labelKey: "account.publish.form.category.options.comics.comedy"},
+        {value: "Crime / Noir", labelKey: "account.publish.form.category.options.comics.crime"},
+        {value: "Romance", labelKey: "account.publish.form.category.options.comics.romance"},
+        {value: "Historical Comics", labelKey: "account.publish.form.category.options.comics.historical"},
     ],
 };
 
@@ -94,7 +94,7 @@ export function PublishSection({
                                }: PublishSectionProps): JSX.Element {
     const isFormDisabled = isAuthorsLoading || !canSubmit;
     const isGlobalCategorySelected = isGlobalCategory(formState.globalCategory);
-    let categoryOptions: Array<{ value: string; label: string }> = [];
+    let categoryOptions: Array<{ value: string; labelKey: string }> = [];
     if (isGlobalCategory(formState.globalCategory)) {
         categoryOptions = CATEGORY_OPTIONS_BY_GLOBAL[formState.globalCategory];
     }
@@ -169,7 +169,7 @@ export function PublishSection({
                             <option value="" disabled>
                                 {t("account.publish.form.globalCategory.placeholder")}
                             </option>
-                            {['book'].map((option) => (
+                            {GLOBAL_CATEGORIES.map((option) => (
                                 <option key={option} value={option}>
                                     {t(`globalCategories.${option}`)}
                                 </option>
@@ -190,7 +190,7 @@ export function PublishSection({
                             </option>
                             {categoryOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
-                                    {option.label}
+                                    {t(option.labelKey)}
                                 </option>
                             ))}
                         </Select>
