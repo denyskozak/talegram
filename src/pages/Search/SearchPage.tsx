@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {useNavigate, useSearchParams} from "react-router-dom";
 
 import {Card, Input, Title} from "@telegram-apps/telegram-ui";
@@ -23,6 +23,14 @@ export default function SearchPage(): JSX.Element {
     const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
     const debouncedQuery = useDebouncedValue(query, 250);
     const trimmedQuery = debouncedQuery.trim();
+    const queryTags = useMemo(
+        () =>
+            trimmedQuery
+                .split(/\s+/)
+                .map((chunk) => chunk.replace(/^#/, "").trim())
+                .filter((chunk) => chunk.length > 0 && chunk !== ""),
+        [trimmedQuery],
+    );
     const [books, setBooks] = useState<Book[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -61,7 +69,8 @@ export default function SearchPage(): JSX.Element {
                 setError(null);
                 const [bookResponse, categoryResponse] = await Promise.all([
                     catalogApi.listBooks({
-                        search: trimmedQuery,
+                        search: queryTags.length === 0 ? trimmedQuery : undefined,
+                        tags: queryTags.length > 0 ? queryTags : undefined,
                         limit: 20,
                     }),
                     catalogApi.listCategories({
@@ -92,7 +101,7 @@ export default function SearchPage(): JSX.Element {
         return () => {
             cancelled = true;
         };
-    }, [trimmedQuery, t, refreshToken]);
+    }, [queryTags, trimmedQuery, t, refreshToken]);
 
     const handleCategoryClick = (category: Category) => {
         if (isSpecialCategoryId(category.id)) {
