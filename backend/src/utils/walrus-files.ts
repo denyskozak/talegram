@@ -420,7 +420,7 @@ export async function fetchWalrusFileBase64(id: string): Promise<string | null> 
 }
 
 export async function handleBookFileDownloadRequest(
-  _req: http.IncomingMessage,
+  req: http.IncomingMessage,
   res: http.ServerResponse,
   params: { bookId: string; fileKind: BookFileKind; telegramUserId: string | null },
 ): Promise<void> {
@@ -591,9 +591,48 @@ export async function handleBookFileDownloadRequest(
     mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 
   const cacheTimeMs = 2 * 24 * 3600 * 1000;
+  const totalSize = responseBuffer.byteLength;
+  const range = req.headers.range;
+  const isAudio = params.fileKind === 'audiobook';
+
+  if (isAudio && range) {
+    const m = /^bytes=(\d+)-(\d+)?$/.exec(range);
+    if (!m) {
+      res.statusCode = 416;
+      res.setHeader('Content-Range', `bytes */${totalSize}`);
+      res.end();
+      return;
+    }
+
+    const start = Number.parseInt(m[1], 10);
+    const end = m[2] ? Number.parseInt(m[2], 10) : totalSize - 1;
+
+    if (start >= totalSize || end >= totalSize || start > end) {
+      res.statusCode = 416;
+      res.setHeader('Content-Range', `bytes */${totalSize}`);
+      res.end();
+      return;
+    }
+
+    const chunk = responseBuffer.subarray(start, end + 1);
+    const chunkSize = chunk.byteLength;
+
+    res.statusCode = 206;
+    res.setHeader('Content-Type', resolvedMimeType);
+    res.setHeader('Content-Length', chunkSize.toString(10));
+    res.setHeader('Accept-Ranges', 'bytes');
+    res.setHeader('Content-Range', `bytes ${start}-${end}/${totalSize}`);
+    res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
+    res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
+    res.setHeader('Expires', new Date(Date.now() + cacheTimeMs).toUTCString());
+    res.end(chunk);
+    return;
+  }
+
   res.statusCode = 200;
   res.setHeader('Content-Type', resolvedMimeType);
-  res.setHeader('Content-Length', responseBuffer.byteLength.toString(10));
+  res.setHeader('Content-Length', totalSize.toString(10));
+  res.setHeader('Accept-Ranges', 'bytes');
   res.setHeader('Content-Disposition', formatContentDispositionHeader(fileName));
   res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
   res.setHeader('Expires', new Date(Date.now() + cacheTimeMs).toUTCString());
