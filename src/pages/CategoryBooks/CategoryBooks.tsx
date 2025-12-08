@@ -8,6 +8,7 @@ import { catalogApi, getCategoryTags } from "@/entities/book/api";
 import type { Book, ID } from "@/entities/book/types";
 import type { Category } from "@/entities/category/types";
 import { BookCard } from "@/entities/book/components/BookCard";
+import { getCategoryLabelKey } from "@/shared/lib/categoryTranslations";
 import { useIntersectionObserver } from "@/shared/hooks/useIntersectionObserver";
 import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
 import type { BookSort } from "@/shared/lib/bookSort";
@@ -130,10 +131,15 @@ export default function CategoryBooks(): JSX.Element {
     return <ErrorBanner message={t("errors.categoryNotFound")} />;
   }
 
+  const categoryTitleKey = category ? getCategoryLabelKey(category.title) : null;
+  const localizedTitle = categoryTitleKey
+    ? t(categoryTitleKey)
+    : category?.title ?? t("book.fallbackCategoryTitle");
+
   return (
     <main style={{ padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720 }}>
       <Title level="1" weight="2" style={{ marginBottom: 16 }}>
-        {category?.title ?? t("book.fallbackCategoryTitle")}
+        {localizedTitle}
       </Title>
       <FiltersBar
         sort={sort}
