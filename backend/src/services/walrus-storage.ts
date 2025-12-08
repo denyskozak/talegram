@@ -1,7 +1,6 @@
 import {  SuiJsonRpcClient } from '@mysten/sui/jsonRpc';
 import {walrus,} from '@mysten/walrus';
 import {getFullnodeUrl} from "@mysten/sui/client";
-import {Agent} from "node:http";
 
 export const suiClient = new SuiJsonRpcClient({
     url: getFullnodeUrl('testnet'),

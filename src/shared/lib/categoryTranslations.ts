@@ -33,8 +33,6 @@ export const CATEGORY_LABEL_KEY_BY_VALUE: Record<string, string> = {
     "Crime / Noir": "account.publish.form.category.options.comics.crime",
     "Romance": "account.publish.form.category.options.comics.romance",
     "Historical Comics": "account.publish.form.category.options.comics.historical",
-    "Fantasy": "account.publish.form.category.options.comics.fantasy",
-    "Science Fiction": "account.publish.form.category.options.comics.scienceFiction",
 };
 
 export function getCategoryLabelKey(title: string | undefined): string | null {
