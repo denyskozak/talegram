@@ -223,7 +223,6 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        showToast(t("book.toast.previewChapters"));
         navigate(`/reader/${encodeURIComponent(book.id)}/books?preview=1`);
     }, [book, navigate, showToast, t]);
 
@@ -278,7 +277,6 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        showToast(t("book.toast.previewAudio"));
         navigate(`/listen/${encodeURIComponent(book.id)}/books?preview=1`);
     }, [book, navigate, showToast, t]);
 

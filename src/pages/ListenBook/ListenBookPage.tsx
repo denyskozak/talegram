@@ -12,6 +12,8 @@ import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookPro
 import {catalogApi} from "@/entities/book/api";
 import type {Book} from "@/entities/book/types";
 
+const SEEK_OFFSET_SECONDS = 15;
+
 export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
     const navigate = useNavigate();
@@ -30,6 +32,7 @@ export default function ListenBookPage(): JSX.Element {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [playbackRate, setPlaybackRate] = useState(1);
     const isPreview = searchParams.get("preview") === "1";
+    const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
 
     const audioUrl = useMemo(() => {
         if (!id) {
@@ -119,6 +122,24 @@ export default function ListenBookPage(): JSX.Element {
         }
     }, []);
 
+    const handleSeek = useCallback((offsetSeconds: number) => {
+        const audioElement = audioRef.current;
+        if (!audioElement) {
+            return;
+        }
+
+        const duration = Number.isFinite(audioElement.duration) ? audioElement.duration : null;
+        const nextTime = duration
+            ? Math.min(Math.max(audioElement.currentTime + offsetSeconds, 0), duration)
+            : Math.max(audioElement.currentTime + offsetSeconds, 0);
+
+        try {
+            audioElement.currentTime = nextTime;
+        } catch (error) {
+            console.warn("Failed to seek audio", error);
+        }
+    }, []);
+
     return (
         <div
             style={{
@@ -143,6 +164,11 @@ export default function ListenBookPage(): JSX.Element {
                         {book.authors.join(", ")}
                     </Text>
                 ) : null}
+                {previewMessage ? (
+                    <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
+                        {previewMessage}
+                    </Text>
+                ) : null}
                 {audioUrl ? (
                     <audio
                         key={id}
@@ -162,6 +188,22 @@ export default function ListenBookPage(): JSX.Element {
                         {t("book.listen.unavailable")}
                     </Text>
                 )}
+                {audioUrl ? (
+                    <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
+                        <Button mode="outline" size="s" onClick={() => handleSeek(-SEEK_OFFSET_SECONDS)}>
+                            <span aria-hidden="true" style={{display: "inline-flex", alignItems: "center", gap: 4}}>
+                                <span role="img">⏪</span>
+                            </span>
+                            <span>{t("book.listen.seekBackward", {seconds: SEEK_OFFSET_SECONDS})}</span>
+                        </Button>
+                        <Button mode="outline" size="s" onClick={() => handleSeek(SEEK_OFFSET_SECONDS)}>
+                            <span aria-hidden="true" style={{display: "inline-flex", alignItems: "center", gap: 4}}>
+                                <span role="img">⏩</span>
+                            </span>
+                            <span>{t("book.listen.seekForward", {seconds: SEEK_OFFSET_SECONDS})}</span>
+                        </Button>
+                    </div>
+                ) : null}
                 <div style={{display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center"}}>
                     <Text style={{margin: 0, fontWeight: 600}}>{t("book.listen.speed")}</Text>
                     {[1, 1.5, 3].map((rate) => (

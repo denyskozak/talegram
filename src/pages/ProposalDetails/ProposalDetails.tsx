@@ -49,6 +49,7 @@ export default function ProposalDetails(): JSX.Element {
         () => Boolean(telegramUserId && isCommunityMember),
         [isCommunityMember, telegramUserId],
     );
+    const isVotingFinished = proposal?.status === "APPROVED" || proposal?.status === "REJECTED";
 
     useEffect(() => {
         if (!id) {
@@ -316,28 +317,38 @@ export default function ProposalDetails(): JSX.Element {
                                     : t("account.voting.youVoted.reject")}
                             </Text>
                         ) : null}
-                        <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
-                            <Button
-                                size="m"
-                                mode="filled"
-                                disabled={!canVote || pendingVote !== null}
-                                loading={pendingVote === "positive"}
-                                onClick={() => handleVote("positive")}
-                            >
-                                {t("account.voting.actions.approve")}
-                            </Button>
-                            <Button
-                                size="m"
-                                mode="filled"
-                                disabled={!canVote || pendingVote !== null}
-                                loading={pendingVote === "negative"}
-                                onClick={() => handleVote("negative")}
-                            >
-                                {t("account.voting.actions.reject")}
-                            </Button>
-                        </div>
-                        {!canVote && (
-                            <Text style={{color: theme.hint}}>{t("account.voting.notAllowed")}</Text>
+                        {isVotingFinished ? (
+                            <Text style={{color: theme.subtitle}}>
+                                {proposal.status === "APPROVED"
+                                    ? t("account.voting.toast.approved")
+                                    : t("account.voting.toast.rejected")}
+                            </Text>
+                        ) : (
+                            <>
+                                <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
+                                    <Button
+                                        size="m"
+                                        mode="filled"
+                                        disabled={!canVote || pendingVote !== null}
+                                        loading={pendingVote === "positive"}
+                                        onClick={() => handleVote("positive")}
+                                    >
+                                        {t("account.voting.actions.approve")}
+                                    </Button>
+                                    <Button
+                                        size="m"
+                                        mode="filled"
+                                        disabled={!canVote || pendingVote !== null}
+                                        loading={pendingVote === "negative"}
+                                        onClick={() => handleVote("negative")}
+                                    >
+                                        {t("account.voting.actions.reject")}
+                                    </Button>
+                                </div>
+                                {!canVote && (
+                                    <Text style={{color: theme.hint}}>{t("account.voting.notAllowed")}</Text>
+                                )}
+                            </>
                         )}
                     </Card>
 

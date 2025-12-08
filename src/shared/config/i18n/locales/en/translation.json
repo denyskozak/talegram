@@ -200,7 +200,9 @@
       "back": "Back",
       "unavailable": "We couldn't find the audiobook for this book.",
       "unsupported": "Your browser does not support audio playback.",
-      "speed": "Speed"
+      "speed": "Speed",
+      "seekBackward": "Rewind {{seconds}}s",
+      "seekForward": "Forward {{seconds}}s"
     },
     "purchase": {
       "statusTitle": "Purchase details",
