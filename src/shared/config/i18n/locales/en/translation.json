@@ -191,6 +191,8 @@
       "purchaseTimeout": "We could not confirm your purchase. Please try again.",
       "readAccessRequired": "Purchase the book to read it.",
       "listenAccessRequired": "Purchase the book to listen to the audiobook.",
+      "previewChapters": "You're reading a preview: first two chapters are free, the rest is paid.",
+      "previewAudio": "You're listening to a preview of the full audiobook.",
       "downloadFailed": "Could not load the book file. Try again later."
     },
     "listen": {
