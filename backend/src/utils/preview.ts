@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 
 const PREVIEW_CHAPTER_LIMIT = 3;
 
@@ -9,23 +10,38 @@ const extractOpfPath = (containerXml: string): string | null => {
   return match?.[1] ?? null;
 };
 
-const trimSpineToPreview = (opfContent: string, chapterLimit: number): string | null => {
-  const spineMatch = opfContent.match(/<spine[^>]*>([\s\S]*?)<\/spine>/i);
-  if (!spineMatch) {
-    return null;
-  }
+export function trimSpineToPreview(opfContent: string, chapterLimit: number): string | null {
+    const parser = new XMLParser({
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+    });
 
-  const spineBody = spineMatch[1];
-  const itemRefs = spineBody.match(/<itemref[^>]*?>/gi) ?? [];
-  if (itemRefs.length === 0) {
-    return null;
-  }
+    const builder = new XMLBuilder({
+        ignoreAttributes: false,
+        attributeNamePrefix: '@_',
+        format: true,
+    });
 
-  const limited = itemRefs.slice(0, chapterLimit).join('\n');
-  const updatedSpine = spineMatch[0].replace(spineBody, `\n${limited}\n`);
+    let opf: any;
+    try {
+        opf = parser.parse(opfContent);
+    } catch {
+        return null;
+    }
 
-  return opfContent.replace(spineMatch[0], updatedSpine);
-};
+    const spine = opf?.package?.spine?.itemref;
+    if (!spine) return null;
+
+    // spine может быть массивом или одним объектом
+    const spineArray = Array.isArray(spine) ? spine : [spine];
+
+    const previewSpine = spineArray.slice(0, chapterLimit);
+
+    opf.package.spine.itemref = Array.isArray(spine) ? previewSpine : previewSpine[0];
+
+    const newXml = builder.build(opf);
+    return newXml;
+}
 
 export async function buildEpubPreview(buffer: Buffer): Promise<Buffer> {
   const zip = await JSZip.loadAsync(buffer);
