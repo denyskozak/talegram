@@ -3,7 +3,7 @@ import { getBook } from '../data/catalog.js';
 import { Author } from '../entities/Author.js';
 import { deletePurchaseByPaymentId, getPurchaseByPaymentId, setPurchased } from '../stores/purchasesStore.js';
 import { appDataSource, initializeDataSource } from '../utils/data-source.js';
-import { normalizeTelegramUserId } from '../utils/telegram';
+import { normalizeTelegramUserId } from '../utils/telegram.js';
 
 export type StarsCurrency = 'XTR';
 
