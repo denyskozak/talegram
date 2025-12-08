@@ -16,21 +16,6 @@ type ReadingOverlayProps = {
 
 type ITheme = 'light' | 'dark'
 
-function updateTheme(rendition: Rendition, theme: ITheme) {
-    const themes = rendition.themes
-    switch (theme) {
-        case 'dark': {
-            themes.override('color', '#fff')
-            themes.override('background', '#000')
-            break
-        }
-        case 'light': {
-            themes.override('color', '#000')
-            themes.override('background', '#fff')
-            break
-        }
-    }
-}
 
 export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
@@ -40,6 +25,24 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     const rendition = useRef<Rendition | undefined>(undefined)
     const [theme, setTheme] = useState<ITheme>(themeSetting.text === '#ffffff' ? 'dark' : 'light');
     const [textSize, setTextSize] = useState(2);
+
+
+    function updateTheme(rendition: Rendition, theme: ITheme) {
+        const themes = rendition.themes
+        switch (theme) {
+            case 'dark': {
+                themes.override('color', '#fff')
+                themes.override('background', '#212121')
+                break
+            }
+            case 'light': {
+                themes.override('color', '#000')
+                themes.override('background', '#fff')
+                break
+            }
+        }
+    }
+
 
     useEffect(() => {
         if (rendition.current) {

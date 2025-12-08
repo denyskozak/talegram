@@ -170,7 +170,7 @@ export default function HomeCategories(): JSX.Element {
                                 display: "grid",
                                 gridAutoFlow: "column", // новые элементы добавляются в новые колонки
                                 gridTemplateRows: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
-                                gridAutoColumns: "calc(30% - 8px)", // ширина одной колонки ~ половина контейнера
+                                gridAutoColumns: "calc(50% - 8px)", // ширина одной колонки ~ половина контейнера
                                 overflowX: "auto", // горизонтальный скролл
                                 columnGap: 16,
                                 rowGap: 16,
@@ -178,10 +178,10 @@ export default function HomeCategories(): JSX.Element {
                                 paddingBottom: 4,
                             }}
                         >
-                            {topBooks.map((book) => (
-                                <div key={book.id} style={{minWidth: 0, width: "100%"}}>
+                            {topBooks.map((book, index) => (
+                                <div key={book.id + index} style={{minWidth: 0, width: "100%"}}>
                                     <BookCard
-                                        showTags={false}
+                                        onlyImage
                                         book={book}
                                         onClick={() => navigate(`/book/${book.id}`)}
                                     />
