@@ -226,6 +226,13 @@ export default function BookPage(): JSX.Element {
         navigate(`/reader/${encodeURIComponent(book.id)}/books?preview=1`);
     }, [book, navigate, showToast, t]);
 
+    const handleTagClick = useCallback(
+        (tag: string) => {
+            navigate(`/search?q=${encodeURIComponent(`#${tag}`)}`);
+        },
+        [navigate],
+    );
+
     const handleRead = useCallback(() => {
         if (!book) {
             return;
@@ -644,7 +651,7 @@ export default function BookPage(): JSX.Element {
                 <div style={{display: "flex", flexDirection: "column", gap: 16}}>
                     <div style={{display: "flex", flexWrap: "wrap", gap: 8}}>
                         {book.tags.map((tag) => (
-                            <Chip key={tag} mode="outline">
+                            <Chip key={tag} mode="outline" onClick={() => handleTagClick(tag)}>
                                 #{tag}
                             </Chip>
                         ))}
