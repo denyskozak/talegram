@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 
-const PREVIEW_CHAPTER_LIMIT = 3;
+const PREVIEW_CHAPTER_LIMIT = 5;
 
 const META_CONTAINER_PATH = 'META-INF/container.xml';
 
