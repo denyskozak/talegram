@@ -84,6 +84,7 @@ export default function PublishedBooks(): JSX.Element {
         <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           <Text style={{ color: theme.subtitle }}>
             {t("account.published.payoutBalance", { value: payoutBalance })}
+            {t("account.published.payoutBalanceCondition")}
           </Text>
           <Button
             type="button"

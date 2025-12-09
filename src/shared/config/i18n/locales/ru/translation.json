@@ -7,7 +7,7 @@
     }
   },
   "splashScreen": {
-    "title": "Цифровая Александри́йская библиоте́ка",
+    "title": "Полка Цифровых Товаров",
     "decentralizedBy": "децентрализовано через Варлус"
   },
   "languages": {
@@ -297,7 +297,8 @@
       "languageUnknown": "Неизвестно",
       "publishedAt": "Опубликовано {{value}}",
       "price": "Цена: {{value}} {{currency}}",
-      "payoutBalance": "Остаток выплаты: {{value}} звёзд",
+      "payoutBalance": "Остаток выплаты: {{value}} звёзд ⭐",
+      "payoutBalanceCondition": " (небходимо более 1000 звезд)",
       "requestPayout": "Получить выплаты",
       "viewDetails": "Показать детали",
       "hideDetails": "Скрыть детали",

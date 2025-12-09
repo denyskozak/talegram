@@ -143,6 +143,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             <ReactReader
                 readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
+                showToc={false}
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 getRendition={(_rendition) => {

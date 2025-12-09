@@ -7,7 +7,7 @@ import {
   type FormEvent,
 } from "react";
 
-import {Avatar, Card, Input, Section, Select, Text, Textarea, Title} from "@telegram-apps/telegram-ui";
+import {Avatar, Card, Section, Select, Text, Title} from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { useTMA } from "@/app/providers/TMAProvider";
@@ -25,6 +25,9 @@ interface ReviewsListProps {
   onReviewCreated?: (review: Review) => void;
 }
 
+/**
+ * Review text commented in code
+ */
 export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps): JSX.Element {
   const [items, setItems] = useState<Review[]>([]);
   const [cursorState, setCursorState] = useState<string | undefined>();
@@ -44,20 +47,20 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
   const hasMore = useMemo(() => Boolean(cursorState), [cursorState]);
 
   const defaultAuthorName = useMemo(() => {
+      console.log("launchParams: ", launchParams);
     const user = launchParams?.tgWebAppData?.user;
-    const firstName = user?.first_name?.trim();
-    const lastName = user?.last_name?.trim();
+    const username = user?.username?.trim();
 
-    if (firstName && lastName) {
-      return `${firstName} ${lastName}`.trim();
-    }
-
-    if (firstName) {
-      return firstName;
+    if (username) {
+      return username;
     }
 
     return t("reviews.form.defaultName");
   }, [launchParams, t]);
+
+  const authorImage = useMemo(() => {
+    return launchParams?.tgWebAppData?.user?.photo_url ?? '';
+  }, [launchParams]);
 
   useEffect(() => {
     setAuthorName((current) => (current.trim().length > 0 ? current : defaultAuthorName));
@@ -153,7 +156,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
   );
 
   const isSubmitDisabled =
-    isSubmitting || authorName.trim().length === 0 || text.trim().length === 0 || rating < 1 || rating > 5;
+    isSubmitting || authorName.trim().length === 0 || rating < 1 || rating > 5;
 
   const locale = i18n.language.startsWith("ru") ? "ru-RU" : "en-US";
 
@@ -163,24 +166,22 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
         {isFormOpen ? (
 
                 <Section   header={t("reviews.form.title")}>
-
-
           <form
             onSubmit={handleSubmit}
             style={{ display: "flex", padding: 4, flexDirection: "column", gap: 12 }}
             noValidate
           >
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Text weight="2">{t("reviews.form.nameLabel")}</Text>
-              <Input
-                  className="input-wrapper"
-                value={authorName}
-                  disabled
-                onChange={(event) => setAuthorName(event.target.value)}
-                placeholder={t("reviews.form.namePlaceholder")}
-                required
-              />
-            </label>
+            {/*<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>*/}
+            {/*  <Text weight="2">{t("reviews.form.nameLabel")}</Text>*/}
+            {/*  <Input*/}
+            {/*      className="input-wrapper"*/}
+            {/*    value={authorName}*/}
+            {/*      disabled*/}
+            {/*    onChange={(event) => setAuthorName(event.target.value)}*/}
+            {/*    placeholder={t("reviews.form.namePlaceholder")}*/}
+            {/*    required*/}
+            {/*  />*/}
+            {/*</label>*/}
             <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
               <Text weight="2">{t("reviews.form.ratingLabel")}</Text>
               <Select
@@ -195,18 +196,18 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
                 ))}
               </Select>
             </label>
-            <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <Text weight="2">{t("reviews.form.textLabel")}</Text>
-              <Textarea
-                value={text}
-                onChange={(event) => setText(event.target.value)}
-                placeholder={t("reviews.form.textPlaceholder")}
-                rows={4}
-                disabled={isSubmitting}
+            {/*<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>*/}
+            {/*  <Text weight="2">{t("reviews.form.textLabel")}</Text>*/}
+            {/*  <Textarea*/}
+            {/*    value={text}*/}
+            {/*    onChange={(event) => setText(event.target.value)}*/}
+            {/*    placeholder={t("reviews.form.textPlaceholder")}*/}
+            {/*    rows={4}*/}
+            {/*    disabled={isSubmitting}*/}
 
-                required
-              />
-            </label>
+            {/*    required*/}
+            {/*  />*/}
+            {/*</label>*/}
             {submitError && (
               <Text style={{ color: "var(--tg-theme-destructive-text-color, #d84b4b)" }}>{submitError}</Text>
             )}
@@ -254,7 +255,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
                 {" • "}
                 {t("reviews.rating", { value: formatRating(review.rating) })}
               </Text>
-              <Text style={{ lineHeight: 1.4 }}>{review.text}</Text>
+              {/*<Text style={{ lineHeight: 1.4 }}>{review.text}</Text>*/}
             </div>
           </div>
         </Card>

@@ -7,7 +7,7 @@
     }
   },
   "splashScreen": {
-    "title": "Digital Library of Alexandria",
+    "title": "Digital Content Marketplace",
     "decentralizedBy": "decentralized by Walrus"
   },
   "languages": {
@@ -295,7 +295,8 @@
       "languageUnknown": "Unknown",
       "publishedAt": "Published at {{value}}",
       "price": "Price: {{value}} {{currency}}",
-      "payoutBalance": "Payout balance: {{value}} stars",
+      "payoutBalance": "Payout balance: {{value}} stars ⭐",
+      "payoutBalanceCondition": " (required more 1000 stars)",
       "requestPayout": "Request payout",
       "viewDetails": "View details",
       "hideDetails": "Hide details",
