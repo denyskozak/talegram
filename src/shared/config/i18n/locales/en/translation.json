@@ -117,6 +117,15 @@
     "title": "Settings",
     "language": "App language",
     "languageNote": "Use the toggle below to switch languages instantly.",
+    "contact": {
+      "title": "Contact us",
+      "description": "Need help or want to request payouts? Message our Telegram team.",
+      "button": "Message @lawyerdsupport"
+    },
+    "about": {
+      "title": "About us",
+      "description": "A marketplace inside Telegram: authors receive 80% of sales revenue, and our anti-censorship community shares in the project's income."
+    },
     "description": "More options are on the way — stay tuned for additional settings."
   },
   "book": {
@@ -287,6 +296,7 @@
       "publishedAt": "Published at {{value}}",
       "price": "Price: {{value}} {{currency}}",
       "payoutBalance": "Payout balance: {{value}} stars",
+      "requestPayout": "Request payout",
       "viewDetails": "View details",
       "hideDetails": "Hide details",
       "noSales": "No sales yet",

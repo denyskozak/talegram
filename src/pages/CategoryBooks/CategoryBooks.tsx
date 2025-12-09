@@ -63,6 +63,7 @@ export default function CategoryBooks(): JSX.Element {
           cursor: reset ? undefined : cursorRef.current,
           sort,
           tags: selectedTags.length > 0 ? selectedTags : undefined,
+          language: i18n.language,
         });
         setCursor(response.nextCursor);
         setBooks((prev) => (reset ? response.items : [...prev, ...response.items]));
@@ -73,7 +74,7 @@ export default function CategoryBooks(): JSX.Element {
         setIsLoading(false);
       }
     },
-    [id, selectedTags, sort, t],
+    [id, i18n.language, selectedTags, sort, t],
   );
 
   useEffect(() => {

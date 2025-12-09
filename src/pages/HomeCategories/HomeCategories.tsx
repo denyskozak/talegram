@@ -24,7 +24,7 @@ import {BookCardSkeleton} from "@/shared/ui/Skeletons";
 
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const [categories, setCategories] = useState<Category[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -88,6 +88,7 @@ export default function HomeCategories(): JSX.Element {
                 const response = await catalogApi.listBooks({
                     sort: "popular",
                     limit: 10,
+                    language: i18n.language,
                 });
 
                 if (!cancelled) {
@@ -115,7 +116,7 @@ export default function HomeCategories(): JSX.Element {
         return () => {
             cancelled = true;
         };
-    }, [selectedGlobalCategory, t, topRefreshToken]);
+    }, [i18n.language, selectedGlobalCategory, t, topRefreshToken]);
 
     const specialCategories: SpecialCategory[] = translatedSpecialCategories;
 

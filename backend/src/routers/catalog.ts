@@ -24,6 +24,7 @@ const listBooksInput = z.object({
   tags: z.array(z.string().trim().min(1)).optional(),
   cursor: z.string().trim().optional(),
   limit: z.number().int().min(1).max(50).optional(),
+  language: z.string().trim().min(1).optional(),
 });
 
 const getBookInput = z.object({
