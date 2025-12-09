@@ -19,7 +19,7 @@ export function CategoryTileSkeleton(): JSX.Element {
   );
 }
 
-export function BookCardSkeleton(): JSX.Element {
+export function BookCardSkeleton({ height = 160 }: { height?: string | number}): JSX.Element {
   return (
     <Card
       style={{
@@ -27,7 +27,7 @@ export function BookCardSkeleton(): JSX.Element {
         overflow: "hidden",
       }}
     >
-      <Skeleton style={{ height: 160 }} />
+      <Skeleton style={{ height }} />
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
         <Skeleton style={{ width: "70%", height: 20 }} />
         <Skeleton style={{ width: "50%", height: 16 }} />

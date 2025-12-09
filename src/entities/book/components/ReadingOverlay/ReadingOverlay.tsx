@@ -7,6 +7,7 @@ import {type Rendition} from 'epubjs'
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
+import {DisplayedLocation} from "epubjs/types/rendition";
 
 type ReadingOverlayProps = {
     fileUrl: string;
@@ -21,23 +22,29 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
     const themeSetting = useTheme();
-
-    const rendition = useRef<Rendition | undefined>(undefined)
-    const [theme, setTheme] = useState<ITheme>(themeSetting.text === '#ffffff' ? 'dark' : 'light');
+    console.log("themeSetting: ", themeSetting);
+    const bookRef = useRef<any | null>(null);
+    const renditionRef = useRef<Rendition | undefined>(undefined)
+    const isDefaultThemeDark = themeSetting.text === '#ffffff' || themeSetting.text === '#FFFFFF';
+    const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [textSize, setTextSize] = useState(2);
-
+    console.log("isDefaultThemeDark: ", isDefaultThemeDark);
+  const darkText =  isDefaultThemeDark ? themeSetting.text : '#fff'
+  const lightText =  isDefaultThemeDark ? '#000' : themeSetting.text
+  const darkBackground =   isDefaultThemeDark ? themeSetting.background : '#212121'
+  const lightBackground =   isDefaultThemeDark ? '#fff' : themeSetting.text
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
         const themes = rendition.themes
         switch (theme) {
             case 'dark': {
-                themes.override('color', '#fff')
-                themes.override('background', '#212121')
+                themes.override('color', darkText)
+                themes.override('background',darkBackground)
                 break
             }
             case 'light': {
-                themes.override('color', '#000')
-                themes.override('background', '#fff')
+                themes.override('color', lightText)
+                themes.override('background', lightBackground)
                 break
             }
         }
@@ -45,8 +52,8 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
 
     useEffect(() => {
-        if (rendition.current) {
-            updateTheme(rendition.current, theme)
+        if (renditionRef.current) {
+            updateTheme(renditionRef.current, theme)
         }
     }, [theme])
 
@@ -56,7 +63,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             2: '140%',
             3: '160%',
         }
-        rendition.current?.themes.fontSize(textSizes[textSize])
+        renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
 
     const handleNextTextSize = () => {
@@ -98,7 +105,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         },
         readerArea: {
             ...ReactReaderStyle.readerArea,
-            backgroundColor: '#212121',
+            backgroundColor: darkBackground,
             transition: undefined,
         },
         titleArea: {
@@ -122,6 +129,42 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             color: 'white',
         },
     }
+
+    const goToNextChapter = () => {
+        const rendition = renditionRef.current;
+        const book = bookRef.current;
+
+        console.log("rendition: ", rendition);
+        console.log("book: ", book);
+        if (!rendition || !book) return;
+
+        const currentLocation = rendition.currentLocation();
+        console.log("currentLocation: ", currentLocation);
+        const currentHref =(currentLocation as unknown as { start: DisplayedLocation })?.start?.href;
+        if (!currentHref) return;
+
+        const spineItems = book.spine?.spineItems || [];
+        console.log("spineItems: ", spineItems);
+        if (!spineItems.length) return;
+
+        const currentIndex = spineItems.findIndex((item: any) =>
+            item.href === currentHref ||
+            item.href.endsWith(currentHref) ||
+            currentHref.endsWith(item.href)
+        );
+
+        console.log("currentIndex: ", currentIndex);
+        if (currentIndex === -1) return;
+
+        const nextItem = spineItems[currentIndex + 1];
+        console.log("nextItem: ", nextItem);
+        if (!nextItem) {
+            // уже в последней главе
+            return;
+        }
+
+        rendition.display(nextItem.href);
+    };
 
     return (
         <div style={{height: '90vh', position: 'relative'}}>
@@ -147,7 +190,23 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 getRendition={(_rendition) => {
                     updateTheme(_rendition, theme)
-                    rendition.current = _rendition
+                    renditionRef.current = _rendition
+
+                    bookRef.current = _rendition.book;
+
+                    _rendition.on('relocated', (loc: any) => {
+                        // обычное обновление позиции
+                        if (loc?.start?.cfi) {
+                            setLocation(loc.start.cfi);
+                        }
+
+                        const displayed = loc.end?.displayed || loc.start?.displayed;
+                        console.log("displayed: ", displayed);
+                        // если данные об отображении есть и мы на последней странице раздела — считаем, что конец главы
+                        if (displayed && displayed.page === displayed.total) {
+                            goToNextChapter();
+                        }
+                    });
                 }}
             />
         </div>

@@ -191,12 +191,12 @@ export default function HomeCategories(): JSX.Element {
 
                             {isTopLoading && topBooks.length === 0 && Array.from({length: 4}).map((_, index) => (
                                 <div key={index} style={{minWidth: 0, width: "100%"}}>
-                                    <BookCardSkeleton />
+                                    <BookCardSkeleton height="auto" />
                                 </div>
                             ))}
                             {isTopLoading && topBooks.length > 0 && (
                                 <div style={{minWidth: 0, width: "100%"}}>
-                                    <BookCardSkeleton />
+                                    <BookCardSkeleton height="auto" />
                                 </div>
                             )}
                         </div>
