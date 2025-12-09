@@ -272,8 +272,8 @@ export async function listBooks(params: {
     return (
       categoryMatch &&
       languageMatch &&
-      matchesSearch(entity, params.search) &&
-      matchesTags(entity, params.tags)
+      (matchesSearch(entity, params.search) ||
+      matchesTags(entity, params.tags))
     );
   });
 

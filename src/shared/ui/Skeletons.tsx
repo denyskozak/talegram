@@ -1,12 +1,15 @@
 import {Card, Skeleton} from "@telegram-apps/telegram-ui";
+import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 
 export function CategoryTileSkeleton(): JSX.Element {
+    const theme = useTheme();
+
   return (
     <div
       style={{
         padding: 16,
         borderRadius: 16,
-        background: "var(--tg-theme-secondary-bg-color, #f3f3f5)",
+        background: theme.section,
         display: "flex",
         flexDirection: "column",
         gap: 12,
