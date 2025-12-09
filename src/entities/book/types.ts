@@ -24,6 +24,7 @@ export interface CatalogApi {
     tags?: string[];
     cursor?: string;
     limit?: number;
+    language?: string;
   }): Promise<{ items: Book[]; nextCursor?: string }>;
   getBook(id: ID): Promise<Book>;
   listReviews(bookId: ID, cursor?: string, limit?: number): Promise<{ items: Review[]; nextCursor?: string }>;

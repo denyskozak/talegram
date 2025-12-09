@@ -14,6 +14,7 @@ type ListBooksPayload = {
   tags?: string[];
   cursor?: string;
   limit?: number;
+  language?: string;
 };
 
 type ListReviewsPayload = {

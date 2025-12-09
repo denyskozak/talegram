@@ -252,14 +252,29 @@ export async function listBooks(params: {
   tags?: string[];
   cursor?: string;
   limit?: number;
+  language?: string;
 } = {}): Promise<{ items: CatalogBook[]; nextCursor?: string }> {
   const repository = await getBookRepository();
   const entities = await repository.find();
 
+  const normalizedLanguage =
+    typeof params.language === 'string' && params.language.trim().length > 0
+      ? params.language.trim().toLocaleLowerCase()
+      : null;
+
   const filtered = entities.filter((entity) => {
     const categoryId = getCategoryId(entity);
     const categoryMatch = params.categoryId ? categoryId === params.categoryId : true;
-    return categoryMatch && matchesSearch(entity, params.search) && matchesTags(entity, params.tags);
+    const languageMatch = normalizedLanguage
+      ? (entity.language ?? '').trim().toLocaleLowerCase() === normalizedLanguage
+      : true;
+
+    return (
+      categoryMatch &&
+      languageMatch &&
+      matchesSearch(entity, params.search) &&
+      matchesTags(entity, params.tags)
+    );
   });
 
   const sort = params.sort ?? 'popular';

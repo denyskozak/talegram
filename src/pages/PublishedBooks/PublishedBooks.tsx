@@ -25,6 +25,7 @@ export default function PublishedBooks(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const payoutBalance = books[0]?.payoutBalance ?? 0;
+  const supportLink = "https://t.me/lawyerdsupport";
 
   useEffect(() => {
     let isMounted = true;
@@ -80,10 +81,18 @@ export default function PublishedBooks(): JSX.Element {
       </header>
 
       {!isLoading && !error && (
-        <Card style={{ padding: 16 }}>
+        <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           <Text style={{ color: theme.subtitle }}>
             {t("account.published.payoutBalance", { value: payoutBalance })}
           </Text>
+          <Button
+            type="button"
+            size="s"
+            mode="outline"
+            onClick={() => window.open(supportLink, "_blank")}
+          >
+            {t("account.published.requestPayout")}
+          </Button>
         </Card>
       )}
 
