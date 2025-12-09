@@ -84,16 +84,16 @@ export default function PublishedBooks(): JSX.Element {
         <Card style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
           <Text style={{ color: theme.subtitle }}>
             {t("account.published.payoutBalance", { value: payoutBalance })}
-            {t("account.published.payoutBalanceCondition")}
+              {payoutBalance < 1000 ? t("account.published.payoutBalanceCondition") : ''}
           </Text>
-          <Button
+              {payoutBalance > 999 ? <Button
             type="button"
             size="s"
             mode="outline"
             onClick={() => window.open(supportLink, "_blank")}
           >
             {t("account.published.requestPayout")}
-          </Button>
+          </Button> : null}
         </Card>
       )}
 
