@@ -28,18 +28,18 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     const isDefaultThemeDark = themeSetting.text === '#ffffff' || themeSetting.text === '#FFFFFF';
     const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [textSize, setTextSize] = useState(2);
-    console.log("isDefaultThemeDark: ", isDefaultThemeDark);
-  const darkText =  isDefaultThemeDark ? themeSetting.text : '#fff'
-  const lightText =  isDefaultThemeDark ? '#000' : themeSetting.text
-  const darkBackground =   isDefaultThemeDark ? themeSetting.background : '#212121'
-  const lightBackground =   isDefaultThemeDark ? '#fff' : themeSetting.text
+
+    const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
+    const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
+    const darkBackground = isDefaultThemeDark ? themeSetting.background : '#212121'
+    const lightBackground = isDefaultThemeDark ? '#fff' : themeSetting.background
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
         const themes = rendition.themes
         switch (theme) {
             case 'dark': {
                 themes.override('color', darkText)
-                themes.override('background',darkBackground)
+                themes.override('background', darkBackground)
                 break
             }
             case 'light': {
@@ -140,7 +140,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
         const currentLocation = rendition.currentLocation();
         console.log("currentLocation: ", currentLocation);
-        const currentHref =(currentLocation as unknown as { start: DisplayedLocation })?.start?.href;
+        const currentHref = (currentLocation as unknown as { start: DisplayedLocation })?.start?.href;
         if (!currentHref) return;
 
         const spineItems = book.spine?.spineItems || [];
