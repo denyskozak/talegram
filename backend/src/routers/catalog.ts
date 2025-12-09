@@ -45,6 +45,7 @@ const listCategoryTagsInput = z.object({
 const createReviewInput = z.object({
   bookId: z.string().trim().min(1),
   authorName: z.string().trim().min(1).max(128),
+  authorImage: z.string().trim().url().nullish(),
   rating: z.number().int().min(1).max(5),
   text: z.string().trim().min(1).max(2048),
 });
@@ -110,6 +111,7 @@ export const catalogRouter = createRouter({
 
     return createReview(input.bookId, {
       authorName: input.authorName,
+      authorImage: input.authorImage,
       rating: input.rating,
       text: input.text,
     });

@@ -376,7 +376,7 @@ async function updateBookRatingStats(bookId: ID, rating: number): Promise<void> 
 
 export async function createReview(
   bookId: ID,
-  params: { authorName: string; rating: number; text: string },
+  params: { authorName: string; authorImage?: string | null; rating: number; text: string },
 ): Promise<Review> {
   const book = await getBook(bookId);
   if (!book) {
@@ -388,6 +388,7 @@ export async function createReview(
     id: randomUUID(),
     bookId,
     authorName: params.authorName,
+    authorImage: params.authorImage,
     rating: normalizedRating,
     text: params.text,
     createdAt: new Date().toISOString(),

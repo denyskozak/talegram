@@ -9,6 +9,7 @@ export type Review = {
   id: ID;
   bookId: ID;
   authorName: string;
+  authorImage?: string | null;
   rating: number;
   text: string;
   createdAt: string;
@@ -28,5 +29,11 @@ export interface CatalogApi {
   }): Promise<{ items: Book[]; nextCursor?: string }>;
   getBook(id: ID): Promise<Book>;
   listReviews(bookId: ID, cursor?: string, limit?: number): Promise<{ items: Review[]; nextCursor?: string }>;
-  createReview(payload: { bookId: ID; authorName: string; rating: number; text: string }): Promise<Review>;
+  createReview(payload: {
+    bookId: ID;
+    authorName: string;
+    authorImage?: string | null;
+    rating: number;
+    text: string;
+  }): Promise<Review>;
 }

@@ -26,6 +26,7 @@ type ListReviewsPayload = {
 type CreateReviewPayload = {
   bookId: ID;
   authorName: string;
+  authorImage?: string | null;
   rating: number;
   text: string;
 };
@@ -70,6 +71,7 @@ export const catalogApi: CatalogApi = {
     const normalizedPayload: CreateReviewPayload = {
       bookId: payload.bookId,
       authorName: payload.authorName,
+      authorImage: payload.authorImage,
       rating: payload.rating,
       text: payload.text,
     };

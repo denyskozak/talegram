@@ -49,6 +49,7 @@ export type Review = {
   id: ID;
   bookId: ID;
   authorName: string;
+  authorImage?: string | null;
   rating: number;
   text: string;
   createdAt: string;

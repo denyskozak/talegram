@@ -47,7 +47,6 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
   const hasMore = useMemo(() => Boolean(cursorState), [cursorState]);
 
   const defaultAuthorName = useMemo(() => {
-      console.log("launchParams: ", launchParams);
     const user = launchParams?.tgWebAppData?.user;
     const username = user?.username?.trim();
 
@@ -58,13 +57,34 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
     return t("reviews.form.defaultName");
   }, [launchParams, t]);
 
+  const currentUsername = useMemo(
+    () => launchParams?.tgWebAppData?.user?.username?.trim() ?? null,
+    [launchParams],
+  );
+
   const authorImage = useMemo(() => {
-    return launchParams?.tgWebAppData?.user?.photo_url ?? '';
+    return launchParams?.tgWebAppData?.user?.photo_url ?? null;
   }, [launchParams]);
+
+  const hasUserReview = useMemo(() => {
+    if (!currentUsername) {
+      return false;
+    }
+
+    const normalizedUsername = currentUsername.toLowerCase();
+
+    return items.some((review) => review.authorName.trim().toLowerCase() === normalizedUsername);
+  }, [currentUsername, items]);
 
   useEffect(() => {
     setAuthorName((current) => (current.trim().length > 0 ? current : defaultAuthorName));
   }, [defaultAuthorName]);
+
+  useEffect(() => {
+    if (hasUserReview) {
+      setIsFormOpen(false);
+    }
+  }, [hasUserReview]);
 
   const updateCursor = useCallback((nextCursor: string | undefined) => {
     cursorRef.current = nextCursor;
@@ -135,6 +155,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
         const createdReview = await api.createReview({
           bookId,
           authorName: normalizedName,
+          authorImage,
           rating,
           text: normalizedText,
         });
@@ -152,7 +173,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
         setIsSubmitting(false);
       }
     },
-    [api, authorName, bookId, load, onReviewCreated, rating, showToast, t, text],
+    [api, authorImage, authorName, bookId, load, onReviewCreated, rating, showToast, t, text],
   );
 
   const isSubmitDisabled =
@@ -163,14 +184,13 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <Card style={{ padding: 16, borderRadius: 20 }}>
-        {isFormOpen ? (
-
-                <Section   header={t("reviews.form.title")}>
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: "flex", padding: 4, flexDirection: "column", gap: 12 }}
-            noValidate
-          >
+        {!hasUserReview && (isFormOpen ? (
+          <Section header={t("reviews.form.title")}>
+            <form
+              onSubmit={handleSubmit}
+              style={{ display: "flex", padding: 4, flexDirection: "column", gap: 12 }}
+              noValidate
+            >
             {/*<label style={{ display: "flex", flexDirection: "column", gap: 6 }}>*/}
             {/*  <Text weight="2">{t("reviews.form.nameLabel")}</Text>*/}
             {/*  <Input*/}
@@ -225,12 +245,12 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
               </Button>
             </div>
           </form>
-                </Section>
+          </Section>
         ) : (
           <Button mode="outline" onClick={handleOpenForm} aria-label={t("reviews.addButton")}>
             {t("reviews.addButton")}
           </Button>
-        )}
+        ))}
       </Card>
       {error && <ErrorBanner message={error} onRetry={() => load({ reset: true })} />}
       {!error && !isLoading && items.length === 0 && (
@@ -239,7 +259,11 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
       {items.map((review) => (
         <Card key={review.id} style={{ padding: 16, borderRadius: 20 }}>
           <div style={{ display: "flex", gap: 12 }}>
-            <Avatar size={40} style={{ background: "var(--tg-theme-secondary-bg-color, #f3f3f5)" }}>
+            <Avatar
+              size={40}
+              src={review.authorImage ?? undefined}
+              style={{ background: "var(--tg-theme-secondary-bg-color, #f3f3f5)" }}
+            >
               {review.authorName.charAt(0).toUpperCase()}
             </Avatar>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
