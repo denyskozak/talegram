@@ -47,7 +47,7 @@ const createReviewInput = z.object({
   authorName: z.string().trim().min(1).max(128),
   authorImage: z.string().trim().url().nullish(),
   rating: z.number().int().min(1).max(5),
-  text: z.string().trim().min(1).max(2048),
+  text: z.string().trim().max(2048),
 });
 
 export const catalogRouter = createRouter({
