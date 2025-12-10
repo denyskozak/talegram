@@ -1,39 +1,41 @@
-import {useEffect, useMemo, useState} from "react";
-import {useNavigate} from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import {Card, SegmentedControl, Tappable, Title} from "@telegram-apps/telegram-ui";
-import {useTranslation} from "react-i18next";
+import { Card, SegmentedControl, Tappable, Title } from "@telegram-apps/telegram-ui";
+import { useTranslation } from "react-i18next";
 
-import {CategoryTile} from "@/entities/category/components/CategoryTile";
-import type {Category} from "@/entities/category/types";
+import { CategoryTile } from "@/entities/category/components/CategoryTile";
+import type { Category } from "@/entities/category/types";
 import {
-    SPECIAL_CATEGORIES,
-    SPECIAL_CATEGORY_MAP,
-    type SpecialCategory,
-    isSpecialCategoryId,
+  SPECIAL_CATEGORIES,
+  SPECIAL_CATEGORY_MAP,
+  type SpecialCategory,
+  isSpecialCategoryId,
 } from "@/entities/category/customCategories";
-import type {Book} from "@/entities/book/types";
-import {catalogApi} from "@/entities/book/api";
-import {useScrollRestoration} from "@/shared/hooks/useScrollRestoration";
-import {EmptyState} from "@/shared/ui/EmptyState";
-import {ErrorBanner} from "@/shared/ui/ErrorBanner";
-import {CategoryTileSkeleton} from "@/shared/ui/Skeletons";
-import {GLOBAL_CATEGORIES, type GlobalCategory} from "@/shared/lib/globalCategories";
-import {BookCard} from "@/entities/book/components/BookCard";
-import {BookCardSkeleton} from "@/shared/ui/Skeletons";
+import { useScrollRestoration } from "@/shared/hooks/useScrollRestoration";
+import { EmptyState } from "@/shared/ui/EmptyState";
+import { ErrorBanner } from "@/shared/ui/ErrorBanner";
+import { CategoryTileSkeleton } from "@/shared/ui/Skeletons";
+import { GLOBAL_CATEGORIES, type GlobalCategory } from "@/shared/lib/globalCategories";
+import { BookCard } from "@/entities/book/components/BookCard";
+import { BookCardSkeleton } from "@/shared/ui/Skeletons";
+import { useHomeStore } from "./store";
 
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
-    const {t, i18n} = useTranslation();
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [refreshToken, setRefreshToken] = useState(0);
+    const { t, i18n } = useTranslation();
     const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
-    const [topBooks, setTopBooks] = useState<Book[]>([]);
-    const [isTopLoading, setIsTopLoading] = useState(false);
-    const [topError, setTopError] = useState<string | null>(null);
-    const [topRefreshToken, setTopRefreshToken] = useState(0);
+    const {
+      categories,
+      isCategoriesLoading,
+      categoriesError,
+      loadCategories,
+      topBooks,
+      isTopBooksLoading,
+      topBooksError,
+      loadTopBooks,
+      clearTopBooks,
+    } = useHomeStore();
 
     useScrollRestoration("home-categories");
 
@@ -46,77 +48,23 @@ export default function HomeCategories(): JSX.Element {
         [t],
     );
     useEffect(() => {
-        let cancelled = false;
-        const load = async () => {
-            try {
-                setIsLoading(true);
-                setError(null);
-
-                const items = await catalogApi.listCategories({
-                    globalCategory: selectedGlobalCategory,
-                });
-                if (!cancelled) {
-                    setCategories(items);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    console.error(err);
-                    setError(t("errors.loadCategories"));
-                }
-            } finally {
-                if (!cancelled) {
-                    setIsLoading(false);
-                }
-            }
-        };
-
-        void load();
-
-        return () => {
-            cancelled = true;
-        };
-    }, [refreshToken, selectedGlobalCategory, t]);
+        void loadCategories({
+            globalCategory: selectedGlobalCategory,
+            errorMessage: t("errors.loadCategories"),
+        });
+    }, [loadCategories, selectedGlobalCategory, t]);
 
     useEffect(() => {
-        let cancelled = false;
-
-        const loadTopBooks = async () => {
-            try {
-                setIsTopLoading(true);
-                setTopError(null);
-
-                const response = await catalogApi.listBooks({
-                    sort: "popular",
-                    limit: 10,
-                    language: i18n.language,
-                });
-
-                if (!cancelled) {
-                    setTopBooks(response.items);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    console.error(err);
-                    setTopError(t("errors.loadBooks"));
-                }
-            } finally {
-                if (!cancelled) {
-                    setIsTopLoading(false);
-                }
-            }
-        };
-
         if (selectedGlobalCategory === "book") {
-            void loadTopBooks();
-        } else {
-            setTopBooks([]);
-            setTopError(null);
+            void loadTopBooks({
+                language: i18n.language,
+                errorMessage: t("errors.loadBooks"),
+            });
+            return;
         }
 
-        return () => {
-            cancelled = true;
-        };
-    }, [i18n.language, selectedGlobalCategory, t, topRefreshToken]);
+        clearTopBooks();
+    }, [clearTopBooks, i18n.language, loadTopBooks, selectedGlobalCategory, t]);
 
     const specialCategories: SpecialCategory[] = translatedSpecialCategories;
 
@@ -131,7 +79,19 @@ export default function HomeCategories(): JSX.Element {
         navigate(`/category/${category.id}`);
     };
 
-    const handleTopRetry = () => setTopRefreshToken((prev) => prev + 1);
+    const handleRetryCategories = () =>
+        loadCategories({
+            globalCategory: selectedGlobalCategory,
+            errorMessage: t("errors.loadCategories"),
+            force: true,
+        });
+
+    const handleTopRetry = () =>
+        loadTopBooks({
+            language: i18n.language,
+            errorMessage: t("errors.loadBooks"),
+            force: true,
+        });
 
     const handleViewAllTopBooks = () => navigate(SPECIAL_CATEGORY_MAP["most-read"].path);
 
@@ -164,7 +124,7 @@ export default function HomeCategories(): JSX.Element {
                             {t("homeCategories.popularBooksTitle")}
                         </Title>
                     </div>
-                    {topError && <ErrorBanner message={topError} onRetry={handleTopRetry}/>}                    
+                    {topBooksError && <ErrorBanner message={topBooksError} onRetry={handleTopRetry}/>}
                     <div style={{overflowX: "auto", paddingBottom: 8}}>
                         <div
                             style={{
@@ -189,19 +149,19 @@ export default function HomeCategories(): JSX.Element {
                                 </div>
                             ))}
 
-                            {isTopLoading && topBooks.length === 0 && Array.from({length: 4}).map((_, index) => (
+                            {isTopBooksLoading && topBooks.length === 0 && Array.from({length: 4}).map((_, index) => (
                                 <div key={index} style={{minWidth: 0, width: "100%"}}>
                                     <BookCardSkeleton height="auto" />
                                 </div>
                             ))}
-                            {isTopLoading && topBooks.length > 0 && (
+                            {isTopBooksLoading && topBooks.length > 0 && (
                                 <div style={{minWidth: 0, width: "100%"}}>
                                     <BookCardSkeleton height="auto" />
                                 </div>
                             )}
                         </div>
                     </div>
-                    {!isTopLoading && topBooks.length === 0 && !topError && (
+                    {!isTopBooksLoading && topBooks.length === 0 && !topBooksError && (
                         <EmptyState
                             title={t("homeCategories.popularBooksEmptyTitle")}
                             description={t("homeCategories.popularBooksEmptyDescription")}
@@ -245,8 +205,9 @@ export default function HomeCategories(): JSX.Element {
                     ))}
                 </SegmentedControl>
             </div>
-            {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
-                                   onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
+            {categoriesError && (
+                <ErrorBanner style={{ margin: "16px 0" }} message={categoriesError} onRetry={handleRetryCategories} />
+            )}
             {selectedGlobalCategory === 'article' || selectedGlobalCategory === 'comics'
 
                 ? <div style={{
@@ -255,7 +216,7 @@ export default function HomeCategories(): JSX.Element {
                     justifyContent: "center"
                 }}>{t("homeCategories.comingSoon")}</div>
 
-                : isLoading && displayedCategories.length === 0
+                : isCategoriesLoading && displayedCategories.length === 0
                     ? (
                         <div style={{
                             display: "grid",
@@ -282,7 +243,7 @@ export default function HomeCategories(): JSX.Element {
                             ))}
                         </div>
                     ) : (
-                        !isLoading && (
+                        !isCategoriesLoading && (
                             <EmptyState
                                 title={t("homeCategories.emptyTitle")}
                                 description={t("homeCategories.emptyDescription")}

@@ -82,9 +82,9 @@ export default function MyAccount(): JSX.Element {
     isMyBooksLoading,
     myBooksError,
     myBooksInitialized,
+    lastLoadedUserId,
     loadMyBooks,
     toggleLike,
-    resetMyBooks,
   } = useMyAccountStore();
   useEffect(() => {
     let isMounted = true;
@@ -127,8 +127,7 @@ export default function MyAccount(): JSX.Element {
 
   useEffect(() => {
     setMyBooksFilter("purchased");
-    resetMyBooks();
-  }, [resetMyBooks, telegramUserId]);
+  }, [telegramUserId]);
 
   const enhanceProposalsWithCovers = useCallback(
     async (proposals: ProposalForVoting[]): Promise<VotingProposal[]> => {
@@ -265,10 +264,13 @@ export default function MyAccount(): JSX.Element {
   }, [activeSection, loadVotingProposals]);
 
   useEffect(() => {
-    if (activeSection === BOOK_SECTION && !myBooksInitialized) {
+    const needsBooksReload =
+      !myBooksInitialized || lastLoadedUserId !== (telegramUserId ?? null);
+
+    if (activeSection === BOOK_SECTION && needsBooksReload) {
       void requestMyBooks();
     }
-  }, [activeSection, myBooksInitialized, requestMyBooks]);
+  }, [activeSection, lastLoadedUserId, myBooksInitialized, requestMyBooks, telegramUserId]);
 
   const menuItems = useMemo(
     () => [
