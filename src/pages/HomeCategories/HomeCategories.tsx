@@ -248,11 +248,13 @@ export default function HomeCategories(): JSX.Element {
             {error && <ErrorBanner style={{margin: "16px 0"}} message={error}
                                    onRetry={() => setRefreshToken((prev) => prev + 1)}/>}
             {selectedGlobalCategory === 'article' || selectedGlobalCategory === 'comics'
+
                 ? <div style={{
                     width: "100%",
                     display: 'flex',
                     justifyContent: "center"
                 }}>{t("homeCategories.comingSoon")}</div>
+
                 : isLoading && displayedCategories.length === 0
                     ? (
                         <div style={{

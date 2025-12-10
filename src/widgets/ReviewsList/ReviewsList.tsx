@@ -143,8 +143,11 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
       event.preventDefault();
 
       const normalizedName = authorName.trim();
-      const normalizedText = text.trim();
-      if (normalizedName.length === 0 || normalizedText.length === 0) {
+      // const normalizedText = text.trim();
+      if (
+          normalizedName.length === 0
+          // || normalizedText.length === 0
+      ) {
         setSubmitError(t("reviews.form.validation"));
         return;
       }
@@ -157,7 +160,7 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
           authorName: normalizedName,
           authorImage,
           rating,
-          text: normalizedText,
+          text: '',
         });
         showToast(t("reviews.toast.success"));
         setIsFormOpen(false);

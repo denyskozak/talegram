@@ -11,14 +11,14 @@ type SpecialCategoryBase = {
 };
 
 const SPECIAL_CATEGORIES_BASE: readonly SpecialCategoryBase[] = [
-  {
-    id: "most-read",
-    titleKey: "categories.special.mostRead",
-    defaultTitle: "Самые читаемые",
-    slug: "most-read",
-    emoji: "📖",
-    sort: "popular",
-  },
+  // {
+  //   id: "most-read",
+  //   titleKey: "categories.special.mostRead",
+  //   defaultTitle: "Самые читаемые",
+  //   slug: "most-read",
+  //   emoji: "📖",
+  //   sort: "popular",
+  // },
   {
     id: "top-rated",
     titleKey: "categories.special.topRated",
