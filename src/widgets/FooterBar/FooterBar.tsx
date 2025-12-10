@@ -19,7 +19,7 @@ function FooterNavItem({ item, isActive }: { item: NavItem; isActive: boolean })
       to={item.path}
       style={{
         textDecoration: "none",
-        color: isActive ? theme.accent : theme.subtitle,
+        color: isActive ? theme.text : theme.subtitle,
         flex: 1,
       }}
     >
@@ -40,7 +40,7 @@ function FooterNavItem({ item, isActive }: { item: NavItem; isActive: boolean })
             color: isActive ? theme.accent : theme.text,
           }}
         >
-          <img alt={item.label} height={32} src={item.iconSrc} width={32} />
+          <img alt={item.label} height={36} src={item.iconSrc} width={36} />
         </div>
         <Text weight={isActive ? "2" : "1"} style={{ fontSize: 12 }}>
           {item.label}

@@ -82,7 +82,7 @@ export function BookEditPage(): JSX.Element {
           title: values.title,
           authors: values.authors,
           categories: values.categories,
-          coverUrl: values.coverUrl,
+          // coverUrl: values.coverUrl,
           description: values.description,
           price: values.price,
           rating: values.rating,

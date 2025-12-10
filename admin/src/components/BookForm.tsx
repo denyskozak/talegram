@@ -143,10 +143,10 @@ export function BookForm({
       return;
     }
 
-    if (!coverUrl) {
-      setSubmitError('Cover URL is required.');
-      return;
-    }
+    // if (!coverUrl) {
+    //   setSubmitError('Cover URL is required.');
+    //   return;
+    // }
 
     if (!description) {
       setSubmitError('Description is required.');
