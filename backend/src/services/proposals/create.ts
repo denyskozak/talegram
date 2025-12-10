@@ -10,7 +10,8 @@ import { writeWalrusFiles } from '../../utils/walrus-files.js';
 import { normalizeTelegramUserId } from '../../utils/telegram.js';
 import { Author } from '../../entities/Author.js';
 
-export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;
+export const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100m
+export const MAX_AUDI_BOOK_SIZE_BYTES = 3 * 1024 * 1024 * 1024; // 3gb
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const WALRUS_STORAGE_EPOCHS = 5;
 const WALRUS_EPOCH_DURATION_SECONDS = 7 * 24 * 60 * 60;
@@ -105,7 +106,7 @@ export async function createBookProposal(
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Uploaded audiobook is empty' });
     }
 
-    if (audiobookSize > MAX_FILE_SIZE_BYTES) {
+    if (audiobookSize > MAX_AUDI_BOOK_SIZE_BYTES) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Audiobook size exceeds the allowed limit' });
     }
   }
