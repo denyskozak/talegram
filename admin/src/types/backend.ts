@@ -17,7 +17,8 @@ export type Book = {
   categories: ID | null;
   coverUrl: string;
   description: string;
-  priceStars: number;
+  price: number;
+  currency?: string;
   rating: {
     average: number;
     votes: number;

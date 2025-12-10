@@ -5,6 +5,7 @@ import { createRouter, procedure } from '../trpc/trpc.js';
 import { issueAdminToken, validateAdminCredentials, verifyAdminToken } from '../services/adminAuth.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { Author } from '../entities/Author.js';
+import { Book } from '../entities/Book.js';
 import { WalrusFileRecord } from '../entities/WalrusFileRecord.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 
@@ -58,9 +59,9 @@ const baseBookSchema = z.object({
   title: z.string().trim().min(1),
   authors: z.array(z.string().trim().min(1)).min(1),
   categories: z.string().trim().min(1),
-  coverUrl: z.string().trim().url(),
+  coverUrl: z.string().trim().url().optional().default(''),
   description: z.string().trim().min(1),
-  priceStars: z.number().int().min(0).max(10),
+  price: z.number().int().min(0),
   rating: ratingSchema,
   tags: z.array(z.string().trim().min(1)).optional().default([]),
   publishedAt: z.string().trim().datetime({ offset: true }).optional(),
@@ -166,17 +167,69 @@ export const adminRouter = createRouter({
 
     return book;
   }),
-  updateBook: adminProcedure.input(updateBookInput).mutation(() => {
-    throw new TRPCError({
-      code: 'NOT_IMPLEMENTED',
-      message: 'Manual book management is disabled for the database-backed catalog.',
-    });
+  updateBook: adminProcedure.input(updateBookInput).mutation(async ({ input }) => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(Book);
+
+    const entity = await repository.findOne({ where: { id: input.id } });
+    if (!entity) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
+    }
+
+    const { patch } = input;
+
+    if (patch.title !== undefined) {
+      entity.title = patch.title;
+    }
+    if (patch.authors !== undefined) {
+      entity.author = patch.authors.join(', ');
+    }
+    if (patch.categories !== undefined) {
+      entity.category = patch.categories;
+    }
+    if (patch.coverUrl !== undefined) {
+      entity.coverUrl = patch.coverUrl;
+    }
+    if (patch.description !== undefined) {
+      entity.description = patch.description;
+    }
+    if (patch.price !== undefined) {
+      entity.price = patch.price;
+    }
+    if (patch.tags !== undefined) {
+      entity.tags = patch.tags;
+    }
+    if (patch.publishedAt !== undefined) {
+      entity.publishedAt = patch.publishedAt ? new Date(patch.publishedAt) : null;
+    }
+    if (patch.reviewsCount !== undefined) {
+      entity.reviewsCount = patch.reviewsCount;
+    }
+    if (patch.rating) {
+      if (patch.rating.average !== undefined) {
+        entity.ratingAverage = patch.rating.average;
+        entity.middleRate = patch.rating.average;
+      }
+      if (patch.rating.votes !== undefined) {
+        entity.ratingVotes = patch.rating.votes;
+      }
+    }
+
+    const saved = await repository.save(entity);
+    return getBook(saved.id);
   }),
-  deleteBook: adminProcedure.input(deleteBookInput).mutation(() => {
-    throw new TRPCError({
-      code: 'NOT_IMPLEMENTED',
-      message: 'Manual book management is disabled for the database-backed catalog.',
-    });
+  deleteBook: adminProcedure.input(deleteBookInput).mutation(async ({ input }) => {
+    await initializeDataSource();
+    const repository = appDataSource.getRepository(Book);
+
+    const entity = await repository.findOne({ where: { id: input.id } });
+    if (!entity) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
+    }
+
+    await repository.remove(entity);
+
+    return { success: true } as const;
   }),
   listCommunityMembers: adminProcedure.query(async () => {
     await initializeDataSource();

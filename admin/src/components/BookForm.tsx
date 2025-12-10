@@ -9,7 +9,7 @@ type BookFormData = {
   categories: string;
   coverUrl: string;
   description: string;
-  priceStars: number;
+  price: number;
   rating: {
     average: number;
     votes: number;
@@ -35,7 +35,7 @@ type DraftState = {
   selectedCategory: string;
   coverUrl: string;
   description: string;
-  priceStars: string;
+  price: string;
   ratingAverage: string;
   ratingVotes: string;
   tags: string;
@@ -51,7 +51,7 @@ function toDraft(values: BookFormData): DraftState {
     selectedCategory: values.categories ?? '',
     coverUrl: values.coverUrl,
     description: values.description,
-    priceStars: values.priceStars.toString(10),
+    price: values.price.toString(10),
     ratingAverage: values.rating.average.toString(10),
     ratingVotes: values.rating.votes.toString(10),
     tags: values.tags.join(', '),
@@ -118,7 +118,7 @@ export function BookForm({
     const coverUrl = draft.coverUrl.trim();
     const description = draft.description.trim();
     const tags = normalizeList(draft.tags);
-    const priceStars = parseNumber(draft.priceStars, initialValues.priceStars, [0, 10]);
+    const price = parseNumber(draft.price, initialValues.price, [0, 10]);
     const ratingAverage = parseNumber(draft.ratingAverage, initialValues.rating.average, [0, 5]);
     const ratingVotes = Math.max(0, Math.round(parseNumber(draft.ratingVotes, initialValues.rating.votes)));
     const reviewsCount = Math.max(0, Math.round(parseNumber(draft.reviewsCount, initialValues.reviewsCount)));
@@ -164,7 +164,7 @@ export function BookForm({
       categories: categoryId,
       coverUrl,
       description,
-      priceStars: Math.round(priceStars),
+      price: Math.round(price),
       rating: {
         average: Number(ratingAverage.toFixed(2)),
         votes: ratingVotes,
@@ -259,8 +259,8 @@ export function BookForm({
             type="number"
             min={0}
             max={10}
-            value={draft.priceStars}
-            onChange={(event) => setDraft((state) => ({ ...state, priceStars: event.target.value }))}
+            value={draft.price}
+            onChange={(event) => setDraft((state) => ({ ...state, price: event.target.value }))}
           />
         </label>
         <label>

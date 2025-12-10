@@ -82,6 +82,9 @@ export class Book {
     @Column({name: 'cover_file_size', type: 'integer', nullable: true})
     coverFileSize!: number | null;
 
+    @Column({name: 'cover_url', type: 'text', nullable: true})
+    coverUrl!: string | null;
+
     @Column({name: 'mime_type', type: 'text', nullable: true})
     mimeType!: string | null;
 

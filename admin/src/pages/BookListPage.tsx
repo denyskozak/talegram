@@ -124,7 +124,9 @@ export function BookListPage(): JSX.Element {
                     <strong>{book.rating.average.toFixed(1)}</strong>
                     <span className="book-list__meta">/{book.rating.votes} votes</span>
                   </td>
-                  <td>{book.priceStars}</td>
+                  <td>
+                    {book.price} {book.currency ?? '⭐'}
+                  </td>
                   <td>{book.tagLabels || '—'}</td>
                   <td className="book-list__actions">
                     <Link to={`/books/${book.id}/edit`}>Edit</Link>

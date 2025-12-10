@@ -199,6 +199,16 @@
   gap: 8px;
 }
 
+.settings__community {
+  border: 1px dashed rgba(74, 108, 247, 0.4);
+  background: linear-gradient(135deg, rgba(74, 108, 247, 0.06), rgba(127, 83, 172, 0.06));
+}
+
+.settings__community .settings__description {
+  color: #2e2f45;
+  font-weight: 500;
+}
+
 .walrus__label {
   font-weight: 600;
   color: #1c1c28;
