@@ -3,9 +3,9 @@ import {walrus,} from '@mysten/walrus';
 import {getFullnodeUrl} from "@mysten/sui/client";
 
 export const suiClient = new SuiJsonRpcClient({
-    url: getFullnodeUrl('testnet'),
+    url: getFullnodeUrl('mainnet'),
     // Setting network on your client is required for walrus to work correctly
-    network: 'testnet',
+    network: 'mainnet',
 }).$extend(walrus({
     storageNodeClientOptions: {
         onError: (error) => console.log(error),
