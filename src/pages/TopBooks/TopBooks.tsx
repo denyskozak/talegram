@@ -22,7 +22,7 @@ export default function TopBooks(): JSX.Element {
   const { type } = useParams<{ type: string }>();
   const categoryId = type && isSpecialCategoryId(type) ? (type as SpecialCategoryId) : null;
   const category = categoryId ? SPECIAL_CATEGORY_MAP[categoryId] : null;
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [books, setBooks] = useState<Book[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +50,7 @@ export default function TopBooks(): JSX.Element {
         const response = await catalogApi.listBooks({
           limit: category.booksCount,
           sort: category.sort,
+          language: i18n.language,
         });
         if (!cancelled) {
           setBooks(response.items);
@@ -71,7 +72,7 @@ export default function TopBooks(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [category, refreshToken, t]);
+  }, [category, i18n.language, refreshToken, t]);
 
   const handleRetry = () => setRefreshToken((prev) => prev + 1);
 
