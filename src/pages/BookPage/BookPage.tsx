@@ -6,7 +6,7 @@ import {Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
-import type {Book, ID, Review} from "@/entities/book/types";
+import type {ID, Review} from "@/entities/book/types";
 import {downloadFile} from "@tma.js/sdk-react";
 import {copyTextToClipboard} from "@tma.js/sdk";
 import {paymentsApi} from "@/entities/payment/api";
@@ -33,6 +33,7 @@ import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNot
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Button} from "@/shared/ui/Button";
 import {invoice as invoiceSDK} from '@tma.js/sdk';
+import {useBookStore} from "@/entities/book/model/bookStore";
 
 export default function BookPage(): JSX.Element {
     const {id} = useParams<{ id: ID }>();
@@ -42,13 +43,8 @@ export default function BookPage(): JSX.Element {
     const {launchParams} = useTMA();
     const theme = useTheme();
 
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const reviewsRef = useRef<HTMLDivElement | null>(null);
-    const loaderTimeoutRef = useRef<number | null>(null);
-    const [book, setBook] = useState<Book | null>(null);
-    const [similar, setSimilar] = useState<Book[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [showFullDescription, setShowFullDescription] = useState(false);
     const [isPurchased, setIsPurchased] = useState(false);
     const [isActionLoading, setIsActionLoading] = useState(false);
@@ -68,6 +64,12 @@ export default function BookPage(): JSX.Element {
     const autoReadTriggeredRef = useRef(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
+    const book = useBookStore((state) => (id ? state.books[id] ?? null : null));
+    const similar = useBookStore((state) => (id ? state.similarByBook[id] ?? [] : []));
+    const isLoading = useBookStore((state) => (id ? state.loadingByBook[id] ?? false : false));
+    const error = useBookStore((state) => (id ? state.errorByBook[id] ?? null : null));
+    const loadBookFromStore = useBookStore((state) => state.loadBook);
+    const updateBook = useBookStore((state) => state.updateBook);
 
     useScrollToTop([id]);
 
@@ -75,33 +77,6 @@ export default function BookPage(): JSX.Element {
     const hasFullAccess = isPurchased || isFreeBook;
     const hasAudiobook = Boolean(book?.audiobookWalrusFileId);
 
-
-    const loadBook = useCallback(async () => {
-        if (!id) {
-            return;
-        }
-
-        try {
-            setIsLoading(true);
-            setError(null);
-            const item = await catalogApi.getBook(id);
-            setBook(item);
-            if (item.categories) {
-                const similarBooksResponse = await catalogApi.listBooks({
-                    categoryId: item.categories,
-                    limit: 12,
-                });
-                setSimilar(similarBooksResponse.items.filter((entry) => entry.id !== item.id).slice(0, 6));
-            } else {
-                setSimilar([]);
-            }
-        } catch (err) {
-            console.error(err);
-            setError(t("errors.loadBook"));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [id, t, telegramUserId]);
 
     const refreshPurchaseStatus = useCallback(async () => {
         if (!id || !telegramUserId) {
@@ -288,28 +263,28 @@ export default function BookPage(): JSX.Element {
     }, [book, navigate, showToast, t]);
 
     const handleReviewCreated = useCallback((review: Review) => {
-        setBook((prev) => {
-            if (!prev) {
-                return prev;
-            }
+        if (!book?.id) {
+            return;
+        }
 
-            const currentVotes = prev.rating.votes ?? 0;
-            const currentAverage = prev.rating.average ?? 0;
+        updateBook(book.id, (current) => {
+            const currentVotes = current.rating.votes ?? 0;
+            const currentAverage = current.rating.average ?? 0;
             const nextVotes = currentVotes + 1;
             const nextAverage = nextVotes === 0
                 ? 0
                 : Math.round(((currentAverage * currentVotes + review.rating) / nextVotes) * 10) / 10;
 
             return {
-                ...prev,
-                reviewsCount: prev.reviewsCount + 1,
+                ...current,
+                reviewsCount: current.reviewsCount + 1,
                 rating: {
                     average: nextAverage,
                     votes: nextVotes,
                 },
             };
         });
-    }, []);
+    }, [book?.id, updateBook]);
 
     const handleDownload = useCallback(async () => {
         if (!hasFullAccess) {
@@ -407,7 +382,9 @@ export default function BookPage(): JSX.Element {
             showToast(t("book.toast.accessGranted"));
             try {
                 const updatedBook = await catalogApi.getBook(book.id);
-                setBook(updatedBook);
+                if (updatedBook) {
+                    updateBook(book.id, () => updatedBook);
+                }
             } catch (updateError) {
                 console.error(updateError);
             }
@@ -418,7 +395,7 @@ export default function BookPage(): JSX.Element {
             setIsConfirmingPurchase(false);
             setIsActionLoading(false);
         }
-    }, [book, invoice, isConfirmingPurchase, showToast, stopPurchasePolling, t, telegramUserId]);
+    }, [book, invoice, isConfirmingPurchase, showToast, stopPurchasePolling, t, telegramUserId, updateBook]);
 
     const handleModalOpenChange = useCallback(
         (open: boolean) => {
@@ -455,18 +432,11 @@ export default function BookPage(): JSX.Element {
 
     useEffect(() => {
         return () => {
-            if (loaderTimeoutRef.current) {
-                window.clearTimeout(loaderTimeoutRef.current);
-            }
             stopPurchasePolling();
         };
     }, [stopPurchasePolling]);
 
     useEffect(() => {
-        if (loaderTimeoutRef.current) {
-            window.clearTimeout(loaderTimeoutRef.current);
-        }
-
         stopPurchasePolling();
         setIsPurchased(false);
         setActiveAction(null);
@@ -529,8 +499,16 @@ export default function BookPage(): JSX.Element {
     }, [handleConfirmPurchase, invoice, showToast, t]);
 
     useEffect(() => {
-        void loadBook();
-    }, [loadBook]);
+        if (!id) {
+            return;
+        }
+
+        void loadBookFromStore({
+            id,
+            language: i18n.language,
+            errorMessage: t("errors.loadBook"),
+        });
+    }, [id, i18n.language, loadBookFromStore, t]);
 
     useEffect(() => {
         void refreshPurchaseStatus();
@@ -576,7 +554,19 @@ export default function BookPage(): JSX.Element {
     }
 
     if (error) {
-        return <ErrorBanner message={error} onRetry={loadBook}/>;
+        return (
+            <ErrorBanner
+                message={error}
+                onRetry={() =>
+                    loadBookFromStore({
+                        id,
+                        language: i18n.language,
+                        errorMessage: t("errors.loadBook"),
+                        force: true,
+                    })
+                }
+            />
+        );
     }
 
     const coverSrc = useMemo(() => {
