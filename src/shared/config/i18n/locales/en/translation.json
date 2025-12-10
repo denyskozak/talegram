@@ -127,6 +127,10 @@
       "description": "A marketplace inside Telegram: authors receive 80% of sales revenue, and our anti-censorship community shares in the project's income.",
       "storage": "We store books in a decentralized way through Walrus."
     },
+    "community": {
+      "title": "Community",
+      "description": "Join voting for new books and earn a floating share of the platform's revenue. Contact us to activate collaboration and link your account to the community program."
+    },
     "description": "More options are on the way — stay tuned for additional settings."
   },
   "book": {

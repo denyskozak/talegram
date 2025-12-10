@@ -170,14 +170,6 @@ export function SettingsPage(): JSX.Element {
         ) : null}
       </section>
 
-      <section className="settings__card settings__community">
-        <h2>Community</h2>
-        <p className="settings__description">
-          Вы можете участвовать в голосовании за новые книги и получать плавающий процент от заработка
-          платформы. Свяжитесь с нами, чтобы активировать сотрудничество и подключить ваш аккаунт к
-          программе сообщества.
-        </p>
-      </section>
     </div>
   );
 }
