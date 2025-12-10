@@ -4,8 +4,7 @@ import type {
   ProposalVotingListResponse,
   SubmitProposalVoteResult,
 } from "./types";
-import { trpc, resolveBackendUrl } from "@/shared/api/trpc";
-import { retrieveRawInitData } from "@tma.js/sdk";
+import { trpc, resolveBackendUrl, buildAuthorizedHeaders } from "@/shared/api/trpc";
 import type { GlobalCategory } from "@/shared/lib/globalCategories";
 
 export type SubmitProposalPayload = {
@@ -50,10 +49,7 @@ export async function submitBookProposal(
   const response = await fetch(`${backendUrl}/proposals`, {
     method: "POST",
     body: formData,
-    headers: {
-      "ngrok-skip-browser-warning": "true",
-      Authorization: `tma ${retrieveRawInitData()}`,
-    },
+    headers: buildAuthorizedHeaders(),
   });
 
   if (!response.ok) {

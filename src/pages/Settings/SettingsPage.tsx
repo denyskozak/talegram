@@ -56,6 +56,16 @@ export default function SettingsPage(): JSX.Element {
         <Text style={{ color: theme.subtitle }}>
           {t("settings.about.description")}
         </Text>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img
+            src="/walrus_logo.svg"
+            alt="Walrus logo"
+            style={{ height: 36, objectFit: "contain" }}
+          />
+          <Text style={{ color: theme.subtitle }}>
+            {t("settings.about.storage")}
+          </Text>
+        </div>
       </div>
       <Text style={{ color: theme.subtitle }}>{t("settings.description")}</Text>
     </div>
