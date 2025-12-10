@@ -449,7 +449,7 @@
           "label": "Audiobook (optional)",
           "cta": "Upload audio",
           "placeholder": "No audio selected",
-          "hint": "Attach MP3, WAV or M4A up to 50 MB."
+          "hint": "Attach MP3, WAV or M4A up to 3 GB."
         },
         "file": {
           "label": "EPUB file",
