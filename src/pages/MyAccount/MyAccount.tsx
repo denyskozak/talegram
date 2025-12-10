@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { SegmentedControl, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
@@ -24,7 +24,6 @@ import { VotingSection } from "./components/VotingSection";
 import { usePublishForm } from "./hooks/usePublishForm";
 import type {
   AccountSection,
-  MyBook,
   MyBooksFilter,
   PublishResultState,
   VotingProposal,
@@ -33,17 +32,10 @@ import {
   getTelegramUserId,
 } from "@/shared/lib/telegram";
 import { isGlobalCategory } from "@/shared/lib/globalCategories";
-import { purchasesApi } from "@/entities/purchase/api";
-import { catalogApi } from "@/entities/book/api";
 import { downloadFile } from "@tma.js/sdk-react";
 import { buildBookFileDownloadUrl } from "@/shared/api/storage";
-import {
-  isBookLiked,
-  loadLikedBookIds,
-  persistLikedBookIds,
-  toggleLikedBookId,
-} from "@/shared/lib/likedBooks";
 import { Button } from "@/shared/ui/Button";
+import { useMyAccountStore } from "./store";
 
 export default function MyAccount(): JSX.Element {
   const { t, i18n } = useTranslation();
@@ -79,16 +71,21 @@ export default function MyAccount(): JSX.Element {
   const [allowedVotersCount, setAllowedVotersCount] = useState<number>(0);
   const [isVotingLoading, setIsVotingLoading] = useState(false);
   const [votingError, setVotingError] = useState<string | null>(null);
-  const [myBooks, setMyBooks] = useState<MyBook[]>([]);
-  const [isMyBooksLoading, setIsMyBooksLoading] = useState(false);
-  const [myBooksError, setMyBooksError] = useState<string | null>(null);
   const [downloadingBookId, setDownloadingBookId] = useState<string | null>(null);
-  const likedBookIdsRef = useRef<Set<string>>(new Set());
   const [myBooksFilter, setMyBooksFilter] = useState<MyBooksFilter>("purchased");
   const [authorUserIds, setAuthorUserIds] = useState<Set<string>>(() => new Set<string>());
   const [isAuthorsLoading, setIsAuthorsLoading] = useState(true);
   const isAllowedAuthor = telegramUserId ? authorUserIds.has(telegramUserId) : false;
   const canPublish = Boolean(telegramUserId && isAllowedAuthor);
+  const {
+    myBooks,
+    isMyBooksLoading,
+    myBooksError,
+    myBooksInitialized,
+    loadMyBooks,
+    toggleLike,
+    resetMyBooks,
+  } = useMyAccountStore();
   useEffect(() => {
     let isMounted = true;
 
@@ -130,16 +127,8 @@ export default function MyAccount(): JSX.Element {
 
   useEffect(() => {
     setMyBooksFilter("purchased");
-
-    const likedSet = loadLikedBookIds(telegramUserId);
-    likedBookIdsRef.current = likedSet;
-    setMyBooks((books) =>
-      books.map((item) => ({
-        ...item,
-        liked: isBookLiked(item.book.id, likedSet),
-      })),
-    );
-  }, [telegramUserId]);
+    resetMyBooks();
+  }, [resetMyBooks, telegramUserId]);
 
   const enhanceProposalsWithCovers = useCallback(
     async (proposals: ProposalForVoting[]): Promise<VotingProposal[]> => {
@@ -168,57 +157,19 @@ export default function MyAccount(): JSX.Element {
     [],
   );
 
-  const loadMyBooks = useCallback(async () => {
-    setIsMyBooksLoading(true);
-    setMyBooksError(null);
-
-    if (!telegramUserId) {
-      setMyBooks([]);
-      setIsMyBooksLoading(false);
-      return;
-    }
-
-    try {
-      const response = await purchasesApi.list();
-      const likedSet = likedBookIdsRef.current;
-      const items = await Promise.all(
-        response.items.map(async (item) => {
-          try {
-            const book = await catalogApi.getBook(item.bookId);
-            if (!book) {
-              return null;
-            }
-
-            return {
-              book,
-              purchase: {
-                paymentId: item.paymentId,
-                purchasedAt: item.purchasedAt,
-                walrusBlobId: item.walrusBlobId,
-                walrusFileId: item.walrusFileId,
-              },
-              liked: isBookLiked(book.id, likedSet),
-            } satisfies MyBook;
-          } catch (error) {
-            console.error("Failed to load book details", error);
-            return null;
-          }
-        }),
-      );
-
-      const normalized = items.filter((item): item is MyBook => item !== null);
-      setMyBooks(normalized);
-    } catch (error) {
-      console.error("Failed to load purchased books", error);
-      setMyBooksError(t("account.myBooks.loadError"));
-    } finally {
-      setIsMyBooksLoading(false);
-    }
-  }, [telegramUserId, t]);
+  const requestMyBooks = useCallback(
+    (force = false) =>
+      loadMyBooks({
+        telegramUserId: telegramUserId ?? null,
+        errorMessage: t("account.myBooks.loadError"),
+        force,
+      }),
+    [loadMyBooks, t, telegramUserId],
+  );
 
   const handleRetryMyBooks = useCallback(() => {
-    void loadMyBooks();
-  }, [loadMyBooks]);
+    void requestMyBooks(true);
+  }, [requestMyBooks]);
 
   const handleReadBook = useCallback(
     (bookId: string) => {
@@ -281,18 +232,9 @@ export default function MyAccount(): JSX.Element {
 
   const handleToggleLike = useCallback(
     (bookId: string) => {
-      setMyBooks((books) => {
-        const { updated } = toggleLikedBookId(bookId, likedBookIdsRef.current);
-        likedBookIdsRef.current = updated;
-        persistLikedBookIds(updated, telegramUserId);
-
-        return books.map((entry) => ({
-          ...entry,
-          liked: isBookLiked(entry.book.id, updated),
-        }));
-      });
+      toggleLike(bookId, telegramUserId);
     },
-    [telegramUserId],
+    [telegramUserId, toggleLike],
   );
 
   const loadVotingProposals = useCallback(async () => {
@@ -323,10 +265,10 @@ export default function MyAccount(): JSX.Element {
   }, [activeSection, loadVotingProposals]);
 
   useEffect(() => {
-    if (activeSection === BOOK_SECTION) {
-      void loadMyBooks();
+    if (activeSection === BOOK_SECTION && !myBooksInitialized) {
+      void requestMyBooks();
     }
-  }, [activeSection, loadMyBooks]);
+  }, [activeSection, myBooksInitialized, requestMyBooks]);
 
   const menuItems = useMemo(
     () => [
