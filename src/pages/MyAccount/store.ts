@@ -10,6 +10,7 @@ export type MyAccountStore = {
   isMyBooksLoading: boolean;
   myBooksError: string | null;
   myBooksInitialized: boolean;
+  lastLoadedUserId: string | null;
   likedBookIds: Set<string>;
   loadMyBooks: (params: {
     telegramUserId: string | null;
@@ -25,10 +26,11 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
   isMyBooksLoading: false,
   myBooksError: null,
   myBooksInitialized: false,
+  lastLoadedUserId: null,
   likedBookIds: new Set<string>(),
   loadMyBooks: async ({ telegramUserId, errorMessage, force = false }) => {
-    const { myBooksInitialized } = get();
-    if (myBooksInitialized && !force) {
+    const { myBooksInitialized, lastLoadedUserId } = get();
+    if (myBooksInitialized && lastLoadedUserId === telegramUserId && !force) {
       return;
     }
 
@@ -39,6 +41,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
         myBooks: [],
         isMyBooksLoading: false,
         myBooksInitialized: true,
+        lastLoadedUserId: null,
         likedBookIds: new Set<string>(),
       });
       return;
@@ -77,6 +80,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
         myBooks: normalized,
         likedBookIds: likedSet,
         myBooksInitialized: true,
+        lastLoadedUserId: telegramUserId,
       });
     } catch (error) {
       console.error("Failed to load purchased books", error);
@@ -104,6 +108,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
       isMyBooksLoading: false,
       myBooksError: null,
       myBooksInitialized: false,
+      lastLoadedUserId: null,
       likedBookIds: new Set<string>(),
     }),
 }));
