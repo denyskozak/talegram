@@ -6,7 +6,7 @@ import {Card, Chip, Modal, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {catalogApi} from "@/entities/book/api";
-import type {ID, Review} from "@/entities/book/types";
+import type {Book, ID, Review} from "@/entities/book/types";
 import {downloadFile} from "@tma.js/sdk-react";
 import {copyTextToClipboard} from "@tma.js/sdk";
 import {paymentsApi} from "@/entities/payment/api";
@@ -35,6 +35,7 @@ import {Button} from "@/shared/ui/Button";
 import {invoice as invoiceSDK} from '@tma.js/sdk';
 import {useBookStore} from "@/entities/book/model/bookStore";
 
+const defautlArray: Book[] = [];
 export default function BookPage(): JSX.Element {
     const {id} = useParams<{ id: ID }>();
     const [searchParams] = useSearchParams();
@@ -65,7 +66,7 @@ export default function BookPage(): JSX.Element {
     const [isDownloading, setIsDownloading] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const book = useBookStore((state) => (id ? state.books[id] ?? null : null));
-    const similar = useBookStore((state) => (id ? state.similarByBook[id] ?? [] : []));
+    const similar = useBookStore((state) => (id ? state.similarByBook[id] ?? defautlArray : defautlArray));
     const isLoading = useBookStore((state) => (id ? state.loadingByBook[id] ?? false : false));
     const error = useBookStore((state) => (id ? state.errorByBook[id] ?? null : null));
     const loadBookFromStore = useBookStore((state) => state.loadBook);

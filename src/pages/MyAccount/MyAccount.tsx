@@ -156,6 +156,7 @@ export default function MyAccount(): JSX.Element {
     [],
   );
 
+    console.log("telegramUserId: ", telegramUserId);
   const requestMyBooks = useCallback(
     (force = false) =>
       loadMyBooks({
