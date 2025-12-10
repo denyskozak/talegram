@@ -6,7 +6,7 @@ import {Card, Chip, Tappable, Text, Title} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
 import {buildBookFileDownloadUrl} from "@/shared/api/storage";
-import {BookRating} from "./BookRating";
+// import {BookRating} from "./BookRating";
 
 interface BookCardProps {
     book: Book;
@@ -34,7 +34,7 @@ export function BookCard({book, onlyImage = false, showTags = true, onClick}: Bo
             style={{textDecoration: "none", color: "inherit", display: "flex", justifyContent: "center"}}
         >
             <Card style={{width: '100%', borderRadius: 20, overflow: "hidden"}}>
-                <div style={{position: "relative", aspectRatio: "3 / 3"}}>
+                <div style={{position: "relative", aspectRatio: "2 / 3"}}>
                     <img
                         src={coverSrc}
                         alt={t("book.coverAlt", {title: book.title})}
@@ -49,11 +49,11 @@ export function BookCard({book, onlyImage = false, showTags = true, onClick}: Bo
                             <Title weight="2" level="3">
                                 {book.title}
                             </Title>
-                            <Text
-                                style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>{book.authors.join(", ")}</Text>
-                            {book.rating.average > 0 && (
-                                <BookRating value={book.rating.average} votes={book.rating.votes}/>
-                            )}
+                            {/*<Text*/}
+                            {/*    style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>{book.authors.join(", ")}</Text>*/}
+                            {/*{book.rating.average > 0 && (*/}
+                            {/*    <BookRating value={book.rating.average} votes={book.rating.votes}/>*/}
+                            {/*)}*/}
                             {showTags && (
                                 <div style={{display: "flex", flexWrap: "wrap", gap: 8}}>
                                     {book.tags.slice(0, 3).map((tag) => (

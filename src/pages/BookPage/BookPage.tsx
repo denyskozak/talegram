@@ -8,7 +8,6 @@ import {useTranslation} from "react-i18next";
 import {catalogApi} from "@/entities/book/api";
 import type {Book, ID, Review} from "@/entities/book/types";
 import {downloadFile} from "@tma.js/sdk-react";
-import {copyTextToClipboard} from "@tma.js/sdk";
 import {paymentsApi} from "@/entities/payment/api";
 import type {Invoice} from "@/entities/payment/types";
 import {purchasesApi} from "@/entities/purchase/api";
@@ -32,8 +31,9 @@ import {BookPageSkeleton} from "./BookPageSkeleton";
 import {QuoteCarouselNotice} from "@/pages/MyAccount/components/QuoteCarouselNotice.tsx";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Button} from "@/shared/ui/Button";
-import {invoice as invoiceSDK} from '@tma.js/sdk';
+import {invoice as invoiceSDK, shareURL} from '@tma.js/sdk';
 import {useBookStore} from "@/entities/book/model/bookStore";
+import {useMediaQuery} from "@uidotdev/usehooks";
 
 const defautlArray: Book[] = [];
 export default function BookPage(): JSX.Element {
@@ -62,6 +62,7 @@ export default function BookPage(): JSX.Element {
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
+
     const autoReadTriggeredRef = useRef(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
@@ -71,7 +72,12 @@ export default function BookPage(): JSX.Element {
     const error = useBookStore((state) => (id ? state.errorByBook[id] ?? null : null));
     const loadBookFromStore = useBookStore((state) => state.loadBook);
     const updateBook = useBookStore((state) => state.updateBook);
-
+    const isLargeDevice = useMediaQuery(
+        "only screen and (min-width : 993px)"
+    );
+    const isMediumDevice = useMediaQuery(
+        "only screen and (min-width : 480px) and (max-width : 992px)"
+    );
     useScrollToTop([id]);
 
     const isFreeBook = Boolean(book && book.price === 0);
@@ -160,9 +166,25 @@ export default function BookPage(): JSX.Element {
 
         try {
             const deepLink =
-                buildMiniAppDirectLink({startParam: `book/${book.id}`}) ?? window.location.href;
-            await copyTextToClipboard(deepLink);
-            showToast(t("book.toast.linkCopied"));
+                buildMiniAppDirectLink({startParam: `book_${book.id}`, botUsername: 'localtalegram_bot'}) ;
+
+            shareURL(deepLink ?? '', 'Invite you to read book');
+        } catch (err) {
+            showToast(t("book.toast.linkFailed"));
+            console.error(err);
+        }
+    }, [book, showToast, t]);
+
+    const handleShareRead = useCallback(async () => {
+        if (!book) {
+            return;
+        }
+
+        try {
+            const deepLink =
+                buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'localtalegram_bot'}) ;
+
+            shareURL(deepLink ?? '', 'Invite you to read book');
         } catch (err) {
             showToast(t("book.toast.linkFailed"));
             console.error(err);
@@ -588,9 +610,15 @@ export default function BookPage(): JSX.Element {
     const actionTitle =
         activeAction === "subscribe" ? t("book.modalTitle.subscribe") : t("book.modalTitle.buy");
 
+    const getImageWidth = () => {
+        if (isMediumDevice) return '40vw';
+        if (isLargeDevice) return '20vw';
+        return '60vw';
+    };
+
     return (
         <>
-            <main style={{margin: "0 8px", maxWidth: 720, paddingBottom: 96}}>
+            <main style={{maxWidth: 720, margin: "auto", paddingBottom: 96}}>
                 <div style={{padding: 16, display: "flex", flexDirection: "column", gap: 16}}>
                     <div
                         style={{
@@ -628,7 +656,7 @@ export default function BookPage(): JSX.Element {
                                 </Button>
                             </div>
                         </div>
-                        <Card style={{borderRadius: 24, margin: "0 auto", overflow: "hidden", width: "60vw"}}>
+                        <Card style={{borderRadius: 24, margin: "0 auto", overflow: "hidden", width: getImageWidth()}}>
                             <div style={{position: "relative", aspectRatio: "10 / 12"}}>
                                 <img
                                     src={coverSrc}
@@ -671,14 +699,14 @@ export default function BookPage(): JSX.Element {
                                     {book.price} {book.currency} ⭐
                                 </Chip>
                             </div>
-                            <div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
-                                {t("book.reviewsCount", {count: book.reviewsCount})}
-                            </div>
+                            {/*<div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>*/}
+                            {/*    {t("book.reviewsCount", {count: book.reviewsCount})}*/}
+                            {/*</div>*/}
                         </div>
-                    </Card>
+
                     {hasFullAccess ? (
                         <>
-                            <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
+                            <div style={{display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap"}}>
 
                                 <Button size="l" onClick={handleRead}>
                                     {t("book.actions.read")}
@@ -697,11 +725,14 @@ export default function BookPage(): JSX.Element {
                                         {t("book.actions.listen")}
                                     </Button>
                                 ) : null}
+                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleShareRead}>
+                                    {t("book.actions.share-read")}
+                                </Button>
                             </div>
                             {isDownloading || isLoading ? <QuoteCarouselNotice theme={theme} t={t}/> : null}
                         </>
                     ) : (
-                        <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                        <div style={{display: "flex",  marginTop: 12,  flexDirection: "column", gap: 12}}>
                             {hasAudiobook ? (
                                 <Chip mode="outline" style={{alignSelf: "flex-start", fontWeight: 600}}>
                                     {t("book.audiobook.badge")}
@@ -728,6 +759,9 @@ export default function BookPage(): JSX.Element {
                                 <Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>
                                     {t("book.actions.preview")}
                                 </Button>
+                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleShareRead}>
+                                    {t("book.actions.share-preview")}
+                                </Button>
                                 {hasAudiobook ? (
                                     <Button size="l" mode="outline" disabled={isActionLoading}
                                             onClick={handleListenPreview}>
@@ -737,7 +771,7 @@ export default function BookPage(): JSX.Element {
                             </div>
                         </div>
                     )}
-
+                    </Card>
                     <Card style={{padding: 16, borderRadius: 20}}>
                         <Title level="3" weight="2" style={{marginBottom: 12}}>
                             {t("book.description.title")}

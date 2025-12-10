@@ -163,6 +163,8 @@
     "actions": {
       "read": "Read 📖",
       "download": "Download ⬇️",
+      "share-read": "Share Read ⬆\uFE0F",
+      "share-preview": "Share Preview ⬆\uFE0F",
       "buy": "Buy",
       "subscribe": "Subscribe",
       "listen": "Listen 👂",

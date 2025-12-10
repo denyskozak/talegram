@@ -58,17 +58,6 @@ export function getTelegramUserId(
 
 type MiniAppMode = "compact" | "fullscreen";
 
-function normalizeBotUsernameForLink(
-  value: string | null | undefined,
-): string | undefined {
-  const normalized = normalizeTelegramUsername(value);
-  if (!normalized) {
-    return undefined;
-  }
-
-  return normalized.slice(1);
-}
-
 function normalizeMiniAppShortName(value: string | null | undefined): string | undefined {
   if (typeof value !== "string") {
     return undefined;
@@ -96,18 +85,8 @@ type BuildMiniAppDirectLinkOptions = {
 export function buildMiniAppDirectLink(
   options: BuildMiniAppDirectLinkOptions = {},
 ): string | undefined {
-  const botUsername =
-    options.botUsername ?? (import.meta.env.VITE_TG_BOT_USERNAME ?? null);
-  const shortName =
-    options.shortName ?? (import.meta.env.VITE_TG_APP_SHORT_NAME ?? null);
-  const sanitizedBotUsername = normalizeBotUsernameForLink(botUsername);
-  const sanitizedShortName = normalizeMiniAppShortName(shortName);
 
-  if (!sanitizedBotUsername || !sanitizedShortName) {
-    return undefined;
-  }
-
-  const url = new URL(`https://t.me/${sanitizedBotUsername}/${sanitizedShortName}`);
+  const url = new URL(`https://t.me/${options.botUsername}?startapp=${options.startParam}?mode=${options.mode ?? "fullscreen"}`);
 
   const startParam = normalizeMiniAppShortName(options.startParam);
   if (startParam) {

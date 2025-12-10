@@ -186,8 +186,9 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <Card style={{ padding: 16, borderRadius: 20 }}>
+
         {!hasUserReview && (isFormOpen ? (
+            <Card style={{ padding: 16, borderRadius: 20 }}>
           <Section header={t("reviews.form.title")}>
             <form
               onSubmit={handleSubmit}
@@ -249,12 +250,13 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
             </div>
           </form>
           </Section>
+            </Card>
         ) : (
           <Button mode="outline" onClick={handleOpenForm} aria-label={t("reviews.addButton")}>
             {t("reviews.addButton")}
           </Button>
         ))}
-      </Card>
+
       {error && <ErrorBanner message={error} onRetry={() => load({ reset: true })} />}
       {!error && !isLoading && items.length === 0 && (
         <EmptyState title={t("reviews.emptyTitle")} description={t("reviews.emptyDescription")} />

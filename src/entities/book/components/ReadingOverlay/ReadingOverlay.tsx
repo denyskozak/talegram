@@ -7,8 +7,6 @@ import {type Rendition} from 'epubjs'
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
-import {DisplayedLocation} from "epubjs/types/rendition";
-
 type ReadingOverlayProps = {
     fileUrl: string;
     onLocationChange: (location: string) => void;
@@ -36,6 +34,9 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
         const themes = rendition.themes
+
+        applyLayoutOverrides(rendition);
+
         switch (theme) {
             case 'dark': {
                 themes.override('color', darkText)
@@ -62,12 +63,13 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             1: '100%',
             2: '140%',
             3: '160%',
+            4: '200%',
         }
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
 
     const handleNextTextSize = () => {
-        const next = textSize + 1 > 3 ? 1 : textSize + 1;
+        const next = textSize + 1 > 4 ? 1 : textSize + 1;
         setTextSize(next);
     }
 
@@ -77,15 +79,42 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
     const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
 
-    const lightReaderTheme: IReactReaderStyle = {
+    const baseReaderStyle: IReactReaderStyle = {
         ...ReactReaderStyle,
-        arrow: {
-            ...ReactReaderStyle.arrow,
-            color: 'black',
+        // контейнер самого ридера – растянем по ширине
+        container: {
+            ...ReactReaderStyle.container,
+            maxWidth: '100%',
+            width: '100%',
+            margin: 0,
         },
+        // область чтения без отступов
         readerArea: {
             ...ReactReaderStyle.readerArea,
-            transition: undefined,
+            margin: 0,
+            padding: 0,
+        },
+        // стрелки навигации – полностью отключаем
+        arrow: {
+            ...ReactReaderStyle.arrow,
+            display: 'none',
+            pointerEvents: 'none',
+            width: 0,
+        },
+        arrowHover: {
+            ...ReactReaderStyle.arrowHover,
+            display: 'none',
+            pointerEvents: 'none',
+            width: 0,
+        },
+    }
+
+
+    const lightReaderTheme: IReactReaderStyle = {
+        ...baseReaderStyle,
+        readerArea: {
+            ...baseReaderStyle.readerArea,
+            backgroundColor: lightBackground,
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
@@ -94,19 +123,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     }
 
     const darkReaderTheme: IReactReaderStyle = {
-        ...ReactReaderStyle,
-        arrow: {
-            ...ReactReaderStyle.arrow,
-            color: 'white',
-        },
-        arrowHover: {
-            ...ReactReaderStyle.arrowHover,
-            color: '#ccc',
-        },
+        ...baseReaderStyle,
         readerArea: {
-            ...ReactReaderStyle.readerArea,
+            ...baseReaderStyle.readerArea,
             backgroundColor: darkBackground,
-            transition: undefined,
         },
         titleArea: {
             ...ReactReaderStyle.titleArea,
@@ -130,44 +150,44 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         },
     }
 
-    const goToNextChapter = () => {
-        const rendition = renditionRef.current;
-        const book = bookRef.current;
+    const epubViewStyles = {
+        view: {
+            // внутренний canvas epub.js
+            width: '100%',
+            height: '100%',
+            margin: 0,
+            padding: 0,
+        },
+        viewHolder: {
+            // внутренний canvas epub.js
+            width: '100%',
+            height: '100%',
+            margin: 0,
+            padding: 0,
+        },
+    }
 
-        console.log("rendition: ", rendition);
-        console.log("book: ", book);
-        if (!rendition || !book) return;
+    function applyLayoutOverrides(rendition: Rendition) {
+        const themes = rendition.themes;
 
-        const currentLocation = rendition.currentLocation();
-        console.log("currentLocation: ", currentLocation);
-        const currentHref = (currentLocation as unknown as { start: DisplayedLocation })?.start?.href;
-        if (!currentHref) return;
+        themes.register('no-margins', {
+            'html': {
+                margin: '0 !important',
+                padding: '0 !important',
+            },
+            'body': {
+                margin: '0 !important',
+                padding: '0 !important',
+                maxWidth: '100% !important',
+            },
+        });
 
-        const spineItems = book.spine?.spineItems || [];
-        console.log("spineItems: ", spineItems);
-        if (!spineItems.length) return;
+        themes.select('no-margins');
+    }
 
-        const currentIndex = spineItems.findIndex((item: any) =>
-            item.href === currentHref ||
-            item.href.endsWith(currentHref) ||
-            currentHref.endsWith(item.href)
-        );
-
-        console.log("currentIndex: ", currentIndex);
-        if (currentIndex === -1) return;
-
-        const nextItem = spineItems[currentIndex + 1];
-        console.log("nextItem: ", nextItem);
-        if (!nextItem) {
-            // уже в последней главе
-            return;
-        }
-
-        rendition.display(nextItem.href);
-    };
 
     return (
-        <div style={{height: '90vh', position: 'relative'}}>
+        <div style={{height: '90vh', width: '100%', position: 'relative'}}>
             <div style={{
                 position: "absolute",
                 right: '4px',
@@ -187,26 +207,22 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                 readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
                 location={location}
+                epubOptions={{
+                    flow: "scrolled-doc",
+                    manager: "continuous",
+                    spread: "none",
+                }}
+                epubViewStyles={epubViewStyles}
+
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 getRendition={(_rendition) => {
-                    updateTheme(_rendition, theme)
                     renditionRef.current = _rendition
-
                     bookRef.current = _rendition.book;
 
-                    _rendition.on('relocated', (loc: any) => {
-                        // обычное обновление позиции
-                        if (loc?.start?.cfi) {
-                            setLocation(loc.start.cfi);
-                        }
 
-                        const displayed = loc.end?.displayed || loc.start?.displayed;
-                        console.log("displayed: ", displayed);
-                        // если данные об отображении есть и мы на последней странице раздела — считаем, что конец главы
-                        if (displayed && displayed.page === displayed.total) {
-                            goToNextChapter();
-                        }
-                    });
+                    // затем накатываем твой цветовой theme
+                    updateTheme(_rendition, theme);
+
                 }}
             />
         </div>

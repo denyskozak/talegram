@@ -1,41 +1,6 @@
-.reading-overlay__viewer {
-  --reader-page-background: #ffffff;
-  --reader-page-border: rgba(15, 23, 42, 0.08);
-  --reader-page-shadow: rgba(15, 23, 42, 0.12);
-  --reader-page-filter: none;
-  overflow: hidden;
-}
-
-
-.reading-overlay__viewer .rpv-core__viewer {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  width: 100%;
-}
-
-.reading-overlay__viewer .rpv-core__inner-pages {
-  gap: 24px;
-  padding-bottom: 40px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
-.reading-overlay__viewer .rpv-core__inner-page {
-  max-width: min(100%, 900px);
-  width: 100%;
-}
-
-.reading-overlay__viewer .rpv-core__page-layer {
-  border-radius: 20px;
-  background: var(--reader-page-background);
-  border: 1px solid var(--reader-page-border);
-  box-shadow: 0 24px 64px var(--reader-page-shadow);
-  filter: var(--reader-page-filter);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.reading-overlay__viewer .rpv-core__page-layer:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 32px 72px var(--reader-page-shadow);
+.react-reader-arrow,
+.react-reader-prev,
+.react-reader-next {
+    display: none !important;
+    pointer-events: none !important;
 }

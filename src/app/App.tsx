@@ -14,6 +14,7 @@ import {FooterBar} from "@/widgets/FooterBar/FooterBar";
 import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
 import {useFooterVisibility} from "@/shared/hooks/useFooterVisibility";
 import {useLaunchParams} from "@tma.js/sdk-react";
+import {StartRouteHandler} from "@/app/StartHandler.tsx";
 
 function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
     const [shouldRender, setShouldRender] = useState(visible);
@@ -199,9 +200,9 @@ function AppContent(): JSX.Element {
 void init();
 
 export default function App(): JSX.Element {
-
     return (
         <BrowserRouter>
+            <StartRouteHandler />
                 <TMAProvider>
                             <AppContent/>
                 </TMAProvider>

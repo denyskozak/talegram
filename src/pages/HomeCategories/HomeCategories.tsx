@@ -20,6 +20,7 @@ import { GLOBAL_CATEGORIES, type GlobalCategory } from "@/shared/lib/globalCateg
 import { BookCard } from "@/entities/book/components/BookCard";
 import { BookCardSkeleton } from "@/shared/ui/Skeletons";
 import { useHomeStore } from "./store";
+import { useMediaQuery } from "@uidotdev/usehooks";
 
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
@@ -36,7 +37,9 @@ export default function HomeCategories(): JSX.Element {
       loadTopBooks,
       clearTopBooks,
     } = useHomeStore();
-
+    const isLargeDevice = useMediaQuery(
+        "only screen and (min-width : 993px)"
+    );
     useScrollRestoration("home-categories");
 
     const translatedSpecialCategories = useMemo<SpecialCategory[]>(
@@ -131,7 +134,7 @@ export default function HomeCategories(): JSX.Element {
                                 display: "grid",
                                 gridAutoFlow: "column", // новые элементы добавляются в новые колонки
                                 gridTemplateRows: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
-                                gridAutoColumns: "calc(50% - 8px)", // ширина одной колонки ~ половина контейнера
+                                gridAutoColumns: `calc(${isLargeDevice ? '20%' : '33.3%'} - 8px)`, // ширина одной колонки ~ половина контейнера
                                 overflowX: "auto", // горизонтальный скролл
                                 columnGap: 16,
                                 rowGap: 16,
@@ -149,7 +152,7 @@ export default function HomeCategories(): JSX.Element {
                                 </div>
                             ))}
 
-                            {isTopBooksLoading && topBooks.length === 0 && Array.from({length: 4}).map((_, index) => (
+                            {isTopBooksLoading && topBooks.length === 0 && Array.from({length: 6}).map((_, index) => (
                                 <div key={index} style={{minWidth: 0, width: "100%"}}>
                                     <BookCardSkeleton height="auto" />
                                 </div>
