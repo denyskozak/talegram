@@ -232,7 +232,7 @@ export default function MyAccount(): JSX.Element {
 
   const handleToggleLike = useCallback(
     (bookId: string) => {
-      toggleLike(bookId, telegramUserId);
+      toggleLike(bookId, telegramUserId ?? null);
     },
     [telegramUserId, toggleLike],
   );
