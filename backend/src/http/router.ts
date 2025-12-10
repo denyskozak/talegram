@@ -107,9 +107,6 @@ export function createRequestHandler(trpcHandler: RequestHandler) {
             return;
         }
 
-        const cacheTimeMs = 3600 * 1000;
-
-        res.setHeader('Cache-Control', `public, max-age=${Math.floor(cacheTimeMs / 1000)}`);
         trpcHandler(req, res);
     };
 }
