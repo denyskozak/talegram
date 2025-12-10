@@ -169,6 +169,7 @@ export function SettingsPage(): JSX.Element {
           </div>
         ) : null}
       </section>
+
     </div>
   );
 }

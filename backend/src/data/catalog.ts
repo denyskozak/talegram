@@ -45,6 +45,17 @@ function ensureArray(value: string[] | null | undefined): string[] {
   return Array.isArray(value) ? value : [];
 }
 
+function splitAuthors(value: string | null | undefined): string[] {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
 function getCategoryId(entity: BookEntity): string | null {
   const raw = entity.category;
   if (typeof raw !== 'string') {
@@ -118,9 +129,9 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
   return {
     id: entity.id,
     title: entity.title,
-    authors: entity.author ? [entity.author] : [],
+    authors: splitAuthors(entity.author),
     categories: getCategoryId(entity),
-    coverUrl: '',
+    coverUrl: entity.coverUrl ?? '',
     description: entity.description,
       price: entity.price ?? 0,
     rating: {

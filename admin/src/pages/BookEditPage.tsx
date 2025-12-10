@@ -12,7 +12,7 @@ function toFormData(book: Book): BookFormData {
     categories: book.categories ?? '',
     coverUrl: book.coverUrl,
     description: book.description,
-    priceStars: book.priceStars,
+    price: book.price,
     rating: {
       average: book.rating.average,
       votes: book.rating.votes,
@@ -84,7 +84,7 @@ export function BookEditPage(): JSX.Element {
           categories: values.categories,
           coverUrl: values.coverUrl,
           description: values.description,
-          priceStars: values.priceStars,
+          price: values.price,
           rating: values.rating,
           tags: values.tags,
           publishedAt: values.publishedAt,

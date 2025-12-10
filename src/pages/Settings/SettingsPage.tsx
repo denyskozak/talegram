@@ -67,6 +67,21 @@ export default function SettingsPage(): JSX.Element {
           </Text>
         </div>
       </div>
+      <div
+        style={{
+          ...sectionStyle,
+          gap: 10,
+          border: `1px dashed ${theme.separator}`,
+          background: theme.section,
+        }}
+      >
+        <Text weight="2" style={{ color: theme.subtitle }}>
+          {t("settings.community.title")}
+        </Text>
+        <Text style={{ color: theme.subtitle }}>
+          {t("settings.community.description")}
+        </Text>
+      </div>
       <Text style={{ color: theme.subtitle }}>{t("settings.description")}</Text>
     </div>
   );
