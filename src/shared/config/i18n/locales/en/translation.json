@@ -217,6 +217,7 @@
       "unavailable": "We couldn't find the audiobook for this book.",
       "unsupported": "Your browser does not support audio playback.",
       "speed": "Speed",
+      "seek": "Seek position",
       "seekBackward": "Rewind {{seconds}}s",
       "seekForward": "Forward {{seconds}}s"
     },
@@ -603,6 +604,9 @@
     "telegramCta": "Open @lawyerdsupport"
   },
   "reading-overlay": {
-    "toggle-font-size": "Font-size"
+    "toggle-font-size": "Font-size",
+    "selectionTitle": "Share this excerpt",
+    "shareSelection": "Share",
+    "clearSelection": "Clear"
   }
 }
