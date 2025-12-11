@@ -85,12 +85,6 @@ export class Book {
     @Column({name: 'file_size', type: 'integer', nullable: true})
     fileSize!: number | null;
 
-    @Column({name: 'file_encryption_iv', type: 'text', nullable: true})
-    fileEncryptionIv!: string | null;
-
-    @Column({name: 'file_encryption_tag', type: 'text', nullable: true})
-    fileEncryptionTag!: string | null;
-
     @Column({name: 'audiobook_mime_type', type: 'text', nullable: true})
     audiobookMimeType!: string | null;
 
@@ -99,12 +93,6 @@ export class Book {
 
     @Column({name: 'audiobook_file_size', type: 'integer', nullable: true})
     audiobookFileSize!: number | null;
-
-    @Column({name: 'audiobook_file_encryption_iv', type: 'text', nullable: true})
-    audiobookFileEncryptionIv!: string | null;
-
-    @Column({name: 'audiobook_file_encryption_tag', type: 'text', nullable: true})
-    audiobookFileEncryptionTag!: string | null;
 
     @Column({name: 'proposal_id', type: 'text', nullable: true})
     proposalId!: string | null;

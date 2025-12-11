@@ -227,13 +227,6 @@ export const proposalsRouter = createRouter({
           throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing file path for approved proposal' });
         }
 
-        if (!proposal.fileEncryptionIv || !proposal.fileEncryptionTag) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Missing encryption metadata for approved proposal',
-          });
-        }
-
         // const categoryId = normalizeCategoryId(proposal.category);
         const tags = Array.isArray(proposal.hashtags) ? proposal.hashtags : [];
 
@@ -243,8 +236,6 @@ export const proposalsRouter = createRouter({
           description: proposal.description,
           filePath,
           fileName: proposal.fileName,
-          fileEncryptionIv: proposal.fileEncryptionIv,
-          fileEncryptionTag: proposal.fileEncryptionTag,
           audiobookFilePath: proposal.audiobookFilePath,
           coverFilePath: proposal.coverFilePath,
           coverMimeType: proposal.coverMimeType,
@@ -258,8 +249,6 @@ export const proposalsRouter = createRouter({
           publishedAt: Date.now(),
           authorTelegramUserId: proposal.submittedByTelegramUserId ?? null,
           language: proposal.language ?? null,
-          audiobookFileEncryptionIv: proposal.audiobookFileEncryptionIv ?? null,
-          audiobookFileEncryptionTag: proposal.audiobookFileEncryptionTag ?? null,
           category: proposal.category,
           globalCategory: proposal.globalCategory,
           price: proposal.price,

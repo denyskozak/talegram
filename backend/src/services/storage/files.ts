@@ -4,10 +4,6 @@ import { promises as fs } from 'node:fs';
 import { Book } from '../../entities/Book.js';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { initializeDataSource, appDataSource } from '../../utils/data-source.js';
-import { decryptBookFile } from '../encryption.js';
-
-const AES_GCM_IV_LENGTH = 12;
-const AES_GCM_TAG_LENGTH = 16;
 
 export class FileNotFoundError extends Error {
   constructor(message = 'File metadata not found') {
@@ -44,23 +40,6 @@ type ProposalResolvedFile = BaseResolvedFile & {
 };
 
 export type ResolvedFile = BookResolvedFile | ProposalResolvedFile;
-
-const decodeBase64Buffer = (value: string | null | undefined): Buffer | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  const trimmed = value.trim();
-  if (trimmed.length === 0) {
-    return null;
-  }
-
-  try {
-    return Buffer.from(trimmed, 'base64');
-  } catch (error) {
-    return null;
-  }
-};
 
 const matchesCoverFile = (
   source: { coverFilePath?: string | null },
@@ -174,30 +153,6 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     } satisfies ProposalResolvedFile;
   }
 
-  const iv = decodeBase64Buffer(
-    fileKind === 'audiobook' ? source.audiobookFileEncryptionIv : source.fileEncryptionIv,
-  );
-  const tag = decodeBase64Buffer(
-    fileKind === 'audiobook' ? source.audiobookFileEncryptionTag : source.fileEncryptionTag,
-  );
-
-  let payload = blobBytes;
-
-  if (iv && iv.byteLength === AES_GCM_IV_LENGTH && tag && tag.byteLength === AES_GCM_TAG_LENGTH) {
-    try {
-      payload = decryptBookFile(blobBytes, iv, tag);
-    } catch (error) {
-      console.warn('Failed to decrypt stored file, falling back to original payload', {
-        fileId: normalizedFileId,
-      });
-      console.warn('error: ', error);
-    }
-  } else {
-    console.warn('Missing or invalid encryption metadata for stored file', {
-      fileId: normalizedFileId,
-    });
-  }
-
   if (book) {
     const fileName = fileKind === 'audiobook' ? book.audiobookFileName ?? null : book.fileName ?? null;
     const mimeType = fileKind === 'audiobook' ? book.audiobookMimeType ?? null : book.mimeType ?? null;
@@ -209,7 +164,7 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
       fileId: normalizedFileId,
       fileName,
       mimeType,
-      buffer: payload,
+      buffer: blobBytes,
       isCoverFile: false,
     } satisfies BookResolvedFile;
   }
@@ -226,7 +181,7 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     fileId: normalizedFileId,
     fileName,
     mimeType,
-    buffer: payload,
+    buffer: blobBytes,
     isCoverFile: false,
   } satisfies ProposalResolvedFile;
 }
