@@ -8,7 +8,7 @@ type Feedback =
   | null;
 
 export function SettingsPage(): JSX.Element {
-  const { backendUrl, setBackendUrl, defaultBackendUrl, token, setToken, client } = useTrpc();
+  const { backendUrl, setBackendUrl, defaultBackendUrl, token, setToken } = useTrpc();
   const [inputValue, setInputValue] = useState(backendUrl);
   const [feedback, setFeedback] = useState<Feedback>(null);
 
