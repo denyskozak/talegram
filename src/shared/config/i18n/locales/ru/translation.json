@@ -212,6 +212,7 @@
       "unavailable": "Не удалось найти аудиоверсию этой книги.",
       "unsupported": "Ваш браузер не поддерживает воспроизведение аудио.",
       "speed": "Скорость",
+      "seek": "Позиция воспроизведения",
       "seekBackward": "Отмотать на {{seconds}} с",
       "seekForward": "Вперёд на {{seconds}} с"
     },
@@ -602,6 +603,9 @@
     }
   },
   "reading-overlay": {
-    "toggle-font-size": "Шрифт"
+    "toggle-font-size": "Шрифт",
+    "selectionTitle": "Поделиться цитатой",
+    "shareSelection": "Поделиться",
+    "clearSelection": "Сбросить"
   }
 }

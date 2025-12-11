@@ -1,12 +1,14 @@
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
 import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {type Rendition} from 'epubjs'
+import {shareURL} from "@tma.js/sdk";
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
+import {Text} from "@telegram-apps/telegram-ui";
 type ReadingOverlayProps = {
     fileUrl: string;
     onLocationChange: (location: string) => void;
@@ -26,6 +28,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     const isDefaultThemeDark = themeSetting.text === '#ffffff' || themeSetting.text === '#FFFFFF';
     const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [textSize, setTextSize] = useState(2);
+    const [selection, setSelection] = useState<{ cfiRange: string; text: string } | null>(null);
 
     const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
     const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
@@ -68,10 +71,66 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
 
+    useEffect(() => {
+        const rendition = renditionRef.current;
+        if (!rendition) {
+            return;
+        }
+
+        const handleSelected = (cfiRange: string, contents: any) => {
+            const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
+
+            if (!selectedText.trim()) {
+                setSelection(null);
+                return;
+            }
+
+            if (selection?.cfiRange) {
+                rendition.annotations.remove(selection.cfiRange, 'highlight');
+            }
+
+            rendition.annotations.highlight(
+                cfiRange,
+                {},
+                () => rendition.annotations.remove(cfiRange, 'highlight'),
+                'highlight',
+            );
+
+            setSelection({cfiRange, text: selectedText.trim()});
+            contents?.window?.getSelection?.()?.removeAllRanges();
+        };
+
+        rendition.on('selected', handleSelected);
+
+        return () => rendition.off('selected', handleSelected);
+    }, [selection]);
+
     const handleNextTextSize = () => {
         const next = textSize + 1 > 4 ? 1 : textSize + 1;
         setTextSize(next);
     }
+
+    const handleClearSelection = useCallback(() => {
+        if (selection?.cfiRange && renditionRef.current) {
+            renditionRef.current.annotations.remove(selection.cfiRange, 'highlight');
+        }
+
+        setSelection(null);
+    }, [selection]);
+
+    const handleShareSelection = useCallback(() => {
+        if (!selection?.text) {
+            return;
+        }
+
+        const excerpt = `“${selection.text}”`;
+
+        try {
+            shareURL(window.location.href, excerpt);
+        } catch (error) {
+            console.error("Failed to share selection", error);
+        }
+    }, [selection]);
 
     useEffect(() => {
         onLocationChange?.(location)
@@ -203,6 +262,39 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                 <Button mode="bezeled" size="s"
                         onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize === 1 || textSize === 2 ? '🔼' : '⬇️'}`}</Button>
             </div>
+            {selection ? (
+                <div
+                    style={{
+                        position: "absolute",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        bottom: 64,
+                        zIndex: 12,
+                        background: "var(--tg-theme-bg-color, #ffffff)",
+                        color: "var(--tg-theme-text-color, #000000)",
+                        padding: "12px 14px",
+                        borderRadius: 16,
+                        boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                        maxWidth: "92%",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                    }}
+                >
+                    <Text style={{margin: 0, fontWeight: 600}}>{t('reading-overlay.selectionTitle')}</Text>
+                    <Text style={{margin: 0, maxHeight: 150, overflow: "auto"}}>
+                        {selection.text}
+                    </Text>
+                    <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
+                        <Button size="s" mode="filled" onClick={handleShareSelection}>
+                            {t('reading-overlay.shareSelection')}
+                        </Button>
+                        <Button size="s" mode="outline" onClick={handleClearSelection}>
+                            {t('reading-overlay.clearSelection')}
+                        </Button>
+                    </div>
+                </div>
+            ) : null}
             <ReactReader
                 readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}

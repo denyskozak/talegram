@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 
@@ -30,9 +30,16 @@ export default function ListenBookPage(): JSX.Element {
         [id],
     );
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [audioDuration, setAudioDuration] = useState(0);
+    const [currentTime, setCurrentTime] = useState(0);
     const [playbackRate, setPlaybackRate] = useState(1);
     const isPreview = searchParams.get("preview") === "1";
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
+
+    useEffect(() => {
+        setAudioDuration(0);
+        setCurrentTime(0);
+    }, [audioUrl]);
 
     const audioUrl = useMemo(() => {
         if (!id) {
@@ -75,6 +82,7 @@ export default function ListenBookPage(): JSX.Element {
             if (target > 0) {
                 try {
                     audioElement.currentTime = target;
+                    setCurrentTime(Math.floor(target));
                 } catch (error) {
                     console.warn("Failed to restore audio position", error);
                 }
@@ -99,12 +107,25 @@ export default function ListenBookPage(): JSX.Element {
         }
 
         const position = Math.floor(audioElement.currentTime);
+        setCurrentTime(position);
         setStoredBookProgress('audio_position', id, position.toString());
     }, [id]);
 
     const handleAudioEnded = useCallback(() => {
+        setCurrentTime(0);
         setStoredBookProgress('audio_position', id, '0');
     }, [id]);
+
+    const handleAudioLoadedMetadata = useCallback(() => {
+        const audioElement = audioRef.current;
+        if (!audioElement) {
+            return;
+        }
+
+        const duration = Number.isFinite(audioElement.duration) ? audioElement.duration : 0;
+        setAudioDuration(duration);
+        setCurrentTime(Math.floor(audioElement.currentTime));
+    }, []);
 
     useEffect(() => {
         const audioElement = audioRef.current;
@@ -122,6 +143,14 @@ export default function ListenBookPage(): JSX.Element {
         }
     }, []);
 
+    const formatTime = useCallback((value: number) => {
+        const safeValue = Number.isFinite(value) && value > 0 ? value : 0;
+        const minutes = Math.floor(safeValue / 60);
+        const seconds = Math.floor(safeValue % 60);
+
+        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }, []);
+
     const handleSeek = useCallback((offsetSeconds: number) => {
         const audioElement = audioRef.current;
         if (!audioElement) {
@@ -135,8 +164,25 @@ export default function ListenBookPage(): JSX.Element {
 
         try {
             audioElement.currentTime = nextTime;
+            setCurrentTime(Math.floor(nextTime));
         } catch (error) {
             console.warn("Failed to seek audio", error);
+        }
+    }, []);
+
+    const handleManualSeek = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        const target = Number.parseFloat(event.target.value);
+        const audioElement = audioRef.current;
+
+        if (!audioElement || Number.isNaN(target)) {
+            return;
+        }
+
+        try {
+            audioElement.currentTime = target;
+            setCurrentTime(target);
+        } catch (error) {
+            console.warn("Failed to set audio position from range", error);
         }
     }, []);
 
@@ -177,12 +223,30 @@ export default function ListenBookPage(): JSX.Element {
                         autoPlay
                         src={audioUrl}
                         style={{width: "100%"}}
+                        onLoadedMetadata={handleAudioLoadedMetadata}
+                        onDurationChange={handleAudioLoadedMetadata}
                         onTimeUpdate={handleAudioProgressChange}
                         onPause={handleAudioProgressChange}
                         onEnded={handleAudioEnded}
                     >
                         {t("book.listen.unsupported")}
                     </audio>
+                    <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                        <input
+                            aria-label={t("book.listen.seek")}
+                            type="range"
+                            min={0}
+                            max={audioDuration || 0}
+                            step={1}
+                            value={Math.min(currentTime, audioDuration || currentTime)}
+                            onChange={handleManualSeek}
+                            style={{width: "100%"}}
+                        />
+                        <div style={{display: "flex", justifyContent: "space-between", color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
+                            <Text style={{margin: 0}}>{formatTime(currentTime)}</Text>
+                            <Text style={{margin: 0}}>{formatTime(audioDuration)}</Text>
+                        </div>
+                    </div>
                 ) : (
                     <Text style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
                         {t("book.listen.unavailable")}
