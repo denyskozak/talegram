@@ -71,8 +71,7 @@ export const authorsRouter = createRouter({
         paymentId: purchase.paymentId,
         purchasedAt: new Date(purchase.purchasedAt).toISOString(),
         telegramUserId: purchase.telegramUserId,
-        walrusBlobId: purchase.walrusBlobId ?? null,
-        walrusFileId: purchase.walrusFileId ?? null,
+        filePath: purchase.filePath ?? null,
       })),
     }));
   }),
@@ -119,8 +118,7 @@ export const authorsRouter = createRouter({
           paymentId: purchase.paymentId,
           purchasedAt: new Date(purchase.purchasedAt).toISOString(),
           telegramUserId: purchase.telegramUserId,
-          walrusBlobId: purchase.walrusBlobId ?? null,
-          walrusFileId: purchase.walrusFileId ?? null,
+          filePath: purchase.filePath ?? null,
         })),
         earnings: {
           total: totalEarnings,

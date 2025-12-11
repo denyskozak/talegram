@@ -4,8 +4,7 @@ import { appDataSource } from '../utils/data-source.js';
 export type PurchaseDetails = {
   paymentId: string;
   purchasedAt: string;
-  walrusBlobId: string | null;
-  walrusFileId: string | null;
+  filePath: string | null;
   telegramChargeId?: string | null;
 };
 
@@ -13,8 +12,7 @@ function mapEntityToDetails(entity: Purchase): PurchaseDetails {
   return {
     paymentId: entity.paymentId,
     purchasedAt: entity.purchasedAt.toISOString(),
-    walrusBlobId: entity.walrusBlobId ?? null,
-    walrusFileId: entity.walrusFileId ?? null,
+    filePath: entity.filePath ?? null,
     telegramChargeId: entity.telegramChargeId ?? null,
   };
 }
@@ -30,8 +28,7 @@ export const setPurchased = async (
   if (existing) {
     existing.paymentId = details.paymentId;
     existing.purchasedAt = new Date(details.purchasedAt);
-    existing.walrusBlobId = details.walrusBlobId ?? null;
-    existing.walrusFileId = details.walrusFileId ?? null;
+    existing.filePath = details.filePath ?? null;
     existing.telegramChargeId = details.telegramChargeId ?? null;
     await repository.save(existing);
     return;
@@ -42,8 +39,7 @@ export const setPurchased = async (
     telegramUserId,
     paymentId: details.paymentId,
     purchasedAt: new Date(details.purchasedAt),
-    walrusBlobId: details.walrusBlobId ?? null,
-    walrusFileId: details.walrusFileId ?? null,
+    filePath: details.filePath ?? null,
     telegramChargeId: details.telegramChargeId ?? null,
   });
 

@@ -9,7 +9,7 @@ import {
     handleBookFileDownloadRequest,
     handleBookPreviewRequest,
     handleProposalFileDownloadRequest,
-} from '../utils/walrus-files.js';
+} from '../utils/storage-files.js';
 import { respondWithError } from './responses.js';
 
 type RequestHandler = (req: http.IncomingMessage, res: http.ServerResponse) => void;

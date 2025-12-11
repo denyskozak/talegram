@@ -55,23 +55,14 @@ export class Book {
     @Column({type: 'text'})
     description!: string;
 
-    @Column({name: 'walrus_blob_id', type: 'text'})
-    walrusBlobId!: string;
+    @Column({name: 'file_path', type: 'text'})
+    filePath!: string;
 
-    @Column({name: 'walrus_file_id', type: 'text', nullable: true})
-    walrusFileId!: string | null;
+    @Column({name: 'audiobook_file_path', type: 'text', nullable: true})
+    audiobookFilePath!: string | null;
 
-    @Column({name: 'audiobook_walrus_blob_id', type: 'text', nullable: true})
-    audiobookWalrusBlobId!: string | null;
-
-    @Column({name: 'audiobook_walrus_file_id', type: 'text', nullable: true})
-    audiobookWalrusFileId!: string | null;
-
-    @Column({name: 'cover_walrus_blob_id', type: 'text', nullable: true})
-    coverWalrusBlobId!: string | null;
-
-    @Column({name: 'cover_walrus_file_id', type: 'text', nullable: true})
-    coverWalrusFileId!: string | null;
+    @Column({name: 'cover_file_path', type: 'text', nullable: true})
+    coverFilePath!: string | null;
 
     @Column({name: 'cover_mime_type', type: 'text', nullable: true})
     coverMimeType!: string | null;

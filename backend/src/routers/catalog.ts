@@ -82,7 +82,7 @@ export const catalogRouter = createRouter({
 
     if (ctx.telegramAuth.userId) {
       const details = await getPurchaseDetails(book.id, ctx.telegramAuth.userId);
-      if (details?.walrusBlobId) {
+      if (details?.filePath) {
         // Preserve purchase details lookup side effect for validation purposes.
       }
     }

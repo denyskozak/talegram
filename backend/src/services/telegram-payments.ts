@@ -251,8 +251,7 @@ export async function recordSuccessfulPayment(params: {
             await setPurchased(book.id, params.userId.toString(), {
                 paymentId,
                 purchasedAt,
-                walrusBlobId: book.walrusBlobId ?? null,
-                walrusFileId: book.walrusFileId ?? null,
+                filePath: book.filePath ?? null,
                 telegramChargeId: params.telegramPaymentChargeId,
             });
         }

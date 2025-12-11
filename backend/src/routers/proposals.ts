@@ -7,7 +7,7 @@ import { ProposalVote } from '../entities/ProposalVote.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 import { authorizedProcedure, createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
-import { fetchWalrusFilesBase64, warmWalrusFileCache } from '../utils/walrus-files.js';
+import { fetchStoredFilesBase64, warmFileCache } from '../utils/storage-files.js';
 
 const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 1;
@@ -55,14 +55,14 @@ export const proposalsRouter = createRouter({
     const coverFileIds = Array.from(
       new Set(
         proposals
-          .map((proposal) => proposal.coverWalrusFileId)
+          .map((proposal) => proposal.coverFilePath)
           .filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
       ),
     );
 
     const coverDataByFileId =
       coverFileIds.length > 0
-        ? await fetchWalrusFilesBase64(coverFileIds)
+        ? await fetchStoredFilesBase64(coverFileIds)
         : new Map<string, string | null>();
 
     const normalized = proposals.map((proposal: BookProposal & { votes: ProposalVote[] }) => {
@@ -77,8 +77,8 @@ export const proposalsRouter = createRouter({
       const { votes: _votes, ...rest } = proposal;
 
       const coverImageData =
-        proposal.coverWalrusFileId && coverDataByFileId.has(proposal.coverWalrusFileId)
-          ? coverDataByFileId.get(proposal.coverWalrusFileId) ?? null
+        proposal.coverFilePath && coverDataByFileId.has(proposal.coverFilePath)
+          ? coverDataByFileId.get(proposal.coverFilePath) ?? null
           : null;
 
       return {
@@ -119,9 +119,9 @@ export const proposalsRouter = createRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
     }
 
-    const coverImageData = proposal.coverWalrusFileId
-      ? (await fetchWalrusFilesBase64([proposal.coverWalrusFileId])).get(
-          proposal.coverWalrusFileId,
+    const coverImageData = proposal.coverFilePath
+      ? (await fetchStoredFilesBase64([proposal.coverFilePath])).get(
+          proposal.coverFilePath,
         ) ?? null
       : null;
 
@@ -222,9 +222,9 @@ export const proposalsRouter = createRouter({
       }
 
       if (positiveVotes >= REQUIRED_APPROVALS) {
-        const walrusBlobId = proposal.walrusBlobId;
-        if (!walrusBlobId) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing walrus Blob Id for approved proposal' });
+        const filePath = proposal.filePath;
+        if (!filePath) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Missing file path for approved proposal' });
         }
 
         if (!proposal.fileEncryptionIv || !proposal.fileEncryptionTag) {
@@ -241,28 +241,25 @@ export const proposalsRouter = createRouter({
           title: proposal.title,
           author: proposal.author,
           description: proposal.description,
-          walrusBlobId: proposal.walrusBlobId,
-          walrusFileId: proposal.walrusFileId,
-            fileName: proposal.fileName,
+          filePath,
+          fileName: proposal.fileName,
           fileEncryptionIv: proposal.fileEncryptionIv,
           fileEncryptionTag: proposal.fileEncryptionTag,
-            audiobookWalrusBlobId: proposal.audiobookWalrusBlobId,
-            audiobookWalrusFileId: proposal.audiobookWalrusFileId,
-            coverWalrusBlobId: proposal.coverWalrusBlobId,
-            coverMimeType: proposal.coverMimeType,
-            coverFileName: proposal.coverFileName,
-            coverFileSize: proposal.coverFileSize,
-            mimeType: proposal.mimeType,
-            fileSize: proposal.fileSize,
-            audiobookMimeType: proposal.audiobookMimeType,
-            audiobookFileName: proposal.audiobookFileName,
-            audiobookFileSize: proposal.audiobookFileSize,
-            publishedAt: Date.now(),
+          audiobookFilePath: proposal.audiobookFilePath,
+          coverFilePath: proposal.coverFilePath,
+          coverMimeType: proposal.coverMimeType,
+          coverFileName: proposal.coverFileName,
+          coverFileSize: proposal.coverFileSize,
+          mimeType: proposal.mimeType,
+          fileSize: proposal.fileSize,
+          audiobookMimeType: proposal.audiobookMimeType,
+          audiobookFileName: proposal.audiobookFileName,
+          audiobookFileSize: proposal.audiobookFileSize,
+          publishedAt: Date.now(),
           authorTelegramUserId: proposal.submittedByTelegramUserId ?? null,
           language: proposal.language ?? null,
           audiobookFileEncryptionIv: proposal.audiobookFileEncryptionIv ?? null,
           audiobookFileEncryptionTag: proposal.audiobookFileEncryptionTag ?? null,
-          coverWalrusFileId: proposal.coverWalrusFileId ?? null,
           category: proposal.category,
           globalCategory: proposal.globalCategory,
           price: proposal.price,
@@ -270,8 +267,8 @@ export const proposalsRouter = createRouter({
           currency: proposal.currency,
         });
 
-        if (proposal.coverWalrusFileId) {
-          await warmWalrusFileCache(proposal.coverWalrusFileId);
+        if (proposal.coverFilePath) {
+          await warmFileCache([proposal.coverFilePath]);
         }
 
         await bookRepository.save(book);

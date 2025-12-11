@@ -19,12 +19,12 @@ export function BookCard({book, onlyImage = false, showTags = true, onClick}: Bo
     const {t} = useTranslation();
 
     const coverSrc = useMemo(() => {
-        if (book.coverWalrusFileId) {
+        if (book.coverFilePath) {
             return buildBookFileDownloadUrl(book.id, "cover");
         }
 
         return book.coverUrl ?? '';
-    }, [book.coverWalrusFileId, book.coverWalrusBlobId, book.coverUrl, book.id]);
+    }, [book.coverFilePath, book.coverUrl, book.id]);
 
     return (
         <Tappable

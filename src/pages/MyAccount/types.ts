@@ -38,8 +38,7 @@ export type MyBook = {
   purchase: {
     paymentId: string;
     purchasedAt: string;
-    walrusBlobId: string | null;
-    walrusFileId: string | null;
+    filePath: string | null;
   };
   liked: boolean;
 };

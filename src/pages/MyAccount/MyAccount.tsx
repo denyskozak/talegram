@@ -178,10 +178,7 @@ export default function MyAccount(): JSX.Element {
         return;
       }
 
-      const hasStorage = Boolean(
-        (typeof item.book.walrusFileId === "string" && item.book.walrusFileId.length > 0) ||
-          (typeof item.book.walrusBlobId === "string" && item.book.walrusBlobId.length > 0),
-      );
+      const hasStorage = typeof item.book.filePath === "string" && item.book.filePath.length > 0;
 
       if (!hasStorage) {
         showToast(t("account.myBooks.toast.missingFile"));
@@ -200,10 +197,7 @@ export default function MyAccount(): JSX.Element {
         return;
       }
 
-      const hasStorage = Boolean(
-        (typeof item.book.walrusFileId === "string" && item.book.walrusFileId.length > 0) ||
-          (typeof item.book.walrusBlobId === "string" && item.book.walrusBlobId.length > 0),
-      );
+      const hasStorage = typeof item.book.filePath === "string" && item.book.filePath.length > 0;
 
       if (!hasStorage) {
         showToast(t("account.myBooks.toast.missingFile"));

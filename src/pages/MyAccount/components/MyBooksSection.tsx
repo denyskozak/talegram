@@ -56,12 +56,12 @@ function MyBookCard({
   const { book, purchase } = item;
 
   const coverUrl = useMemo(() => {
-    if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+    if (book.coverFilePath) {
       return buildBookFileDownloadUrl(book.id, "cover");
     }
 
     return book.coverUrl ?? '';
-  }, [book.coverWalrusFileId, book.coverWalrusBlobId, book.coverUrl, book.id]);
+  }, [book.coverFilePath, book.coverUrl, book.id]);
   const author = book.authors.join(", ");
   const fallbackInitial = book.title.trim().charAt(0).toUpperCase() || "📘";
   const formattedPurchasedAt = formatPurchaseDate(purchase.purchasedAt);

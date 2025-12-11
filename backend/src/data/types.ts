@@ -24,12 +24,9 @@ export type Book = {
   tags: string[];
   publishedAt?: string;
   reviewsCount: number;
-  walrusBlobId?: string;
-  walrusFileId?: string | null;
-  audiobookWalrusBlobId?: string | null;
-  audiobookWalrusFileId?: string | null;
-  coverWalrusBlobId?: string | null;
-  coverWalrusFileId?: string | null;
+  filePath?: string | null;
+  audiobookFilePath?: string | null;
+  coverFilePath?: string | null;
   coverMimeType?: string | null;
   mimeType?: string | null;
   fileName?: string | null;

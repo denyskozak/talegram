@@ -44,12 +44,12 @@ function SimilarCarouselItem({ book, onSelect, t }: SimilarCarouselItemProps): J
 
 
     const coverSrc = useMemo(() => {
-        if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+        if (book.coverFilePath) {
             return buildBookFileDownloadUrl(book.id, "cover");
         }
 
         return book.coverUrl ?? '';
-    }, [book.coverWalrusFileId, book.coverWalrusBlobId, book.coverUrl, book.id]);
+    }, [book.coverFilePath, book.coverUrl, book.id]);
   return (
     <Tappable
       onClick={() => onSelect(book.id)}
