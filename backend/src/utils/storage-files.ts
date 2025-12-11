@@ -1,4 +1,3 @@
-import { Buffer } from 'node:buffer';
 import http from 'node:http';
 import { createReadStream } from 'node:fs';
 import { promises as fs } from 'node:fs';
