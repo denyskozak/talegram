@@ -73,17 +73,11 @@ export class BookProposal {
   })
   hashtags!: string[];
 
-  @Column({ name: 'walrus_file_id', type: 'text' })
-  walrusFileId!: string;
+  @Column({ name: 'file_path', type: 'text' })
+  filePath!: string;
 
-  @Column({ name: 'walrus_blob_id', type: 'text' })
-  walrusBlobId!: string;
-
-  @Column({ name: 'audiobook_walrus_file_id', type: 'text', nullable: true })
-  audiobookWalrusFileId!: string | null;
-
-  @Column({ name: 'audiobook_walrus_blob_id', type: 'text', nullable: true })
-  audiobookWalrusBlobId!: string | null;
+  @Column({ name: 'audiobook_file_path', type: 'text', nullable: true })
+  audiobookFilePath!: string | null;
 
   @Column({ name: 'audiobook_mime_type', type: 'text', nullable: true })
   audiobookMimeType!: string | null;
@@ -94,11 +88,8 @@ export class BookProposal {
   @Column({ name: 'audiobook_file_size', type: 'integer', nullable: true })
   audiobookFileSize!: number | null;
 
-  @Column({ name: 'cover_walrus_file_id', type: 'text', nullable: true })
-  coverWalrusFileId!: string | null;
-
-  @Column({ name: 'cover_walrus_blob_id', type: 'text', nullable: true })
-  coverWalrusBlobId!: string | null;
+  @Column({ name: 'cover_file_path', type: 'text', nullable: true })
+  coverFilePath!: string | null;
 
   @Column({ name: 'cover_mime_type', type: 'text', nullable: true })
   coverMimeType!: string | null;

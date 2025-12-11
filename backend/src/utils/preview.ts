@@ -1,5 +1,4 @@
 import JSZip from 'jszip';
-import { XMLParser, XMLBuilder } from 'fast-xml-parser';
 
 const PREVIEW_CHAPTER_LIMIT = 5;
 
@@ -11,36 +10,21 @@ const extractOpfPath = (containerXml: string): string | null => {
 };
 
 export function trimSpineToPreview(opfContent: string, chapterLimit: number): string | null {
-    const parser = new XMLParser({
-        ignoreAttributes: false,
-        attributeNamePrefix: '@_',
-    });
+  const spineMatch = opfContent.match(/<spine[^>]*>[\s\S]*?<\/spine>/i);
+  if (!spineMatch) {
+    return null;
+  }
 
-    const builder = new XMLBuilder({
-        ignoreAttributes: false,
-        attributeNamePrefix: '@_',
-        format: true,
-    });
+  const itemRefs = spineMatch[0].match(/<itemref[^>]*\/>/gi);
+  if (!itemRefs || itemRefs.length === 0) {
+    return null;
+  }
 
-    let opf: any;
-    try {
-        opf = parser.parse(opfContent);
-    } catch {
-        return null;
-    }
+  const limited = itemRefs.slice(0, chapterLimit).join('\n');
+  const spineOpenTag = spineMatch[0].match(/<spine[^>]*>/i)?.[0] ?? '<spine>';
 
-    const spine = opf?.package?.spine?.itemref;
-    if (!spine) return null;
-
-    // spine может быть массивом или одним объектом
-    const spineArray = Array.isArray(spine) ? spine : [spine];
-
-    const previewSpine = spineArray.slice(0, chapterLimit);
-
-    opf.package.spine.itemref = Array.isArray(spine) ? previewSpine : previewSpine[0];
-
-    const newXml = builder.build(opf);
-    return newXml;
+  const trimmedSpine = `${spineOpenTag}\n${limited}\n</spine>`;
+  return opfContent.replace(spineMatch[0], trimmedSpine);
 }
 
 export async function buildEpubPreview(buffer: Buffer): Promise<Buffer> {

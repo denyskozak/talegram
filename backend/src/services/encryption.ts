@@ -55,3 +55,11 @@ export function decryptBookFile(encryptedData: Buffer, iv: Buffer, authTag: Buff
   const decryptedChunks = [decipher.update(encryptedData), decipher.final()];
   return Buffer.concat(decryptedChunks);
 }
+
+export function createBookFileDecipher(iv: Buffer, authTag: Buffer) {
+  const key = getKey();
+  const decipher = createDecipheriv(ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+
+  return decipher;
+}

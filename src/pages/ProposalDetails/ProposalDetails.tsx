@@ -138,7 +138,7 @@ export default function ProposalDetails(): JSX.Element {
     }, [proposal, t]);
 
     const handleDownload = useCallback(async () => {
-        if (!proposal?.walrusFileId) {
+        if (!proposal?.filePath) {
             showToast(t("account.voting.downloadError"));
             return;
         }
@@ -418,7 +418,7 @@ export default function ProposalDetails(): JSX.Element {
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.manuscript")}</Text>
                                 <Text style={{color: theme.subtitle}}>{proposal.fileName}</Text>
-                                {proposal.walrusFileId ? (
+                                {proposal.filePath ? (
                                     <>
                                         <Button
                                             type="button"
@@ -449,7 +449,7 @@ export default function ProposalDetails(): JSX.Element {
                                         {t("account.proposalDetails.read")}
                                     </Button>
                                 ) : null}
-                                {canVote && proposal.audiobookWalrusFileId ? (
+                                {canVote && proposal.audiobookFilePath ? (
                                     <Button
                                         type="button"
                                         mode="outline"
@@ -469,7 +469,7 @@ export default function ProposalDetails(): JSX.Element {
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.audiobook")}</Text>
                                 <Text style={{color: theme.subtitle}}>
-                                    {proposal.audiobookWalrusFileId
+                                    {proposal.audiobookFilePath
                                         ? t("account.proposalDetails.audiobookAvailable")
                                         : t("account.proposalDetails.noAudiobook")}
                                 </Text>

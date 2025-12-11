@@ -1,20 +1,21 @@
 import type { Buffer } from 'node:buffer';
 import { TRPCError } from '@trpc/server';
-import { WalrusFile } from '@mysten/walrus';
+import { createWriteStream } from 'node:fs';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
+import { randomUUID } from 'node:crypto';
 import { BookProposal } from '../../entities/BookProposal.js';
-import { WalrusFileRecord } from '../../entities/WalrusFileRecord.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
-import { getKeypair } from '../keys.js';
 import { encryptBookFile } from '../encryption.js';
-import { writeWalrusFiles } from '../../utils/walrus-files.js';
 import { normalizeTelegramUserId } from '../../utils/telegram.js';
 import { Author } from '../../entities/Author.js';
 
 export const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100m
 export const MAX_AUDI_BOOK_SIZE_BYTES = 3 * 1024 * 1024 * 1024; // 3gb
 export const MAX_COVER_FILE_SIZE_BYTES = 5 * 1024 * 1024;
-const WALRUS_STORAGE_EPOCHS = 5;
-const WALRUS_EPOCH_DURATION_SECONDS = 7 * 24 * 60 * 60;
+const STORAGE_ROOT = process.env.FILE_STORAGE_ROOT ?? path.resolve(process.cwd(), 'data/storage');
 
 function getStartOfCurrentDayUnix(): number {
   const now = new Date();
@@ -45,6 +46,16 @@ export type CreateBookProposalParams = {
 };
 
 const MAX_HASHTAGS = 8;
+
+async function writeBufferToFile(filePath: string, data: Buffer): Promise<void> {
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await pipeline(Readable.from(data), createWriteStream(filePath));
+}
+
+function sanitizeFileName(rawName: string): string {
+  const normalized = rawName.trim().replace(/[^a-zA-Z0-9._-]+/g, '-');
+  return normalized.length > 0 ? normalized : 'file';
+}
 
 function normalizeHashtags(rawHashtags: string[]): string[] {
   const seen = new Set<string>();
@@ -116,67 +127,30 @@ export async function createBookProposal(
     ? encryptBookFile(params.audiobook.data)
     : null;
 
-  const bookFile = WalrusFile.from({
-    contents: encryptedData,
-    identifier: `book:${params.file.name}`,
-    tags: params.file.mimeType
-      ? {
-          'content-type': params.file.mimeType,
-        }
-      : undefined,
-  });
+  const proposalId = randomUUID();
+  const proposalDir = path.join(STORAGE_ROOT, 'proposals', proposalId);
 
-  const coverFile = WalrusFile.from({
-    contents: params.cover.data,
-    identifier: `cover:${params.cover.name}`,
-    tags: params.cover.mimeType
-      ? {
-          'content-type': params.cover.mimeType,
-        }
-      : undefined,
-  });
+  const bookFilePath = path.join(proposalDir, `book-${sanitizeFileName(params.file.name)}`);
+  const coverFilePath = path.join(proposalDir, `cover-${sanitizeFileName(params.cover.name)}`);
+  const audiobookFilePath = params.audiobook
+    ? path.join(proposalDir, `audiobook-${sanitizeFileName(params.audiobook.name)}`)
+    : null;
 
-  const filesToUpload = [bookFile, coverFile];
-  if (params.audiobook && audiobookEncryption) {
-    const audiobookFile = WalrusFile.from({
-      contents: audiobookEncryption.encryptedData,
-      identifier: `audiobook:${params.audiobook.name}`,
-      tags: params.audiobook.mimeType
-        ? {
-            'content-type': params.audiobook.mimeType,
-          }
-        : undefined,
-    });
-    filesToUpload.push(audiobookFile);
-  }
-
-  const uploadResults = await writeWalrusFiles({
-    files: filesToUpload,
-    epochs: WALRUS_STORAGE_EPOCHS,
-    deletable: true,
-    signer: getKeypair(),
-  });
-
-  const [uploadResult, coverUploadResult, audiobookUploadResult] = uploadResults;
-
-
-  if (!uploadResult || !coverUploadResult) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Failed to upload proposal files to Walrus storage',
-    });
-  }
-
-  if (params.audiobook && !audiobookUploadResult) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Failed to upload audiobook file to Walrus storage',
-    });
+  try {
+    await Promise.all([
+      writeBufferToFile(bookFilePath, encryptedData),
+      writeBufferToFile(coverFilePath, params.cover.data),
+      audiobookEncryption && audiobookFilePath
+        ? writeBufferToFile(audiobookFilePath, audiobookEncryption.encryptedData)
+        : Promise.resolve(),
+    ]);
+  } catch (error) {
+    console.error('Failed to persist proposal files to storage', error);
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Failed to save proposal files' });
   }
 
   await initializeDataSource();
   const bookProposalRepository = appDataSource.getRepository(BookProposal);
-  const walrusFileRepository = appDataSource.getRepository(WalrusFileRecord);
   const normalizedUploaderUserId = normalizeTelegramUserId(params.submittedByTelegramUserId);
   if (!normalizedUploaderUserId) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Telegram user id is required' });
@@ -201,22 +175,8 @@ export async function createBookProposal(
     : 0;
 
   const currency = 'stars';
-  const walrusExpiresDate =
-    getStartOfCurrentDayUnix() + WALRUS_STORAGE_EPOCHS * WALRUS_EPOCH_DURATION_SECONDS;
-  const walrusRecords = [uploadResult, coverUploadResult, audiobookUploadResult]
-    .filter((item): item is NonNullable<typeof item> => Boolean(item && item.id))
-    .map((item) =>
-      walrusFileRepository.create({
-        warlusFileId: item.id,
-        expiresDate: walrusExpiresDate,
-      }),
-    );
-
-  if (walrusRecords.length > 0) {
-    await walrusFileRepository.save(walrusRecords);
-  }
-
   const proposal = bookProposalRepository.create({
+    id: proposalId,
     title: params.title,
     author: params.author,
     description: params.description,
@@ -225,15 +185,12 @@ export async function createBookProposal(
     price: normalizedPrice,
     currency,
     hashtags: normalizeHashtags(params.hashtags),
-    walrusFileId: uploadResult.id,
-    walrusBlobId: uploadResult.blobId,
-    audiobookWalrusFileId: audiobookUploadResult?.id ?? null,
-    audiobookWalrusBlobId: audiobookUploadResult?.blobId ?? null,
+    filePath: bookFilePath,
+    audiobookFilePath,
     audiobookMimeType: params.audiobook?.mimeType ?? null,
     audiobookFileName: params.audiobook?.name ?? null,
     audiobookFileSize: params.audiobook?.size ?? null,
-    coverWalrusFileId: coverUploadResult.id,
-    coverWalrusBlobId: coverUploadResult.blobId,
+    coverFilePath,
     coverMimeType: params.cover.mimeType ?? null,
     coverFileName: params.cover.name,
     coverFileSize: params.cover.size ?? null,

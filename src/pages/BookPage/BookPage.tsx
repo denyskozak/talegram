@@ -82,7 +82,7 @@ export default function BookPage(): JSX.Element {
 
     const isFreeBook = Boolean(book && book.price === 0);
     const hasFullAccess = isPurchased || isFreeBook;
-    const hasAudiobook = Boolean(book?.audiobookWalrusFileId);
+    const hasAudiobook = Boolean(book?.audiobookFilePath);
 
 
     const refreshPurchaseStatus = useCallback(async () => {
@@ -212,8 +212,7 @@ export default function BookPage(): JSX.Element {
         }
 
         const hasStorage = Boolean(
-            (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0) ||
-            (typeof book.walrusBlobId === "string" && book.walrusBlobId.length > 0),
+          typeof book.filePath === "string" && book.filePath.length > 0,
         );
 
         if (!hasStorage) {
@@ -242,8 +241,7 @@ export default function BookPage(): JSX.Element {
         }
 
         const hasStorage = Boolean(
-            (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0) ||
-            (typeof book.walrusBlobId === "string" && book.walrusBlobId.length > 0),
+            typeof book.filePath === "string" && book.filePath.length > 0,
         );
 
         if (!hasStorage) {
@@ -259,7 +257,7 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        if (!book.audiobookWalrusFileId) {
+        if (!book.audiobookFilePath) {
             showToast(t("book.audiobook.locked"));
             return;
         }
@@ -277,7 +275,7 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        if (!book.audiobookWalrusFileId && !book.audiobookWalrusBlobId) {
+        if (!book.audiobookFilePath) {
             showToast(t("book.audiobook.unavailable"));
             return;
         }
@@ -323,8 +321,7 @@ export default function BookPage(): JSX.Element {
             }
 
             const hasStorage = Boolean(
-                (typeof book.walrusFileId === "string" && book.walrusFileId.length > 0) ||
-                (typeof book.walrusBlobId === "string" && book.walrusBlobId.length > 0),
+                typeof book.filePath === "string" && book.filePath.length > 0,
             );
 
             if (!hasStorage) {
@@ -597,7 +594,7 @@ export default function BookPage(): JSX.Element {
             return '';
         }
 
-        if (book.coverWalrusFileId || book.coverWalrusBlobId) {
+        if (book.coverFilePath) {
             return buildBookFileDownloadUrl(book.id, "cover");
         }
 

@@ -102,11 +102,7 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                     }}
                 >
                     <span>{t("splashScreen.decentralizedBy")}</span>
-                    <img
-                        src="/walrus_logo.svg"
-                        alt="Walrus logo"
-                        style={{height: 52, objectFit: "contain"}}
-                    />
+                    <span style={{fontWeight: 600}}>{t("app.name")}</span>
                 </div>
             </div>
             {/*</div>*/}

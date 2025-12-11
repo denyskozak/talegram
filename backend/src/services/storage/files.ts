@@ -1,9 +1,9 @@
 import { Buffer } from 'node:buffer';
+import { promises as fs } from 'node:fs';
 
 import { Book } from '../../entities/Book.js';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { initializeDataSource, appDataSource } from '../../utils/data-source.js';
-import { suiClient } from '../walrus-storage.js';
 import { decryptBookFile } from '../encryption.js';
 
 const AES_GCM_IV_LENGTH = 12;
@@ -16,10 +16,10 @@ export class FileNotFoundError extends Error {
   }
 }
 
-export class WalrusFileFetchError extends Error {
-  constructor(message = 'Failed to fetch file from Walrus') {
+export class StorageFileFetchError extends Error {
+  constructor(message = 'Failed to fetch file from storage') {
     super(message);
-    this.name = 'WalrusFileFetchError';
+    this.name = 'StorageFileFetchError';
   }
 }
 
@@ -63,33 +63,25 @@ const decodeBase64Buffer = (value: string | null | undefined): Buffer | null => 
 };
 
 const matchesCoverFile = (
-  source: { coverWalrusFileId?: string | null; coverWalrusBlobId?: string | null },
+  source: { coverFilePath?: string | null },
   id: string,
 ) => {
   const normalizedId = id.trim();
-  return (
-    (typeof source.coverWalrusFileId === 'string' && source.coverWalrusFileId.trim() === normalizedId) ||
-    (typeof source.coverWalrusBlobId === 'string' && source.coverWalrusBlobId.trim() === normalizedId)
-  );
+  return typeof source.coverFilePath === 'string' && source.coverFilePath.trim() === normalizedId;
 };
 
 const matchesAudiobookFile = (
-  source: { audiobookWalrusFileId?: string | null; audiobookWalrusBlobId?: string | null },
+  source: { audiobookFilePath?: string | null },
   id: string,
 ) => {
   const normalizedId = id.trim();
-  return (
-    (typeof source.audiobookWalrusFileId === 'string' && source.audiobookWalrusFileId.trim() === normalizedId) ||
-    (typeof source.audiobookWalrusBlobId === 'string' && source.audiobookWalrusBlobId.trim() === normalizedId)
-  );
+  return typeof source.audiobookFilePath === 'string' && source.audiobookFilePath.trim() === normalizedId;
 };
 
 const determineSourceFileKind = (
   source: {
-    coverWalrusFileId?: string | null;
-    coverWalrusBlobId?: string | null;
-    audiobookWalrusFileId?: string | null;
-    audiobookWalrusBlobId?: string | null;
+    coverFilePath?: string | null;
+    audiobookFilePath?: string | null;
   },
   id: string,
 ): 'cover' | 'book' | 'audiobook' => {
@@ -116,10 +108,8 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
 
   const book = await bookRepository.findOne({
     where: [
-      { walrusFileId: normalizedFileId },
-      { coverWalrusFileId: normalizedFileId },
-      { walrusBlobId: normalizedFileId },
-      { coverWalrusBlobId: normalizedFileId },
+      { filePath: normalizedFileId },
+      { coverFilePath: normalizedFileId },
     ],
   });
 
@@ -127,10 +117,8 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     ? null
     : await appDataSource.getRepository(BookProposal).findOne({
         where: [
-          { walrusFileId: normalizedFileId },
-          { coverWalrusFileId: normalizedFileId },
-          { walrusBlobId: normalizedFileId },
-          { coverWalrusBlobId: normalizedFileId },
+          { filePath: normalizedFileId },
+          { coverFilePath: normalizedFileId },
         ],
       });
 
@@ -142,16 +130,22 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
 
   const fileKind = determineSourceFileKind(source, normalizedFileId);
 
+  const resolvedPath =
+    fileKind === 'cover'
+      ? source.coverFilePath
+      : fileKind === 'audiobook'
+        ? source.audiobookFilePath
+        : source.filePath;
+
+  if (!resolvedPath) {
+    throw new FileNotFoundError('Stored file path is missing');
+  }
+
   let blobBytes: Buffer;
   try {
-    const files = await suiClient.walrus.getFiles({ ids: [normalizedFileId] });
-    const file = files[0];
-    if (!file) {
-      throw new Error('Walrus file not found');
-    }
-    blobBytes = Buffer.from(await file.bytes());
+    blobBytes = await fs.readFile(resolvedPath);
   } catch (error) {
-    throw new WalrusFileFetchError();
+    throw new StorageFileFetchError();
   }
 
   if (fileKind === 'cover') {
@@ -193,13 +187,13 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
     try {
       payload = decryptBookFile(blobBytes, iv, tag);
     } catch (error) {
-      console.warn('Failed to decrypt Walrus file, falling back to original payload', {
+      console.warn('Failed to decrypt stored file, falling back to original payload', {
         fileId: normalizedFileId,
       });
       console.warn('error: ', error);
     }
   } else {
-    console.warn('Missing or invalid encryption metadata for Walrus file', {
+    console.warn('Missing or invalid encryption metadata for stored file', {
       fileId: normalizedFileId,
     });
   }

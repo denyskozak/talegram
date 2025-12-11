@@ -63,8 +63,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
               purchase: {
                 paymentId: item.paymentId,
                 purchasedAt: item.purchasedAt,
-                walrusBlobId: item.walrusBlobId,
-                walrusFileId: item.walrusFileId,
+                filePath: item.filePath,
               },
               liked: isBookLiked(book.id, likedSet),
             } satisfies MyBook;

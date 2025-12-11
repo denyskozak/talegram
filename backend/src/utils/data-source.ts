@@ -4,7 +4,6 @@ import { Book } from '../entities/Book.js';
 import { BookProposal } from '../entities/BookProposal.js';
 import { ProposalVote } from '../entities/ProposalVote.js';
 import { Purchase } from '../entities/Purchase.js';
-import { WalrusFileRecord } from '../entities/WalrusFileRecord.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 
 const getDatabasePath = () => process.env.DATABASE_URL ?? 'database.sqlite';
@@ -13,7 +12,7 @@ const getNodeEnv = () => process.env.NODE_ENV;
 export const appDataSource = new DataSource({
   type: 'sqlite',
   database: getDatabasePath(),
-  entities: [Author, BookProposal, Book, ProposalVote, Purchase, WalrusFileRecord, CommunityMember],
+  entities: [Author, BookProposal, Book, ProposalVote, Purchase, CommunityMember],
   synchronize: true,
   logging: getNodeEnv() === 'development',
 });

@@ -6,7 +6,6 @@ import { issueAdminToken, validateAdminCredentials, verifyAdminToken } from '../
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { Author } from '../entities/Author.js';
 import { Book } from '../entities/Book.js';
-import { WalrusFileRecord } from '../entities/WalrusFileRecord.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 
 function extractBearerToken(rawHeader: string | string[] | undefined): string | null {
@@ -109,8 +108,6 @@ const updateCommunityMemberInput = z.object({
 const deleteCommunityMemberInput = z.object({
   id: z.number().int().positive(),
 });
-
-const ONE_MONTH_SECONDS = 30 * 24 * 60 * 60;
 
 export const adminRouter = createRouter({
   login: procedure.input(loginInput).mutation(({ input }) => {
@@ -323,30 +320,6 @@ export const adminRouter = createRouter({
     await repository.remove(member);
 
     return { success: true } as const;
-  }),
-  refreshWalrusFiles: adminProcedure.mutation(async () => {
-    await initializeDataSource();
-    const repository = appDataSource.getRepository(WalrusFileRecord);
-
-    const nowSeconds = Math.floor(Date.now() / 1000);
-    const thresholdSeconds = nowSeconds + ONE_MONTH_SECONDS;
-    const expiring = await repository
-      .createQueryBuilder('wf')
-      .where('wf.expiresDate <= :threshold', { threshold: thresholdSeconds })
-      .orderBy('wf.expiresDate', 'ASC')
-      .getMany();
-
-    const expiringFiles = expiring.map((record) => ({
-      warlusFileId: record.warlusFileId,
-      expiresDate: record.expiresDate,
-      expiresInSeconds: record.expiresDate - nowSeconds,
-    }));
-
-    return {
-      expiringFiles,
-      count: expiringFiles.length,
-      checkedAt: new Date(nowSeconds * 1000).toISOString(),
-    } as const;
   }),
 });
 

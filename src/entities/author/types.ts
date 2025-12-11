@@ -9,8 +9,7 @@ export type PublishedBookSale = {
   paymentId: string;
   purchasedAt: string;
   telegramUserId: string;
-  walrusBlobId: string | null;
-  walrusFileId: string | null;
+  filePath: string | null;
 };
 
 export type PublishedBook = {

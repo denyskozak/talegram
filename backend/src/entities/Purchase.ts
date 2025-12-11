@@ -30,11 +30,8 @@ export class Purchase {
   @Column({ name: 'purchased_at', type: 'datetime' })
   purchasedAt!: Date;
 
-  @Column({ name: 'walrus_blob_id', type: 'text', nullable: true })
-  walrusBlobId!: string | null;
-
-  @Column({ name: 'walrus_file_id', type: 'text', nullable: true })
-  walrusFileId!: string | null;
+  @Column({ name: 'file_path', type: 'text', nullable: true })
+  filePath!: string | null;
 
   @Column({ name: 'download_url', type: 'text', nullable: true })
   downloadUrl!: string | null;
