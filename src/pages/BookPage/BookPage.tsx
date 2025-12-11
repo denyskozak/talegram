@@ -166,7 +166,7 @@ export default function BookPage(): JSX.Element {
 
         try {
             const deepLink =
-                buildMiniAppDirectLink({startParam: `book_${book.id}`, botUsername: 'localtalegram_bot'}) ;
+                buildMiniAppDirectLink({startParam: `book_${book.id}`, botUsername: 'talegram_org_bot'}) ;
 
             shareURL(deepLink ?? '', 'Invite you to read book');
         } catch (err) {
@@ -182,7 +182,7 @@ export default function BookPage(): JSX.Element {
 
         try {
             const deepLink =
-                buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'localtalegram_bot'}) ;
+                buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'talegram_org_bot'}) ;
 
             shareURL(deepLink ?? '', 'Invite you to read book');
         } catch (err) {

@@ -89,21 +89,21 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                         {t("splashScreen.title")}
                     </span>
                 </div>
-                <div
-                    style={{
-                        position: "absolute",
-                        bottom: '5%',
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginTop: 8,
-                        color: theme.text,
-                        fontSize: 20,
-                    }}
-                >
-                    <span>{t("splashScreen.decentralizedBy")}</span>
-                    <span style={{fontWeight: 600}}>{t("app.name")}</span>
-                </div>
+                {/*<div*/}
+                {/*    style={{*/}
+                {/*        position: "absolute",*/}
+                {/*        bottom: '5%',*/}
+                {/*        display: "flex",*/}
+                {/*        alignItems: "center",*/}
+                {/*        gap: 8,*/}
+                {/*        marginTop: 8,*/}
+                {/*        color: theme.text,*/}
+                {/*        fontSize: 20,*/}
+                {/*    }}*/}
+                {/*>*/}
+                    {/*<span>{t("splashScreen.decentralizedBy")}</span>*/}
+                    {/*<span style={{fontWeight: 600}}>{t("app.name")}</span>*/}
+                {/*</div>*/}
             </div>
             {/*</div>*/}
         </div>
