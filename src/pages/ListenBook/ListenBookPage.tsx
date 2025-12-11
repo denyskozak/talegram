@@ -36,11 +36,6 @@ export default function ListenBookPage(): JSX.Element {
     const isPreview = searchParams.get("preview") === "1";
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
 
-    useEffect(() => {
-        setAudioDuration(0);
-        setCurrentTime(0);
-    }, [audioUrl]);
-
     const audioUrl = useMemo(() => {
         if (!id) {
             return null;
@@ -99,6 +94,11 @@ export default function ListenBookPage(): JSX.Element {
             audioElement.removeEventListener("loadedmetadata", setInitialPosition);
         };
     }, [audioUrl, savedAudioPositionSeconds]);
+
+    useEffect(() => {
+        setAudioDuration(0);
+        setCurrentTime(0);
+    }, [audioUrl]);
 
     const handleAudioProgressChange = useCallback(() => {
         const audioElement = audioRef.current;
@@ -216,6 +216,7 @@ export default function ListenBookPage(): JSX.Element {
                     </Text>
                 ) : null}
                 {audioUrl ? (
+                    <>
                     <audio
                         key={id}
                         ref={audioRef}
@@ -247,6 +248,7 @@ export default function ListenBookPage(): JSX.Element {
                             <Text style={{margin: 0}}>{formatTime(audioDuration)}</Text>
                         </div>
                     </div>
+                    </>
                 ) : (
                     <Text style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
                         {t("book.listen.unavailable")}
