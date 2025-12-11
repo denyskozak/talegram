@@ -26,12 +26,15 @@ export function StartRouteHandler(): null {
         if (startParam.startsWith("reader_")) {
             const hasPreview = startParam.includes("preview_1")
             const [,bookId] = startParam.match(/reader_(.+)_books/)!;
-            navigate(`/reader/${bookId}/books?${hasPreview ? '?preview=1' : ''}`, {
+            navigate(`/reader/${bookId}/books${hasPreview ? '?preview=1' : ''}`, {
                 replace: true,
             });
             return;
         }
-       
+
+        // navigate("reader/53fb29b1-f320-4421-9afa-bc8957cafe6c/books?preview=1", {
+        //     replace: true,
+        // });
     }, [navigate, startParam]);
 
     return null;
