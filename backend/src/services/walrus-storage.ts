@@ -12,7 +12,7 @@ export const suiClient = new SuiJsonRpcClient({
     },
     uploadRelay: {
         host: 'https://upload-relay.testnet.walrus.space',
-        timeout: 60_000,
+        timeout: 10 * 60_000, // 10 min
         sendTip: {
             max: 1_000,
         },
