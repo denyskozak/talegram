@@ -33,10 +33,6 @@ export type Book = {
   audiobookMimeType?: string | null;
   audiobookFileName?: string | null;
   audiobookFileSize?: number | null;
-  fileEncryptionIv?: string | null;
-  fileEncryptionTag?: string | null;
-  audiobookFileEncryptionIv?: string | null;
-  audiobookFileEncryptionTag?: string | null;
   globalCategory?: string | null;
   authorTelegramUserId?: string | null;
   language?: string | null;

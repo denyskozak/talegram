@@ -9,7 +9,6 @@ import { Book } from '../entities/Book.js';
 import { BookProposal } from '../entities/BookProposal.js';
 import { Purchase } from '../entities/Purchase.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
-import { createBookFileDecipher, decryptBookFile } from '../services/encryption.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
 import { buildAudioPreview, buildEpubPreview } from './preview.js';
 import { respondWithError } from '../http/responses.js';
@@ -87,20 +86,6 @@ export async function fetchStoredFilesBase64(ids: string[]): Promise<Map<string,
 export async function fetchStoredFileBase64(id: string): Promise<string | null> {
   const result = await fetchStoredFilesBase64([id]);
   return result.get(id.trim()) ?? null;
-}
-
-function decodeBase64Buffer(value: string | null | undefined): Buffer | null {
-  if (typeof value !== 'string') {
-    return null;
-  }
-
-  try {
-    const decoded = Buffer.from(value, 'base64');
-    return decoded.byteLength > 0 ? decoded : null;
-  } catch (error) {
-    console.warn('Failed to decode base64 buffer', { error });
-    return null;
-  }
 }
 
 function guessExtensionFromMime(mimeType: string | null | undefined): string | null {
@@ -263,22 +248,8 @@ export async function handleBookPreviewRequest(
     const fileBuffer = await fs.readFile(filePath);
     const mimeType = params.fileKind === 'audiobook' ? book.audiobookMimeType ?? null : book.mimeType ?? null;
 
-    let decryptedBuffer = fileBuffer;
-    const iv = decodeBase64Buffer(params.fileKind === 'audiobook' ? book.audiobookFileEncryptionIv : book.fileEncryptionIv);
-    const authTag = decodeBase64Buffer(
-      params.fileKind === 'audiobook' ? book.audiobookFileEncryptionTag : book.fileEncryptionTag,
-    );
-
-    if (iv && authTag) {
-      try {
-        decryptedBuffer = decryptBookFile(fileBuffer, iv, authTag);
-      } catch (error) {
-        console.warn('Failed to decrypt stored book for preview', { bookId: normalizedBookId, filePath, error });
-      }
-    }
-
     const previewBuffer =
-      params.fileKind === 'audiobook' ? buildAudioPreview(decryptedBuffer) : await buildEpubPreview(decryptedBuffer);
+      params.fileKind === 'audiobook' ? buildAudioPreview(fileBuffer) : await buildEpubPreview(fileBuffer);
 
     const resolvedMimeType = mimeType ?? (params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
     const fileName = determineDownloadFileName(book, params.fileKind, mimeType);
@@ -375,18 +346,7 @@ export async function handleBookFileDownloadRequest(
     return;
   }
 
-  const iv = decodeBase64Buffer(params.fileKind === 'audiobook' ? book.audiobookFileEncryptionIv : book.fileEncryptionIv);
-  const authTag = decodeBase64Buffer(
-    params.fileKind === 'audiobook' ? book.audiobookFileEncryptionTag : book.fileEncryptionTag,
-  );
-
-  if (!iv || !authTag) {
-    respondWithError(res, 500, 'Missing encryption metadata');
-    return;
-  }
-
-  const decipher = createBookFileDecipher(iv, authTag);
-  await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType, transform: decipher });
+  await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType });
 }
 
 export async function handleProposalFileDownloadRequest(
@@ -468,20 +428,7 @@ export async function handleProposalFileDownloadRequest(
     return;
   }
 
-  const iv = decodeBase64Buffer(
-    params.fileKind === 'audiobook' ? proposal.audiobookFileEncryptionIv : proposal.fileEncryptionIv,
-  );
-  const authTag = decodeBase64Buffer(
-    params.fileKind === 'audiobook' ? proposal.audiobookFileEncryptionTag : proposal.fileEncryptionTag,
-  );
-
-  if (!iv || !authTag) {
-    respondWithError(res, 500, 'Missing encryption metadata');
-    return;
-  }
-
-  const decipher = createBookFileDecipher(iv, authTag);
-  await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType, transform: decipher });
+  await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType });
 }
 
 function matchesCoverFile(source: { coverFilePath?: string | null }, id: string): boolean {

@@ -8,7 +8,6 @@ import { Readable } from 'node:stream';
 import { randomUUID } from 'node:crypto';
 import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
-import { encryptBookFile } from '../encryption.js';
 import { normalizeTelegramUserId } from '../../utils/telegram.js';
 import { Author } from '../../entities/Author.js';
 
@@ -122,11 +121,6 @@ export async function createBookProposal(
     }
   }
 
-  const { encryptedData, iv, authTag } = encryptBookFile(params.file.data);
-  const audiobookEncryption = params.audiobook
-    ? encryptBookFile(params.audiobook.data)
-    : null;
-
   const proposalId = randomUUID();
   const proposalDir = path.join(STORAGE_ROOT, 'proposals', proposalId);
 
@@ -138,10 +132,10 @@ export async function createBookProposal(
 
   try {
     await Promise.all([
-      writeBufferToFile(bookFilePath, encryptedData),
+      writeBufferToFile(bookFilePath, params.file.data),
       writeBufferToFile(coverFilePath, params.cover.data),
-      audiobookEncryption && audiobookFilePath
-        ? writeBufferToFile(audiobookFilePath, audiobookEncryption.encryptedData)
+      params.audiobook && audiobookFilePath
+        ? writeBufferToFile(audiobookFilePath, params.audiobook.data)
         : Promise.resolve(),
     ]);
   } catch (error) {
@@ -197,10 +191,6 @@ export async function createBookProposal(
     fileName: params.file.name,
     fileSize: params.file.size ?? null,
     mimeType: params.file.mimeType ?? null,
-    fileEncryptionIv: iv.toString('base64'),
-    fileEncryptionTag: authTag.toString('base64'),
-    audiobookFileEncryptionIv: audiobookEncryption?.iv.toString('base64') ?? null,
-    audiobookFileEncryptionTag: audiobookEncryption?.authTag.toString('base64') ?? null,
     submittedByTelegramUserId: normalizedUploaderUserId,
     language: typeof params.language === 'string' && params.language.trim().length > 0
       ? params.language.trim()

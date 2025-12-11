@@ -60,17 +60,7 @@ export const catalogRouter = createRouter({
     .query(async ({ input }) => {
       const result = await listBooks(input ?? {});
 
-      const items = result.items.map((book) => {
-        const {
-          fileEncryptionIv,
-          fileEncryptionTag,
-          audiobookFileEncryptionIv,
-          audiobookFileEncryptionTag,
-          ...bookForClient
-        } = book;
-
-        return bookForClient;
-      });
+      const items = result.items.map((book) => ({ ...book }));
 
       return { ...result, items };
     }),
@@ -87,15 +77,7 @@ export const catalogRouter = createRouter({
       }
     }
 
-    const {
-      fileEncryptionIv,
-      fileEncryptionTag,
-      audiobookFileEncryptionIv,
-      audiobookFileEncryptionTag,
-      ...bookForClient
-    } = book;
-
-    return bookForClient;
+    return book;
   }),
   listReviews: procedure
     .input(listReviewsInput)
