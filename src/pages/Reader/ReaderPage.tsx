@@ -11,6 +11,7 @@ import {getTelegramUserId} from "@/shared/lib/telegram";
 import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
 import {catalogApi} from "@/entities/book/api.ts";
 import {Book} from "@/entities/book/types.ts";
+import {useLaunchParams} from "@tma.js/sdk-react";
 
 type ReaderRouteParams = {
     id?: string;
@@ -27,6 +28,8 @@ export default function ReaderPage(): ReactNode | undefined {
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
+
     if (id === undefined || type === undefined) return null;
 
 
@@ -55,7 +58,7 @@ export default function ReaderPage(): ReactNode | undefined {
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {previewMessage ? (
-                <div style={{marginTop: "14vh"}}>
+                <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
                         {previewMessage}
                     </Text>
