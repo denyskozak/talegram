@@ -217,6 +217,8 @@
       "unavailable": "We couldn't find the audiobook for this book.",
       "unsupported": "Your browser does not support audio playback.",
       "speed": "Speed",
+      "play": "Play",
+      "pause": "Pause",
       "seek": "Seek position",
       "seekBackward": "Rewind {{seconds}}s",
       "seekForward": "Forward {{seconds}}s"

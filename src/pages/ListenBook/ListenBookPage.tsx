@@ -33,6 +33,7 @@ export default function ListenBookPage(): JSX.Element {
     const [audioDuration, setAudioDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [playbackRate, setPlaybackRate] = useState(1);
+    const [isPlaying, setIsPlaying] = useState(false);
     const isPreview = searchParams.get("preview") === "1";
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
 
@@ -98,6 +99,7 @@ export default function ListenBookPage(): JSX.Element {
     useEffect(() => {
         setAudioDuration(0);
         setCurrentTime(0);
+        setIsPlaying(false);
     }, [audioUrl]);
 
     const handleAudioProgressChange = useCallback(() => {
@@ -113,6 +115,7 @@ export default function ListenBookPage(): JSX.Element {
 
     const handleAudioEnded = useCallback(() => {
         setCurrentTime(0);
+        setIsPlaying(false);
         setStoredBookProgress('audio_position', id, '0');
     }, [id]);
 
@@ -135,6 +138,28 @@ export default function ListenBookPage(): JSX.Element {
 
         audioElement.playbackRate = playbackRate;
     }, [playbackRate]);
+
+    useEffect(() => {
+        const audioElement = audioRef.current;
+        if (!audioElement) {
+            return;
+        }
+
+        const handlePlay = () => setIsPlaying(true);
+        const handlePause = () => setIsPlaying(false);
+
+        audioElement.addEventListener("play", handlePlay);
+        audioElement.addEventListener("playing", handlePlay);
+        audioElement.addEventListener("pause", handlePause);
+        audioElement.addEventListener("ended", handlePause);
+
+        return () => {
+            audioElement.removeEventListener("play", handlePlay);
+            audioElement.removeEventListener("playing", handlePlay);
+            audioElement.removeEventListener("pause", handlePause);
+            audioElement.removeEventListener("ended", handlePause);
+        };
+    }, []);
 
     const handlePlaybackRateChange = useCallback((rate: number) => {
         setPlaybackRate(rate);
@@ -186,6 +211,22 @@ export default function ListenBookPage(): JSX.Element {
         }
     }, []);
 
+    const handleTogglePlay = useCallback(() => {
+        const audioElement = audioRef.current;
+
+        if (!audioElement) {
+            return;
+        }
+
+        if (audioElement.paused) {
+            void audioElement.play().catch((error) => {
+                console.warn("Failed to start playback", error);
+            });
+        } else {
+            audioElement.pause();
+        }
+    }, []);
+
     return (
         <div
             style={{
@@ -220,10 +261,11 @@ export default function ListenBookPage(): JSX.Element {
                     <audio
                         key={id}
                         ref={audioRef}
-                        controls
                         autoPlay
+                        preload="metadata"
                         src={audioUrl}
-                        style={{width: "100%"}}
+                        style={{display: "none"}}
+                        controlsList="nodownload noplaybackrate noremoteplayback"
                         onLoadedMetadata={handleAudioLoadedMetadata}
                         onDurationChange={handleAudioLoadedMetadata}
                         onTimeUpdate={handleAudioProgressChange}
@@ -232,20 +274,30 @@ export default function ListenBookPage(): JSX.Element {
                     >
                         {t("book.listen.unsupported")}
                     </audio>
-                    <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                        <input
-                            aria-label={t("book.listen.seek")}
-                            type="range"
-                            min={0}
-                            max={audioDuration || 0}
-                            step={1}
-                            value={Math.min(currentTime, audioDuration || currentTime)}
-                            onChange={handleManualSeek}
-                            style={{width: "100%"}}
-                        />
-                        <div style={{display: "flex", justifyContent: "space-between", color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
-                            <Text style={{margin: 0}}>{formatTime(currentTime)}</Text>
-                            <Text style={{margin: 0}}>{formatTime(audioDuration)}</Text>
+                    <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12}}>
+                            <Button mode="filled" size="s" onClick={handleTogglePlay}>
+                                {isPlaying ? t("book.listen.pause") : t("book.listen.play")}
+                            </Button>
+                            <Text style={{margin: 0, color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
+                                {book?.title ?? t("book.listen.title")}
+                            </Text>
+                        </div>
+                        <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                            <input
+                                aria-label={t("book.listen.seek")}
+                                type="range"
+                                min={0}
+                                max={audioDuration || 0}
+                                step={1}
+                                value={Math.min(currentTime, audioDuration || currentTime)}
+                                onChange={handleManualSeek}
+                                style={{width: "100%"}}
+                            />
+                            <div style={{display: "flex", justifyContent: "space-between", color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
+                                <Text style={{margin: 0}}>{formatTime(currentTime)}</Text>
+                                <Text style={{margin: 0}}>{formatTime(audioDuration)}</Text>
+                            </div>
                         </div>
                     </div>
                     </>

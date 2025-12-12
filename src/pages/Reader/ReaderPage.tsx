@@ -39,11 +39,13 @@ export default function ReaderPage(): ReactNode | undefined {
         : buildBookFileDownloadUrl(id || '', 'book', type, {telegramUserId: telegramUserId});
 
     return (
-        <div style={{padding: "12px", display: "flex", flexDirection: "column", gap: 12}}>
+        <div style={{display: "flex", flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {previewMessage ? (
-                <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
-                    {previewMessage}
-                </Text>
+                <div style={{padding: "12px"}}>
+                    <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
+                        {previewMessage}
+                    </Text>
+                </div>
             ) : null}
             <ReadingOverlay
                 fileUrl={downloadUrl}
