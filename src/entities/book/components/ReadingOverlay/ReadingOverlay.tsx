@@ -210,10 +210,17 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             ...ReactReaderStyle.reader,
             inset: '0  24px'
         },
+        tocButtonBarTop: {
+            ...ReactReaderStyle.tocButtonBarTop,
+            background:  theme === 'dark' ? darkText : lightText,
+            height: '4px',
+            zIndex: 4,
+        },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
             background:  theme === 'dark' ? darkText : lightText,
             zIndex: 4,
+            height: '4px',
         },
         tocButton: {
             ...ReactReaderStyle.tocButton,
