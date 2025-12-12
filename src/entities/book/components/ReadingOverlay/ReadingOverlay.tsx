@@ -214,12 +214,12 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             ...ReactReaderStyle.tocButtonBarTop,
             background:  theme === 'dark' ? darkText : lightText,
             height: '4px',
-            zIndex: 4,
+            zIndex: 100,
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
             background:  theme === 'dark' ? darkText : lightText,
-            zIndex: 4,
+            zIndex: 100,
             height: '4px',
         },
         tocButton: {
@@ -231,7 +231,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             width: '3em',
             height: '3em',
             opacity: 0.8,
-            zIndex: 3,
+            zIndex: 99,
         },
 
 
