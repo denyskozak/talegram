@@ -6,11 +6,12 @@ import {Card, Text, Title} from "@telegram-apps/telegram-ui";
 
 import {useTMA} from "@/app/providers/TMAProvider";
 import {buildBookFileDownloadUrl, buildBookPreviewDownloadUrl} from "@/shared/api/storage";
-import {getTelegramUserId} from "@/shared/lib/telegram";
+import {buildMiniAppDirectLink, getTelegramUserId} from "@/shared/lib/telegram";
 import {Button} from "@/shared/ui/Button";
 import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
 import {catalogApi} from "@/entities/book/api";
 import type {Book} from "@/entities/book/types";
+import {shareURL} from "@tma.js/sdk";
 
 const SEEK_OFFSET_SECONDS = 30;
 
@@ -25,10 +26,19 @@ export default function ListenBookPage(): JSX.Element {
         [launchParams],
     );
     const [book, setBook] = useState<Book | null>(null);
+    const sharedAudioPositionSeconds = useMemo(() => {
+        const value = searchParams.get("time");
+        const parsed = value ? Number.parseFloat(value) : NaN;
+
+        return Number.isFinite(parsed) ? parsed : undefined;
+    }, [searchParams]);
+
     const savedAudioPositionSeconds = useMemo(
         () => Number.parseFloat(getStoredBookProgress('audio_position', id, '0')),
         [id],
     );
+
+    const initialAudioPositionSeconds = sharedAudioPositionSeconds ?? savedAudioPositionSeconds;
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [audioDuration, setAudioDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
@@ -69,12 +79,12 @@ export default function ListenBookPage(): JSX.Element {
         }
 
         const setInitialPosition = () => {
-            if (!Number.isFinite(savedAudioPositionSeconds) || savedAudioPositionSeconds <= 0) {
+            if (!Number.isFinite(initialAudioPositionSeconds) || initialAudioPositionSeconds <= 0) {
                 return;
             }
 
             const duration = Number.isFinite(audioElement.duration) ? audioElement.duration : null;
-            const target = duration ? Math.min(savedAudioPositionSeconds, duration) : savedAudioPositionSeconds;
+            const target = duration ? Math.min(initialAudioPositionSeconds, duration) : initialAudioPositionSeconds;
             if (target > 0) {
                 try {
                     audioElement.currentTime = target;
@@ -94,7 +104,7 @@ export default function ListenBookPage(): JSX.Element {
         return () => {
             audioElement.removeEventListener("loadedmetadata", setInitialPosition);
         };
-    }, [audioUrl, savedAudioPositionSeconds]);
+    }, [audioUrl, initialAudioPositionSeconds]);
 
     useEffect(() => {
         setAudioDuration(0);
@@ -227,6 +237,34 @@ export default function ListenBookPage(): JSX.Element {
         }
     }, []);
 
+    const handleShareAudio = useCallback(() => {
+        if (!id || !type || !book) {
+            return;
+        }
+
+        const parts = [`listen_${id}_${type}`];
+        const currentSeconds = Math.floor(audioRef.current?.currentTime ?? currentTime ?? 0);
+
+        if (Number.isFinite(currentSeconds) && currentSeconds > 0) {
+            parts.push(`time_${currentSeconds}`);
+        }
+
+        if (isPreview) {
+            parts.push("preview_1");
+        }
+
+        const deepLink = buildMiniAppDirectLink({
+            botUsername: "talegram_org_bot",
+            startParam: parts.join("_"),
+        });
+
+        try {
+            shareURL(deepLink ?? "", book.title);
+        } catch (error) {
+            console.error("Failed to share audiobook", error);
+        }
+    }, [book, currentTime, id, isPreview, type]);
+
     return (
         <div
             style={{
@@ -335,6 +373,13 @@ export default function ListenBookPage(): JSX.Element {
                         </Button>
                     ))}
                 </div>
+                {audioUrl ? (
+                    <div style={{display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center"}}>
+                        <Button mode="outline" size="s" onClick={handleShareAudio}>
+                            {t("book.share")}
+                        </Button>
+                    </div>
+                ) : null}
             </Card>
         </div>
     );

@@ -24,11 +24,53 @@ export function StartRouteHandler(): null {
         }
         
         if (startParam.startsWith("reader_")) {
-            const hasPreview = startParam.includes("preview_1")
-            const [,bookId] = startParam.match(/reader_(.+)_books/)!;
-            navigate(`/reader/${bookId}/books${hasPreview ? '?preview=1' : ''}`, {
-                replace: true,
-            });
+            const hasPreview = startParam.includes("preview_1");
+            const [, bookId, encodedLocation] = startParam.match(/reader_([^_]+)_books(?:_loc_([^_]+))?/) || [];
+
+            if (bookId) {
+                const query = new URLSearchParams();
+
+                if (hasPreview) {
+                    query.set("preview", "1");
+                }
+
+                if (encodedLocation) {
+                    query.set("location", decodeURIComponent(encodedLocation));
+                }
+
+                const queryString = query.toString();
+
+                navigate(`/reader/${bookId}/books${queryString ? `?${queryString}` : ""}`, {
+                    replace: true,
+                });
+            }
+
+            return;
+        }
+
+        if (startParam.startsWith("listen_")) {
+            const hasPreview = startParam.includes("preview_1");
+            const [, bookId, contentType, timeSeconds] =
+                startParam.match(/listen_([^_]+)_([^_]+)(?:_time_(\d+))?/) || [];
+
+            if (bookId && contentType) {
+                const query = new URLSearchParams();
+
+                if (hasPreview) {
+                    query.set("preview", "1");
+                }
+
+                if (timeSeconds) {
+                    query.set("time", timeSeconds);
+                }
+
+                const queryString = query.toString();
+
+                navigate(`/listen/${bookId}/${contentType}${queryString ? `?${queryString}` : ""}`, {
+                    replace: true,
+                });
+            }
+
             return;
         }
 

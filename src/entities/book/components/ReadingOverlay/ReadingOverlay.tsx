@@ -134,15 +134,24 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         }
 
         const excerpt = `\n\n“${selection}”\n\nExcerpt From\n${book.title}\n${book.authors.join(', ')}\nThis material may be protected by copyright`;
-        const deepLink =
-            buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'talegram_org_bot'}) ;
+        const startParamParts = [`reader_${book.id}_books`];
+
+        if (location) {
+            startParamParts.push(`loc_${encodeURIComponent(location)}`);
+        }
+
+        if (book.price !== 0) {
+            startParamParts.push("preview_1");
+        }
+
+        const deepLink = buildMiniAppDirectLink({startParam: startParamParts.join("_"), botUsername: 'talegram_org_bot'}) ;
 
         try {
             shareURL(deepLink ?? '', excerpt);
         } catch (error) {
             console.error("Failed to share selection", error);
         }
-    }, [selection]);
+    }, [book, location, selection]);
 
     useEffect(() => {
         onLocationChange?.(location)

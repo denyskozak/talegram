@@ -28,9 +28,15 @@ export default function ReaderPage(): ReactNode | undefined {
         [launchParams],
     );
     if (id === undefined || type === undefined) return null;
+
+    const sharedLocation = useMemo(
+        () => searchParams.get('location') ?? undefined,
+        [searchParams],
+    );
+
     const initialReaderLocation = useMemo(
-        () => getStoredBookProgress('reader_location', id, '0'),
-        [id],
+        () => sharedLocation ?? getStoredBookProgress('reader_location', id, '0'),
+        [id, sharedLocation],
     );
     const handleReaderLocationChange = (location: string) => {
         setStoredBookProgress('reader_location', id, String(location));
