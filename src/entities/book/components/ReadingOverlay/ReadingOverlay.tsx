@@ -98,7 +98,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             return;
         }
 
-        const excerpt = `“${selection}”\n\nExcerpt From\n${book.title}\n${book.authors.join(', ')}\nThis material may be protected by copyright`;
+        const excerpt = `\n\n“${selection}”\n\nExcerpt From\n${book.title}\n${book.authors.join(', ')}\nThis material may be protected by copyright`;
         const deepLink =
             buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'talegram_org_bot'}) ;
 
@@ -150,7 +150,29 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         },
         reader: {
             ...ReactReaderStyle.reader,
-            inset: '0 16px'
+            inset: '0  24px'
+        },
+        tocButtonBar: {
+            ...ReactReaderStyle.tocButtonBar,
+            background: themeSetting.text,
+            zIndex: 4,
+
+            // position: "absolute",
+            // top: '10%',
+            // left: '5%'
+
+        },
+        tocButton: {
+            ...ReactReaderStyle.tocButton,
+            background:  themeSetting.section,
+            width: '3em',
+            height: '3em',
+            opacity: 0.9,
+            zIndex: 3,
+        },
+        tocButtonExpanded: {
+            ...ReactReaderStyle.tocButtonExpanded,
+            background:  themeSetting.section,
         },
     }
 
@@ -160,10 +182,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         readerArea: {
             ...baseReaderStyle.readerArea,
             backgroundColor: lightBackground,
-        },
-        tocButtonBar: {
-            ...ReactReaderStyle.tocButtonBar,
-            background: 'black',
         },
     }
 
@@ -183,24 +201,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             ...ReactReaderStyle.tocArea,
             background: '#212121',
         },
-        tocButtonExpanded: {
-            ...ReactReaderStyle.tocButtonExpanded,
-            background: '#212121',
-        },
-        tocButtonBar: {
-            ...ReactReaderStyle.tocButtonBar,
-            background: themeSetting.text,
-            opacity: 0.9,
-            zIndex: 3,
-            position: "fixed",
-            top: '10%',
-            left: '5%'
 
-        },
-        tocButton: {
-            ...ReactReaderStyle.tocButton,
-            color: 'white',
-        },
+
+
+
     }
 
     const epubViewStyles = {
@@ -211,6 +215,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             margin: 0,
             padding: 0,
         },
+
         viewHolder: {
             // внутренний canvas epub.js
             width: '100%',
