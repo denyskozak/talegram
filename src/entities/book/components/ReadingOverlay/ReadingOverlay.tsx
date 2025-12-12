@@ -226,7 +226,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         tocButton: {
             ...ReactReaderStyle.tocButton,
             position: "fixed",
-            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? isPreview ? "18vh" : '12vh' : '5vh',
+            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? isPreview ? "25vh" : '12vh' : '5vh',
             left: '5vw',
             background:  theme === 'dark' ? darkBackground : lightBackground,
             width: '3em',
