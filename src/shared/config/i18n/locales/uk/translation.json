@@ -2,13 +2,13 @@
   "app": {
     "name": "Talegram",
     "demo": {
-      "title": "Demo mode",
-      "description": "You are outside Telegram. Some features are limited."
+      "title": "Демо режим",
+      "description": "Ви поза Telegram. Деякі функції обмежені."
     }
   },
   "splashScreen": {
-    "title": "Digital Books Marketplace",
-    "subtitle": "text and audio formats"
+    "title": "Маркетплейс цифрових книг",
+    "subtitle": "текстові та аудіоформати"
   },
   "languages": {
     "en": "Англійська",
@@ -16,456 +16,456 @@
     "uk": "Українська"
   },
   "header": {
-    "languageToggle": "Switch language (current: {{language}})",
+    "languageToggle": "Перемкнути мову (поточна: {{language}})",
     "account": {
-      "button": "My account"
+      "button": "Мій акаунт"
     },
     "wallet": {
-      "connect": "Connect wallet",
-      "connected": "Wallet: {{wallet}}",
-      "connectedToast": "Wallet {{wallet}} connected (demo)",
-      "select": "Choose a wallet"
+      "connect": "Під'єднати гаманець",
+      "connected": "Гаманець: {{wallet}}",
+      "connectedToast": "Гаманець {{wallet}} під'єднано (демо)",
+      "select": "Виберіть гаманець"
     }
   },
   "navigation": {
-    "label": "Primary navigation",
-    "account": "My account",
-    "books": "Books",
-    "settings": "Settings"
+    "label": "Головна навігація",
+    "account": "Мій акаунт",
+    "books": "Книги",
+    "settings": "Налаштування"
   },
   "footer": {
-    "languageLabel": "Language to",
-    "contact": "Contact",
-    "themeToggleLabel": "Switch to {{mode}}",
+    "languageLabel": "Мова інтерфейсу",
+    "contact": "Контакти",
+    "themeToggleLabel": "Перемкнути на {{mode}}",
     "theme": {
-      "light": "light mode",
-      "dark": "dark mode"
+      "light": "світлий режим",
+      "dark": "темний режим"
     }
   },
   "errors": {
-    "genericTitle": "Something went wrong",
-    "loadCategories": "Failed to load categories",
-    "loadGlobalCategories": "Failed to load global categories",
-    "loadBooks": "Failed to load books",
-    "loadBook": "Failed to load the book",
-    "loadReviews": "Failed to load reviews",
-    "submitReview": "Could not submit review",
-    "fetchCategory": "Failed to fetch category",
-    "categoryNotFound": "Category not found",
-    "bookNotFound": "Book not found"
+    "genericTitle": "Щось пішло не так",
+    "loadCategories": "Не вдалося завантажити категорії",
+    "loadGlobalCategories": "Не вдалося завантажити глобальні категорії",
+    "loadBooks": "Не вдалося завантажити книги",
+    "loadBook": "Не вдалося завантажити книгу",
+    "loadReviews": "Не вдалося завантажити відгуки",
+    "submitReview": "Не вдалося надіслати відгук",
+    "fetchCategory": "Не вдалося отримати категорію",
+    "categoryNotFound": "Категорія не знайдена",
+    "bookNotFound": "Книга не знайдена"
   },
   "homeCategories": {
-    "title": "Categories",
-    "comingSoon": "Coming Soon",
-    "searchPlaceholder": "Search categories",
+    "title": "Категорії",
+    "comingSoon": "Скоро буде",
+    "searchPlaceholder": "Пошук категорій",
     "alphaBanner": {
-      "title": "Alpha version",
-      "description": "Most functions disabled."
+      "title": "Альфа версія",
+      "description": "Більшість функцій вимкнені."
     },
-    "emptyTitle": "Nothing found",
-    "emptyDescription": "Try changing the query",
-    "popularBooksTitle": "Popular books",
-    "popularBooksEmptyTitle": "No popular books yet",
-    "popularBooksEmptyDescription": "Check back soon for fresh picks",
-    "popularBooksShowAll": "View all popular"
+    "emptyTitle": "Нічого не знайдено",
+    "emptyDescription": "Спробуйте змінити запит",
+    "popularBooksTitle": "Популярні книги",
+    "popularBooksEmptyTitle": "Поки немає популярних книг",
+    "popularBooksEmptyDescription": "Перевіряйте пізніше — будуть новинки",
+    "popularBooksShowAll": "Переглянути всі популярні"
   },
   "filters": {
-    "searchPlaceholder": "Search books",
+    "searchPlaceholder": "Пошук книг",
     "sort": {
-      "popular": "Popular",
-      "rating": "Top rated",
-      "new": "New"
+      "popular": "Популярні",
+      "rating": "Найвищий рейтинг",
+      "new": "Нові"
     }
   },
   "search": {
-    "title": "Search",
-    "placeholder": "Search books and categories",
-    "error": "Could not complete the search",
+    "title": "Пошук",
+    "placeholder": "Пошук книг і категорій",
+    "error": "Не вдалося виконати пошук",
     "empty": {
-      "title": "Start typing",
-      "description": "We will show matching books and categories"
+      "title": "Почніть вводити",
+      "description": "Ми покажемо відповідні книги та категорії"
     },
     "results": {
-      "categories": "Categories",
-      "books": "Books",
-      "noCategories": "No categories match your request",
-      "noBooks": "No books match your request",
-      "adjustQuery": "Try another query"
+      "categories": "Категорії",
+      "books": "Книги",
+      "noCategories": "Немає категорій за вашим запитом",
+      "noBooks": "Немає книг за вашим запитом",
+      "adjustQuery": "Спробуйте інший запит"
     }
   },
   "categoryBooks": {
-    "emptyDescription": "Adjust the filters or try a different query"
+    "emptyDescription": "Змініть фільтри або спробуйте інший запит"
   },
   "common": {
-    "notFound": "Nothing found",
-    "tryLater": "Try refreshing the page later"
+    "notFound": "Нічого не знайдено",
+    "tryLater": "Спробуйте оновити сторінку пізніше"
   },
   "buttons": {
-    "retry": "Retry",
-    "goHome": "Go home",
-    "read": "Read 📖",
-    "download": "Download ⬇️",
-    "buy": "Buy",
-    "subscribe": "Subscribe",
-    "search": "Search",
-    "collapse": "Show less",
-    "expand": "Show more",
-    "confirm": "Complete",
-    "showMore": "Show more",
-    "cancel": "Cancel"
+    "retry": "Спробувати ще раз",
+    "goHome": "На головну",
+    "read": "Читати 📖",
+    "download": "Завантажити ⬇️",
+    "buy": "Купити",
+    "subscribe": "Підписатися",
+    "search": "Пошук",
+    "collapse": "Показати менше",
+    "expand": "Показати більше",
+    "confirm": "Підтвердити",
+    "showMore": "Показати більше",
+    "cancel": "Скасувати"
   },
   "settings": {
-    "title": "Settings",
-    "language": "App language",
-    "languageNote": "Use the toggle below to switch languages instantly.",
+    "title": "Налаштування",
+    "language": "Мова додатку",
+    "languageNote": "Використовуйте перемикач нижче для миттєвої зміни мови.",
     "contact": {
-      "title": "Contact us",
-      "description": "Need help or want to request payouts? Message our Telegram team.",
-      "button": "Message @lawyerdsupport"
+      "title": "Зв’язатися з нами",
+      "description": "Потрібна допомога або хочете запросити виплати? Напишіть нашій Telegram-команді.",
+      "button": "Написати @lawyerdsupport"
     },
     "about": {
-      "title": "About us",
-      "description": "A marketplace inside Telegram: authors receive 80% of sales revenue, and our anti-censorship community shares in the project's income.",
-      "storage": "We store books in a decentralized way through Walrus."
+      "title": "Про нас",
+      "description": "Маркетплейс у Telegram: автори отримують 80% доходу від продажів, а наша антицензурна спільнота ділиться прибутком проєкту.",
+      "storage": "Ми зберігаємо книги децентралізовано через Walrus."
     },
     "community": {
-      "title": "Community",
-      "description": "Join voting for new books and earn a floating share of the platform's revenue. Contact us to activate collaboration and link your account to the community program."
+      "title": "Спільнота",
+      "description": "Долучайтеся до голосування за нові книги й отримуйте плаваючу частку доходу платформи. Зв’яжіться з нами, щоб активувати співпрацю та прив’язати акаунт до програми спільноти."
     },
-    "description": "More options are on the way — stay tuned for additional settings."
+    "description": "Н незабаром буде більше опцій — слідкуйте за оновленнями."
   },
   "book": {
-    "cardAria": "Book {{title}}",
-    "coverAlt": "{{title}} book cover",
-    "fallbackCategoryTitle": "Category",
-    "share": "Share",
+    "cardAria": "Книга {{title}}",
+    "coverAlt": "Обкладинка книги {{title}}",
+    "fallbackCategoryTitle": "Категорія",
+    "share": "Поділитися",
     "description": {
-      "title": "Description",
-      "showLess": "Show less",
-      "showMore": "Show more"
+      "title": "Опис",
+      "showLess": "Показати менше",
+      "showMore": "Показати більше"
     },
-    "reviewsSection": "Reviews",
-    "similarSection": "Similar books",
-    "similarEmptyTitle": "Nothing to recommend yet",
-    "similarEmptyDescription": "We are working on recommendations",
+    "reviewsSection": "Відгуки",
+    "similarSection": "Схожі книги",
+    "similarEmptyTitle": "Поки немає рекомендацій",
+    "similarEmptyDescription": "Ми працюємо над рекомендаціями",
     "audiobook": {
-      "title": "Audiobook",
-      "locked": "Purchase the book to listen to the audiobook.",
-      "audioUnsupported": "Your browser does not support audio playback.",
-      "listenPrompt": "Open the audiobook player to keep listening.",
-      "badge": "Audiobook included"
+      "title": "Аудіокнига",
+      "locked": "Щоб слухати аудіокнигу, придбайте книгу.",
+      "audioUnsupported": "Ваш браузер не підтримує відтворення аудіо.",
+      "listenPrompt": "Відкрийте програвач аудіокниги, щоб продовжити прослуховування.",
+      "badge": "Аудіокнига включена"
     },
-    "subscribeDescription": "A subscription opens access to new releases and this book.",
-    "buyDescription": "You will get full access to the book after completing the purchase.",
+    "subscribeDescription": "Підписка відкриває доступ до новинок і цієї книги.",
+    "buyDescription": "Після покупки ви отримаєте повний доступ до книги.",
     "modalTitle": {
-      "buy": "Purchase",
-      "subscribe": "Subscription"
+      "buy": "Покупка",
+      "subscribe": "Підписка"
     },
     "actions": {
-      "read": "Read 📖",
-      "download": "Download ⬇️",
-      "share-read": "Share Read ⬆\uFE0F",
-      "share-preview": "Share Preview ⬆\uFE0F",
-      "buy": "Buy",
-      "subscribe": "Subscribe",
-      "listen": "Listen 👂",
-      "preview": "Preview 📖",
-      "previewAudio": "Preview audio 👂",
-      "confirm": "Complete",
-      "like": "Like \"{{title}}\"",
-      "unlike": "Remove like from \"{{title}}\""
+      "read": "Читати 📖",
+      "download": "Завантажити ⬇️",
+      "share-read": "Поділитися читанням ⬆️",
+      "share-preview": "Поділитися уривком ⬆️",
+      "buy": "Купити",
+      "subscribe": "Підписатися",
+      "listen": "Слухати 👂",
+      "preview": "Прев’ю 📖",
+      "previewAudio": "Аудіопрев’ю 👂",
+      "confirm": "Підтвердити",
+      "like": "Вподобати «{{title}}»",
+      "unlike": "Прибрати вподобання з «{{title}}»"
     },
     "reader": {
-      "title": "Reading mode",
-      "close": "Close",
-      "fontLabel": "Text size",
-      "fontDecrease": "Decrease text size",
-      "fontIncrease": "Increase text size",
+      "title": "Режим читання",
+      "close": "Закрити",
+      "fontLabel": "Розмір тексту",
+      "fontDecrease": "Зменшити текст",
+      "fontIncrease": "Збільшити текст",
       "theme": {
-        "light": "Light",
-        "sepia": "Sepia",
-        "dark": "Dark"
+        "light": "Світла",
+        "sepia": "Сепія",
+        "dark": "Темна"
       },
-      "loading": "Loading book…",
-      "loadError": "We couldn't display the book. Try downloading it instead.",
-      "demoNotice": "Demo excerpt to preview the book.",
-      "unknownAuthor": "an unknown author",
-      "sampleIntro": "An excerpt from \"{{title}}\" written by {{author}}.",
-      "sampleMiddle": "The heroes dive into {{focus}}, and every page is filled with anticipation.",
-      "sampleOutro": "Continue reading after purchase or subscription.",
-      "sampleFocusTag": "the world of \"{{tag}}\"",
-      "sampleFocusFallback": "uncharted worlds"
+      "loading": "Завантаження книги…",
+      "loadError": "Не вдалося відобразити книгу. Спробуйте завантажити її.",
+      "demoNotice": "Демо-уривок для ознайомлення.",
+      "unknownAuthor": "невідомого автора",
+      "sampleIntro": "Уривок з «{{title}}», автор — {{author}}.",
+      "sampleMiddle": "Герої занурюються у {{focus}}, а кожна сторінка наповнена очікуванням.",
+      "sampleOutro": "Продовження доступне після покупки або підписки.",
+      "sampleFocusTag": "світ «{{tag}}»",
+      "sampleFocusFallback": "незвідані світи"
     },
     "toast": {
-      "linkCopied": "Link copied",
-      "linkFailed": "Could not copy the link",
-      "accessGranted": "Access granted. Your download link is ready.",
-      "invoiceFailed": "Could not create a invoice",
-      "confirmFailed": "Could not confirm the payment",
-      "paymentCancelled": "Payment was cancelled",
-      "paymentFailed": "Payment failed",
-      "purchaseSuccess": "Purchase completed successfully",
-      "purchaseTimeout": "We could not confirm your purchase. Please try again.",
-      "readAccessRequired": "Purchase the book to read it.",
-      "listenAccessRequired": "Purchase the book to listen to the audiobook.",
-      "previewChapters": "You're reading a preview: first two chapters are free, the rest is paid.",
-      "previewAudio": "You're listening to a preview of the full audiobook.",
-      "downloadFailed": "Could not load the book file. Try again later."
+      "linkCopied": "Посилання скопійовано",
+      "linkFailed": "Не вдалося скопіювати посилання",
+      "accessGranted": "Доступ надано. Посилання на завантаження готове.",
+      "invoiceFailed": "Не вдалося створити інвойс",
+      "confirmFailed": "Не вдалося підтвердити оплату",
+      "paymentCancelled": "Платіж скасовано",
+      "paymentFailed": "Помилка платежу",
+      "purchaseSuccess": "Покупка успішно завершена",
+      "purchaseTimeout": "Не вдалося підтвердити покупку. Спробуйте ще раз.",
+      "readAccessRequired": "Придбайте книгу, щоб читати її.",
+      "listenAccessRequired": "Придбайте книгу, щоб слухати аудіоверсію.",
+      "previewChapters": "Ви читаєте прев’ю: перші два розділи безкоштовні, решта — платно.",
+      "previewAudio": "Ви слухаєте прев’ю аудіокниги.",
+      "downloadFailed": "Не вдалося завантажити файл книги. Спробуйте пізніше."
     },
     "listen": {
-      "title": "Listen to the audiobook",
-      "back": "Back",
-      "unavailable": "We couldn't find the audiobook for this book.",
-      "unsupported": "Your browser does not support audio playback.",
-      "speed": "Speed",
-      "play": "Play",
-      "pause": "Pause",
-      "seek": "Seek position",
-      "seekBackward": "Rewind {{seconds}}s",
-      "seekForward": "Forward {{seconds}}s"
+      "title": "Слухати аудіокнигу",
+      "back": "Назад",
+      "unavailable": "Аудіокнигу не знайдено.",
+      "unsupported": "Ваш браузер не підтримує відтворення аудіо.",
+      "speed": "Швидкість",
+      "play": "Відтворити",
+      "pause": "Пауза",
+      "seek": "Перехід",
+      "seekBackward": "Назад на {{seconds}}с",
+      "seekForward": "Вперед на {{seconds}}с"
     },
     "purchase": {
-      "statusTitle": "Purchase details",
-      "downloadDescription": "Use the download button above and keep the Walrus IDs below to retain access to the purchased book.",
-      "fileLabel": "Walrus file ID",
+      "statusTitle": "Деталі покупки",
+      "downloadDescription": "Використовуйте кнопку завантаження вище та збережіть Walrus ID нижче, щоб не втратити доступ.",
+      "fileLabel": "Файл Walrus ID",
       "blobLabel": "Walrus blob ID",
-      "purchasedAtLabel": "Purchased",
-      "invoiceDescription": "Open invoice in Telegram, complete the payment and return here to unlock the book.",
-      "openInvoice": "Open invoice",
-      "invoiceIdLabel": "Payment ID",
-      "confirmHelp": "Already paid? Tap the button below to refresh the status."
+      "purchasedAtLabel": "Придбано",
+      "invoiceDescription": "Відкрийте інвойс у Telegram, завершіть оплату та поверніться для розблокування книги.",
+      "openInvoice": "Відкрити інвойс",
+      "invoiceIdLabel": "ID платежу",
+      "confirmHelp": "Вже оплатили? Натисніть нижче для оновлення статусу."
     },
-    "reviewsCount": "{{count}} review",
-    "reviewsCount_plural": "{{count}} reviews",
-    "votes": "{{count}} rating",
-    "votes_plural": "{{count}} ratings"
+    "reviewsCount": "{{count}} відгук",
+    "reviewsCount_plural": "{{count}} відгуків",
+    "votes": "{{count}} оцінка",
+    "votes_plural": "{{count}} оцінок"
   },
   "reviews": {
-    "emptyTitle": "No reviews yet",
-    "emptyDescription": "Be the first to share your impressions",
-    "rating": "Rating {{value}}",
-    "loadMore": "Show more",
-    "addButton": "Write a review",
+    "emptyTitle": "Ще немає відгуків",
+    "emptyDescription": "Станьте першим, хто поділиться враженнями",
+    "rating": "Рейтинг {{value}}",
+    "loadMore": "Показати більше",
+    "addButton": "Написати відгук",
     "form": {
-      "title": "Share your thoughts",
-      "nameLabel": "Name",
-      "namePlaceholder": "How should we call you?",
-      "defaultName": "Guest reader",
-      "ratingLabel": "Rating",
-      "ratingOption": "{{value}} out of 5",
-      "textLabel": "Review",
-      "textPlaceholder": "Tell others what you liked",
-      "submit": "Send review",
-      "validation": "Please fill in your name and review text"
+      "title": "Поділіться своїми думками",
+      "nameLabel": "Ім’я",
+      "namePlaceholder": "Як до вас звертатися?",
+      "defaultName": "Гість",
+      "ratingLabel": "Оцінка",
+      "ratingOption": "{{value}} з 5",
+      "textLabel": "Відгук",
+      "textPlaceholder": "Розкажіть, що вам сподобалося",
+      "submit": "Надіслати",
+      "validation": "Будь ласка, заповніть ім’я та текст відгуку"
     },
     "toast": {
-      "success": "Review added",
-      "error": "Could not submit review"
+      "success": "Відгук додано",
+      "error": "Не вдалося надіслати відгук"
     }
   },
   "similar": {
-    "empty": "Nothing to recommend yet",
-    "aria": "Go to the book {{title}}"
+    "empty": "Поки немає рекомендацій",
+    "aria": "Перейти до книги {{title}}"
   },
   "images": {
-    "bookCover": "{{title}} book cover"
+    "bookCover": "Обкладинка книги {{title}}"
   },
   "categories": {
     "special": {
-      "mostRead": "Most read",
-      "topRated": "Top rated"
+      "mostRead": "Найбільш читані",
+      "topRated": "Найвищий рейтинг"
     },
-    "aria": "Category {{title}}",
-    "booksCount": "{{count}} book",
-    "booksCount_plural": "{{count}} books",
-    "specialCategory": "Click"
+    "aria": "Категорія {{title}}",
+    "booksCount": "{{count}} книга",
+    "booksCount_plural": "{{count}} книг",
+    "specialCategory": "Клік"
   },
   "globalCategories": {
-    "article": "Articles",
-    "book": "Books",
-    "comics": "Comics"
+    "article": "Статті",
+    "book": "Книги",
+    "comics": "Комікси"
   },
   "account": {
-    "title": "My account",
+    "title": "Мій акаунт",
     "telegramUserId": "Telegram ID: {{id}}",
-    "telegramUserIdUnavailable": "Telegram ID is not available",
-    "publishedBooks": "Published books",
+    "telegramUserIdUnavailable": "Telegram ID недоступний",
+    "publishedBooks": "Опубліковані книги",
     "menu": {
-      "myBooks": "My books",
-      "publish": "Publish a book",
-      "voting": "Voting"
+      "myBooks": "Мої книги",
+      "publish": "Опублікувати книгу",
+      "voting": "Голосування"
     },
     "published": {
-      "title": "Published books",
-      "subtitle": "Track your catalog and sales performance.",
-      "back": "Back to account",
-      "loading": "Loading published books...",
-      "retry": "Try again",
-      "empty": "You haven't published any books yet.",
-      "language": "Language: {{value}}",
-      "languageUnknown": "Unknown",
-      "publishedAt": "Published at {{value}}",
-      "price": "Price: {{value}} {{currency}}",
-      "payoutBalance": "Payout balance: {{value}} stars ⭐",
-      "payoutBalanceCondition": " (required more 1000 stars)",
-      "requestPayout": "Request payout",
-      "viewDetails": "View details",
-      "hideDetails": "Hide details",
-      "noSales": "No sales yet",
-      "saleBuyer": "Buyer ID: {{id}}",
-      "salePayment": "Payment ID: {{id}}",
-      "salePurchasedAt": "Purchased at {{value}}",
-      "loadError": "We couldn't load your published books.",
+      "title": "Опубліковані книги",
+      "subtitle": "Стежте за каталогом і результатами продажів.",
+      "back": "Назад до акаунта",
+      "loading": "Завантаження опублікованих книг...",
+      "retry": "Спробувати ще раз",
+      "empty": "Ви ще не опублікували жодної книги.",
+      "language": "Мова: {{value}}",
+      "languageUnknown": "Невідома",
+      "publishedAt": "Опубліковано {{value}}",
+      "price": "Ціна: {{value}} {{currency}}",
+      "payoutBalance": "Баланс виплат: {{value}} зірок ⭐",
+      "payoutBalanceCondition": " (потрібно більше 1000 зірок)",
+      "requestPayout": "Запросити виплату",
+      "viewDetails": "Переглянути деталі",
+      "hideDetails": "Сховати деталі",
+      "noSales": "Продажів ще не було",
+      "saleBuyer": "ID покупця: {{id}}",
+      "salePayment": "ID платежу: {{id}}",
+      "salePurchasedAt": "Придбано {{value}}",
+      "loadError": "Не вдалося завантажити опубліковані книги.",
       "details": {
-        "title": "Published book details",
-        "subtitle": "View performance and buyer information for this book.",
-        "back": "Back to published books",
-        "loading": "Loading book details...",
-        "loadError": "We couldn't load this book.",
-        "notFound": "This book is not available.",
-        "info": "Book info",
-        "buyers": "Buyers",
-        "earnings": "Total earned: {{value}} {{currency}}",
-        "payoutBalance": "Payout balance: {{value}} stars",
-        "salesCount": "{{count}} sale",
-        "salesCount_plural": "{{count}} sales"
+        "title": "Деталі опублікованої книги",
+        "subtitle": "Перегляньте статистику та інформацію про покупців.",
+        "back": "Назад до списку книг",
+        "loading": "Завантаження деталей...",
+        "loadError": "Не вдалося завантажити дану книгу.",
+        "notFound": "Ця книга недоступна.",
+        "info": "Інформація про книгу",
+        "buyers": "Покупці",
+        "earnings": "Зароблено: {{value}} {{currency}}",
+        "payoutBalance": "Баланс виплат: {{value}} зірок",
+        "salesCount": "{{count}} продаж",
+        "salesCount_plural": "{{count}} продажів"
       }
     },
     "myBooks": {
-      "title": "My TON bookshelf",
-      "description": "Books you've purchased in the TON marketplace.",
-      "coverAlt": "Cover of {{title}}",
+      "title": "Моя TON книжкова полиця",
+      "description": "Книги, які ви придбали на маркетплейсі TON.",
+      "coverAlt": "Обкладинка «{{title}}»",
       "tonBadge": "TON NFT",
       "status": {
-        "owned": "Owned",
-        "listed": "Listed for sale",
-        "liked": "Liked"
+        "owned": "Придбано",
+        "listed": "Виставлено на продаж",
+        "liked": "Вподобано"
       },
-      "purchased": "Purchased {{value}}",
-      "paymentId": "Payment ID {{id}}",
-      "loading": "Loading your books...",
-      "empty": "You haven't purchased any books yet.",
-      "emptyLiked": "You haven't liked any books yet.",
-      "loadError": "We couldn't load your bookshelf.",
-      "retry": "Try again",
+      "purchased": "Придбано {{value}}",
+      "paymentId": "ID платежу {{id}}",
+      "loading": "Завантаження ваших книг...",
+      "empty": "Ви ще не придбали жодної книги.",
+      "emptyLiked": "Ви ще не вподобали жодної книги.",
+      "loadError": "Не вдалося завантажити вашу полицю.",
+      "retry": "Спробувати ще раз",
       "filters": {
-        "purchased": "Purchased",
-        "liked": "Liked"
+        "purchased": "Придбані",
+        "liked": "Вподобані"
       },
       "actions": {
-        "read": "Read 📖",
-        "download": "Download ⬇️"
+        "read": "Читати 📖",
+        "download": "Завантажити ⬇️"
       },
-      "like": "Like \"{{title}}\"",
-      "unlike": "Remove like from \"{{title}}\"",
+      "like": "Вподобати «{{title}}»",
+      "unlike": "Прибрати вподобання з «{{title}}»",
       "toast": {
-        "missingFile": "The download link isn't ready yet. Please try again soon.",
-        "downloadError": "We couldn't download your book. Try again later."
+        "missingFile": "Посилання для завантаження ще не готове. Спробуйте згодом.",
+        "downloadError": "Не вдалося завантажити книгу. Спробуйте пізніше."
       }
     },
     "publish": {
-      "title": "Publish a new book",
-      "description": "Prepare your manuscript and submit it for the marketplace.",
-      "restrictedAlert": "Only approved authors can submit book proposals 🚫",
+      "title": "Опублікувати нову книгу",
+      "description": "Підготуйте рукопис і надішліть його до маркетплейсу.",
+      "restrictedAlert": "Тільки підтверджені автори можуть надсилати книги 🚫",
       "form": {
         "name": {
-          "label": "Book title",
-          "placeholder": "Enter the book title"
+          "label": "Назва книги",
+          "placeholder": "Введіть назву книги"
         },
         "author": {
-          "label": "Author",
-          "placeholder": "Enter the author name"
+          "label": "Автор",
+          "placeholder": "Введіть ім’я автора"
         },
         "globalCategory": {
-          "label": "Global category",
-          "placeholder": "Select the global category"
+          "label": "Глобальна категорія",
+          "placeholder": "Виберіть глобальну категорію"
         },
         "category": {
-          "label": "Category",
-          "placeholder": "Select the genre or collection",
+          "label": "Категорія",
+          "placeholder": "Виберіть жанр або збірку",
           "options": {
             "book": {
-              "novels": "Novels / Literary Fiction",
-              "philosophy": "Philosophy",
-              "scienceFiction": "Science Fiction",
-              "fantasy": "Fantasy",
-              "mystery": "Mystery & Thrillers",
-              "nonFiction": "Non-Fiction",
-              "selfHelp": "Self-Help & Psychology",
-              "history": "History",
-              "biographies": "Biographies & Memoirs",
-              "business": "Business & Finance",
-              "children": "Children’s Literature"
+              "novels": "Романи / Художня література",
+              "philosophy": "Філософія",
+              "scienceFiction": "Наукова фантастика",
+              "fantasy": "Фентезі",
+              "mystery": "Детективи та трилери",
+              "nonFiction": "Нон-фікшн",
+              "selfHelp": "Саморозвиток і психологія",
+              "history": "Історія",
+              "biographies": "Біографії та мемуари",
+              "business": "Бізнес і фінанси",
+              "children": "Дитяча література"
             },
             "article": {
-              "news": "News & Politics",
-              "scienceTech": "Science & Technology",
-              "business": "Business & Economics",
-              "education": "Education",
-              "sports": "Sports",
-              "entertainment": "Entertainment (movies, music, showbiz)",
-              "travel": "Travel",
-              "lifestyle": "Lifestyle",
-              "health": "Health & Medicine",
-              "culture": "Culture & Arts"
+              "news": "Новини та політика",
+              "scienceTech": "Наука та технології",
+              "business": "Бізнес та економіка",
+              "education": "Освіта",
+              "sports": "Спорт",
+              "entertainment": "Розваги (фільми, музика, шоу-бізнес)",
+              "travel": "Подорожі",
+              "lifestyle": "Стиль життя",
+              "health": "Здоров’я та медицина",
+              "culture": "Культура та мистецтво"
             },
             "comics": {
-              "superheroes": "Superheroes",
-              "manga": "Manga",
-              "fantasy": "Fantasy",
-              "scienceFiction": "Science Fiction",
-              "horror": "Horror",
-              "adventure": "Adventure",
-              "comedy": "Comedy / Satire",
-              "crime": "Crime / Noir",
-              "romance": "Romance",
-              "historical": "Historical Comics"
+              "superheroes": "Супергерої",
+              "manga": "Манґа",
+              "fantasy": "Фентезі",
+              "scienceFiction": "Наукова фантастика",
+              "horror": "Горор",
+              "adventure": "Пригоди",
+              "comedy": "Комедія / Сатира",
+              "crime": "Кримінал / Нуар",
+              "romance": "Романтика",
+              "historical": "Історичні комікси"
             }
           }
         },
         "free": {
-          "label": "Free?",
-          "hint": "Readers will access it at no cost."
+          "label": "Безкоштовно?",
+          "hint": "Читачі отримають доступ без оплати."
         },
         "price": {
-          "label": "Price in Stars",
-          "placeholder": "Enter the price",
-          "hint": "This is the amount readers will pay in Stars"
+          "label": "Ціна в Stars",
+          "placeholder": "Вкажіть ціну",
+          "hint": "Це сума, яку читач заплатить у Stars"
         },
         "hashtags": {
-          "label": "Hashtags",
-          "placeholder": "Type a hashtag and press Enter",
-          "add": "Add hashtag",
-          "hint": "Use up to {{count}} hashtags to help discovery.",
-          "empty": "No hashtags yet.",
-          "remove": "Remove hashtag {{tag}}"
+          "label": "Хештеги",
+          "placeholder": "Введіть хештег і натисніть Enter",
+          "add": "Додати хештег",
+          "hint": "Використовуйте до {{count}} хештегів для кращого пошуку.",
+          "empty": "Хештегів ще немає.",
+          "remove": "Видалити хештег {{tag}}"
         },
         "description": {
-          "label": "Description",
-          "placeholder": "Short synopsis or pitch"
+          "label": "Опис",
+          "placeholder": "Короткий синопсис або презентація"
         },
         "cover": {
-          "label": "Cover image",
-          "cta": "Upload image",
-          "placeholder": "No image selected"
+          "label": "Обкладинка",
+          "cta": "Завантажити зображення",
+          "placeholder": "Зображення не вибрано"
         },
         "audiobook": {
-          "label": "Audiobook (optional)",
-          "cta": "Upload audio",
-          "placeholder": "No audio selected",
-          "hint": "Attach MP3, WAV or M4A up to 3 GB."
+          "label": "Аудіокнига (опціонально)",
+          "cta": "Завантажити аудіо",
+          "placeholder": "Аудіо не вибрано",
+          "hint": "Підтримка MP3, WAV, M4A до 3 ГБ."
         },
         "file": {
-          "label": "EPUB file",
-          "cta": "Upload .epub",
-          "placeholder": "No file selected"
+          "label": "Файл EPUB",
+          "cta": "Завантажити .epub",
+          "placeholder": "Файл не вибрано"
         },
-        "submit": "Submit for review",
-        "notice": "Upload to secure decentralized storage can take 10s+.",
+        "submit": "Надіслати на розгляд",
+        "notice": "Завантаження до децентралізованого сховища може тривати 10+ секунд.",
         "quoteCarousel": {
           "sections": [
             {
-              "title": "Plato",
+              "title": "Платон",
               "quotes": [
                 {
                   "english": "“The beginning is the most important part of the work.”",
@@ -490,7 +490,7 @@
               ]
             },
             {
-              "title": "Aristotle",
+              "title": "Арістотель",
               "quotes": [
                 {
                   "english": "“The whole is greater than the sum of its parts.”",
@@ -509,7 +509,7 @@
                   "russian": "«Счастье зависит от нас самих.»"
                 },
                 {
-                  "english": "“The more you know, the more you realize you don’t know.”",
+                  "english": "“The more you know, the more you realize you don't know.”",
                   "russian": "«Чем больше знаешь, тем больше понимаешь, что ничего не знаешь.»"
                 }
               ]
@@ -517,99 +517,99 @@
           ]
         }
       },
-      "toastSuccess": "Book \"{{title}}\" submitted for review.",
-      "toastFallbackTitle": "your book",
-      "toastError": "Failed to submit the book. Try again later.",
-      "toastMissingFile": "Attach the PDF file before submitting.",
-      "toastMissingCover": "Add a cover image.",
-      "toastMissingGlobalCategory": "Choose the global category.",
-      "toastMissingCategory": "Choose a category for the book.",
-      "toastMissingPrice": "Set the price in Stars.",
-      "toastInvalidPrice": "Enter a non-negative number of Stars.",
-      "toastRestricted": "Only approved authors can submit book proposals.",
-      "toastHashtagInvalid": "Enter a hashtag before adding it.",
-      "toastHashtagLimit": "You can add up to {{count}} hashtags.",
+      "toastSuccess": "Книгу «{{title}}» подано на розгляд.",
+      "toastFallbackTitle": "вашу книгу",
+      "toastError": "Не вдалося надіслати книгу. Спробуйте пізніше.",
+      "toastMissingFile": "Прикріпіть файл PDF перед надсиланням.",
+      "toastMissingCover": "Додайте обкладинку.",
+      "toastMissingGlobalCategory": "Виберіть глобальну категорію.",
+      "toastMissingCategory": "Виберіть категорію книги.",
+      "toastMissingPrice": "Вкажіть ціну у Stars.",
+      "toastInvalidPrice": "Введіть невід’ємну кількість Stars.",
+      "toastRestricted": "Тільки підтверджені автори можуть подавати книги.",
+      "toastHashtagInvalid": "Введіть хештег перед додаванням.",
+      "toastHashtagLimit": "Можна додати до {{count}} хештегів.",
       "modal": {
-        "successTitle": "Proposal submitted",
-        "successDescription": "Book \"{{title}}\" is now pending review. We'll notify you once it's processed.",
-        "errorTitle": "Submission failed",
-        "errorDescription": "Something went wrong. Please try again later.",
-        "close": "Got it"
+        "successTitle": "Пропозицію надіслано",
+        "successDescription": "Книга «{{title}}» очікує на розгляд. Ми повідомимо, коли її буде опрацьовано.",
+        "errorTitle": "Помилка надсилання",
+        "errorDescription": "Щось пішло не так. Спробуйте пізніше.",
+        "close": "Гаразд"
       }
     },
     "voting": {
-      "title": "Editorial voting",
-      "description": "Review incoming book proposals and decide their future.",
-      "threshold": "{{required}} approvals are required. Authorized voters: {{count}}.",
-      "notAllowed": "Voting is limited to Community member.",
-      "empty": "No book proposals are waiting for your vote.",
-      "loading": "Loading proposals...",
-      "loadError": "Failed to load proposals.",
-      "progress": "{{positive}} / {{required}} approvals • {{negative}} rejections",
+      "title": "Редакційне голосування",
+      "description": "Переглядайте надіслані пропозиції та вирішуйте їхню долю.",
+      "threshold": "Потрібно {{required}} схвалень. Уповноважених голосуючих: {{count}}.",
+      "notAllowed": "Голосування доступне лише членам Спільноти.",
+      "empty": "Немає пропозицій, що очікують на ваш голос.",
+      "loading": "Завантаження пропозицій...",
+      "loadError": "Не вдалося завантажити пропозиції.",
+      "progress": "{{positive}} / {{required}} схвалень • {{negative}} відхилень",
       "youVoted": {
-        "approve": "You voted to approve this book.",
-        "reject": "You voted to reject this book."
+        "approve": "Ви проголосували за схвалення.",
+        "reject": "Ви проголосували за відхилення."
       },
       "actions": {
-        "approve": "Approve",
-        "reject": "Reject",
-        "viewDetails": "View details",
-        "download": "Download book ⬇️"
+        "approve": "Схвалити",
+        "reject": "Відхилити",
+        "viewDetails": "Деталі",
+        "download": "Завантажити книгу ⬇️"
       },
-      "downloadError": "Could not download the manuscript. Try again later.",
-      "price": "Price: {{value}} ⭐",
-      "priceWithCurrency": "Price: {{value}} {{currency}}",
-      "coverAlt": "Cover of \"{{title}}\"",
+      "downloadError": "Не вдалося завантажити рукопис. Спробуйте пізніше.",
+      "price": "Ціна: {{value}} ⭐",
+      "priceWithCurrency": "Ціна: {{value}} {{currency}}",
+      "coverAlt": "Обкладинка «{{title}}»",
       "toast": {
-        "submitted": "Vote saved",
-        "approved": "Proposal approved and moved to the library",
-        "rejected": "Proposal rejected",
-        "error": "Could not submit the vote. Try again later."
+        "submitted": "Голос збережено",
+        "approved": "Пропозицію схвалено і додано до бібліотеки",
+        "rejected": "Пропозицію відхилено",
+        "error": "Не вдалося надіслати голос. Спробуйте пізніше."
       }
     },
     "proposalDetails": {
-      "back": "Back to proposals",
-      "loading": "Loading proposal...",
-      "loadError": "We couldn't load this proposal. Try again later.",
+      "back": "Назад до пропозицій",
+      "loading": "Завантаження пропозиції...",
+      "loadError": "Не вдалося завантажити цю пропозицію. Спробуйте пізніше.",
       "sections": {
-        "overview": "Overview",
-        "description": "Description",
-        "files": "Submitted files"
+        "overview": "Огляд",
+        "description": "Опис",
+        "files": "Файли"
       },
-      "category": "Category",
-      "price": "Price",
-      "hashtags": "Hashtags",
-      "noHashtags": "No hashtags were provided.",
+      "category": "Категорія",
+      "price": "Ціна",
+      "hashtags": "Хештеги",
+      "noHashtags": "Хештеги не вказано.",
       "status": {
-        "label": "Status",
-        "PENDING": "Pending review",
-        "APPROVED": "Approved",
-        "REJECTED": "Rejected"
+        "label": "Статус",
+        "PENDING": "Очікує розгляду",
+        "APPROVED": "Схвалено",
+        "REJECTED": "Відхилено"
       },
-      "submitted": "Submitted on {{value}}",
-      "updated": "Last updated {{value}}",
-      "manuscript": "Manuscript",
-      "cover": "Cover image",
-      "audiobook": "Audiobook",
-      "download": "Download manuscript ⬇️",
-      "read": "Read in the app",
-      "listen": "Listen in the app",
-      "noDownload": "File stored on Walrus decentralized storage",
-      "noCover": "Cover file unavailable",
-      "noAudiobook": "No audiobook was attached.",
-      "audiobookAvailable": "Audiobook attached to the proposal."
+      "submitted": "Надіслано {{value}}",
+      "updated": "Оновлено {{value}}",
+      "manuscript": "Рукопис",
+      "cover": "Обкладинка",
+      "audiobook": "Аудіокнига",
+      "download": "Завантажити рукопис ⬇️",
+      "read": "Читати в додатку",
+      "listen": "Слухати в додатку",
+      "noDownload": "Файл зберігається у децентралізованому сховищі Walrus",
+      "noCover": "Обкладинка недоступна",
+      "noAudiobook": "Аудіокнигу не додано.",
+      "audiobookAvailable": "До пропозиції додано аудіокнигу."
     }
   },
   "contact": {
-    "title": "Contact support",
-    "subtitle": "Need help? We're just a message away.",
-    "description": "Reach our support team on Telegram and we'll get back to you shortly.",
-    "telegramCta": "Open @lawyerdsupport"
+    "title": "Підтримка",
+    "subtitle": "Потрібна допомога? Ми поруч.",
+    "description": "Напишіть нашій команді підтримки в Telegram — і ми відповімо найближчим часом.",
+    "telegramCta": "Відкрити @lawyerdsupport"
   },
   "reading-overlay": {
-    "toggle-font-size": "Font-size",
-    "selectionTitle": "Share this excerpt",
-    "shareSelection": "Share",
-    "clearSelection": "Clear"
+    "toggle-font-size": "Розмір шрифту",
+    "selectionTitle": "Поділитися уривком",
+    "shareSelection": "Поділитися",
+    "clearSelection": "Очистити"
   }
 }

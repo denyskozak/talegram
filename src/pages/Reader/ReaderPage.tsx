@@ -1,4 +1,4 @@
-import {ReactNode, useMemo} from "react";
+import {ReactNode, useEffect, useMemo, useState} from "react";
 
 import {useParams, useSearchParams} from "react-router-dom";
 import {Text} from "@telegram-apps/telegram-ui";
@@ -9,6 +9,8 @@ import {buildBookFileDownloadUrl, buildBookPreviewDownloadUrl} from "@/shared/ap
 import {useTMA} from "@/app/providers/TMAProvider";
 import {getTelegramUserId} from "@/shared/lib/telegram";
 import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
+import {catalogApi} from "@/entities/book/api.ts";
+import {Book} from "@/entities/book/types.ts";
 
 type ReaderRouteParams = {
     id?: string;
@@ -20,6 +22,7 @@ export default function ReaderPage(): ReactNode | undefined {
     const [searchParams] = useSearchParams();
     const {t} = useTranslation();
     const {launchParams} = useTMA();
+    const [book, updateBook] = useState<Book | null>(null);
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
@@ -38,6 +41,14 @@ export default function ReaderPage(): ReactNode | undefined {
         ? buildBookPreviewDownloadUrl(id || '', 'book', type, {telegramUserId})
         : buildBookFileDownloadUrl(id || '', 'book', type, {telegramUserId: telegramUserId});
 
+    useEffect(() => {
+        if (type ==='books') {
+            catalogApi
+                .getBook(id)
+                .then(data => {updateBook(data)})
+                .catch(error => console.error(error))
+        }
+    }, []);
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {previewMessage ? (
@@ -48,6 +59,7 @@ export default function ReaderPage(): ReactNode | undefined {
                 </div>
             ) : null}
             <ReadingOverlay
+                book={book}
                 fileUrl={downloadUrl}
                 initialLocation={initialReaderLocation}
                 onLocationChange={handleReaderLocationChange}

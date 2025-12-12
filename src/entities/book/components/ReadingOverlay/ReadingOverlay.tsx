@@ -9,9 +9,11 @@ import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Text} from "@telegram-apps/telegram-ui";
+import type {Book} from "@/entities/book/types";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
+    book?: Book | null;
     fileUrl: string;
     onLocationChange: (location: string) => void;
     initialLocation: string
@@ -20,11 +22,10 @@ type ReadingOverlayProps = {
 type ITheme = 'light' | 'dark'
 
 
-export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
     const themeSetting = useTheme();
-    console.log("themeSetting: ", themeSetting);
     const bookRef = useRef<any | null>(null);
     const renditionRef = useRef<Rendition | undefined>(undefined)
     const isDefaultThemeDark = themeSetting.text === '#ffffff' || themeSetting.text === '#FFFFFF';
@@ -85,7 +86,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
         const handleSelected = (cfiRange: string, contents: any) => {
             const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
-
             if (!selectedText.trim()) {
                 setSelection(null);
                 return;
@@ -101,7 +101,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                 () => rendition.annotations.remove(cfiRange, 'highlight'),
                 'highlight',
             );
-
+            console.log("8: ", 8);
             setSelection({cfiRange, text: selectedText.trim()});
             contents?.window?.getSelection?.()?.removeAllRanges();
         };
@@ -109,7 +109,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         rendition.on('selected', handleSelected);
 
         return () => rendition.off('selected', handleSelected);
-    }, [selection]);
+    }, [selection, renditionRef.current]);
 
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
@@ -132,7 +132,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             return;
         }
 
-        const excerpt = `“${selection.text}”`;
+        const excerpt = `“${selection.text}”\n\nExcerpt From\n${book?.title}\n${book?.authors.join(', ')}\nThis material may be protected by copyright`;
 
         try {
             shareURL(window.location.href, excerpt);
@@ -164,6 +164,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             margin: 0,
             padding: 0,
             height: '100%',
+            inset: 0,
             overflow: 'hidden',
         },
         // стрелки навигации – полностью отключаем
@@ -269,20 +270,23 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         themes.select('no-margins');
     }
 
+
+    console.log("selection: ", selection);
+    console.log("darkBackground: ", darkBackground);
     return (
         <div style={{height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
             <div style={{
                 position: "fixed",
                 right: '4px',
                 bottom: '4px',
-                zIndex: '10',
+                zIndex: '100',
                 width: 'fit-content',
                 gap: '5px',
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-                <Button mode="filled" size="m" style={{opacity: 0.9, background: themeSetting.background}}
-                        onClick={() => setMenuOpen(!isMenuOpen)}><span>Menu ☰</span></Button>
+                <Button mode="filled" size="m" style={{opacity: 0.9, background: darkBackground}}
+                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ☰</span></Button>
                 {isMenuOpen
                     ? (
                         <>
@@ -295,16 +299,15 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                         </>)
                     : null}
             </div>
-            {selection ? (
+            {selection && book ? (
                 <div
                     style={{
                         position: "absolute",
                         left: "50%",
-                        transform: "translateX(-50%)",
                         bottom: 64,
                         zIndex: 12,
-                        background: "var(--tg-theme-bg-color, #ffffff)",
-                        color: "var(--tg-theme-text-color, #000000)",
+                        background: themeSetting.background,
+                        color: themeSetting.text,
                         padding: "12px 14px",
                         borderRadius: 16,
                         boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
@@ -315,14 +318,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                     }}
                 >
                     <Text style={{margin: 0, fontWeight: 600}}>{t('reading-overlay.selectionTitle')}</Text>
-                    <Text style={{margin: 0, maxHeight: 150, overflow: "auto"}}>
-                        {selection.text}
-                    </Text>
                     <div style={{display: "flex", gap: 8, flexWrap: "wrap"}}>
                         <Button size="s" mode="filled" onClick={handleShareSelection}>
                             {t('reading-overlay.shareSelection')}
                         </Button>
-                        <Button size="s" mode="outline" onClick={handleClearSelection}>
+                        <Button size="s" mode="filled" onClick={handleClearSelection}>
                             {t('reading-overlay.clearSelection')}
                         </Button>
                     </div>
