@@ -4,7 +4,7 @@ import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {type Rendition} from 'epubjs'
-import {shareURL} from "@tma.js/sdk";
+import {shareURL, backButton} from "@tma.js/sdk";
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
@@ -12,6 +12,7 @@ import {Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 import {useLaunchParams} from "@tma.js/sdk-react";
+import {useNavigate} from "react-router-dom";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
@@ -73,7 +74,27 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             }
         }
     }
+    const navigate = useNavigate();
 
+    useEffect(() => {
+
+        function listener() {
+            if (backButton.onClick.isAvailable()) {
+
+
+            if (window.history.length < 2) {
+                navigate('/');
+                return;
+            }
+            }
+        }
+
+        // or
+        backButton.onClick(listener);
+        return () => {
+            backButton.offClick(listener);
+        }
+    }, []);
 
     useEffect(() => {
         if (renditionRef.current) {
@@ -191,32 +212,22 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
-            background: themeSetting.text,
+            background:  theme === 'dark' ? darkText : lightText,
             zIndex: 4,
-
-
-
         },
         tocButton: {
             ...ReactReaderStyle.tocButton,
             position: "fixed",
-            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "16vh" : '5vh',
+            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "14vh" : '5vh',
             left: '5vw',
-            background:  themeSetting.section,
-            width: '4em',
-            height: '4em',
-            opacity: 0.9,
+            background:  theme === 'dark' ? darkBackground : lightBackground,
+            width: '3em',
+            height: '3em',
+            opacity: 0.8,
             zIndex: 3,
         },
-        tocButtonExpanded: {
-            ...ReactReaderStyle.tocButtonExpanded,
-            background:  themeSetting.section,
-            transform: "scale(1.2)",
-        },
-        tocButtonBarTop: {
-            ...ReactReaderStyle.tocButtonBarTop,
-           
-        },
+
+
         titleArea: {
             ...ReactReaderStyle.titleArea,
         },
@@ -252,16 +263,16 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     const epubViewStyles = {
         view: {
             // внутренний canvas epub.js
-            width: '100%',
-            height: '100%',
+            width: '100vw',
+            height: '100vh',
             margin: 0,
             padding: 0,
         },
 
         viewHolder: {
             // внутренний canvas epub.js
-            width: '100%',
-            height: '100%',
+            width: '100vw',
+            height: '100vh',
             margin: 0,
             padding: 0,
             overflow: 'hidden',
