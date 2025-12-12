@@ -6,7 +6,7 @@ const ALLOWED_ORIGINS = new Set<string>([
     'https://talegrafrontendadmin.gastroand.me',
     'http://localhost:5174',
     'https://172.20.10.7:5173',
-    'https://172.20.10.2:5173/'
+    'https://172.20.10.2:5173'
 ]);
 
 const ALLOWED_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
