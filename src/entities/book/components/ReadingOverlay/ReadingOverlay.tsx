@@ -11,6 +11,7 @@ import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
+import {useLaunchParams} from "@tma.js/sdk-react";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
@@ -33,11 +34,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
-    const [isHeaderVisible, setHeaderVisible] = useState(true);
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const lastScrollTopRef = useRef<number>(0);
+    const readerIframetRef = useRef<null | HTMLIFrameElement>(null);
 
     const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
     const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
@@ -51,28 +52,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         }
     };
 
-    const showHeader = useCallback(() => {
-        clearHideHeaderTimeout();
-        setHeaderVisible(true);
-    }, []);
 
-    const scheduleHideHeader = useCallback(() => {
-        clearHideHeaderTimeout();
-        hideHeaderTimeoutRef.current = setTimeout(() => setHeaderVisible(false), 1000);
-    }, []);
-
-    const handleScrollDirection = useCallback(
-        (currentScrollTop: number) => {
-            if (currentScrollTop < lastScrollTopRef.current) {
-                showHeader();
-            } else if (currentScrollTop > lastScrollTopRef.current) {
-                scheduleHideHeader();
-            }
-
-            lastScrollTopRef.current = currentScrollTop;
-        },
-        [scheduleHideHeader, showHeader],
-    );
 
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
@@ -157,13 +137,20 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         onLocationChange?.(location)
     }, [location]);
 
-    const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+    useEffect(() => {
+        if (!readerIframetRef.current) return;
 
-    const headerVisibilityStyles = {
-        opacity: isHeaderVisible ? 1 : 0,
-        pointerEvents: isHeaderVisible ? 'auto' : 'none',
-        transition: 'opacity 0.3s ease',
-    } as const;
+        const intervalId = setInterval(() => {
+            const newSelectedText = (readerIframetRef?.current as unknown as { window: Window})?.window?.getSelection?.()?.toString() ?? "";
+            console.log("selectedText: ", newSelectedText);
+
+
+            if (selection !== newSelectedText) setSelection(newSelectedText)
+        }, 1500)
+        return () => clearInterval(intervalId)
+    }, []);
+
+    const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
 
     const baseReaderStyle: IReactReaderStyle = {
         ...ReactReaderStyle,
@@ -204,17 +191,17 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
-            ...headerVisibilityStyles,
             background: themeSetting.text,
             zIndex: 4,
 
-            // position: "absolute",
-            // top: '10%',
-            // left: '5%'
+
 
         },
         tocButton: {
             ...ReactReaderStyle.tocButton,
+            position: "fixed",
+            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : '5vh',
+            left: '5vw',
             background:  themeSetting.section,
             width: '3em',
             height: '3em',
@@ -227,11 +214,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         },
         tocButtonBarTop: {
             ...ReactReaderStyle.tocButtonBarTop,
-            ...headerVisibilityStyles,
+           
         },
         titleArea: {
             ...ReactReaderStyle.titleArea,
-            ...headerVisibilityStyles,
         },
     }
 
@@ -260,10 +246,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             ...ReactReaderStyle.tocArea,
             background: '#212121',
         },
-
-
-
-
     }
 
     const epubViewStyles = {
@@ -384,32 +366,12 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
                     // затем накатываем твой цветовой theme
                     updateTheme(_rendition, theme);
 
-                    const handleRendered = (_: string, contents: any) => {
-                        console.log("222: ", 222);
-                        const documentElement = contents?.document?.documentElement;
-                        if (documentElement) {
-                            lastScrollTopRef.current = documentElement.scrollTop;
+                    const handleRendered = (_: string, view: any) => {
+                        if (view) {
+                            readerIframetRef.current = view;
                         }
 
-                        const handleScroll = () => {
-                            const scrollTop = contents?.document?.documentElement?.scrollTop
-                                || contents?.document?.body?.scrollTop
-                                || 0;
-                            handleScrollDirection(scrollTop);
-                        };
 
-                        contents?.document?.addEventListener?.('scroll', handleScroll, {passive: true});
-                        contents?.on?.('destroyed', () => {
-                            contents?.document?.removeEventListener?.('scroll', handleScroll);
-                        });
-                        setInterval(() => {
-                            const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
-                            console.log("selectedText: ", selectedText);
-
-
-                            console.log("8: ", 8);
-                            setSelection(selectedText.trim());
-                        }, 1000)
                     };
                     _rendition.on('rendered', handleRendered);
                 }}
