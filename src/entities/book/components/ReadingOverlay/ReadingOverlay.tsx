@@ -142,13 +142,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             if (!readerIframetRef.current) return;
 
             const newSelectedText = (readerIframetRef?.current as unknown as { window: Window})?.window?.getSelection?.()?.toString() ?? "";
-            console.log("selectedText: ", newSelectedText);
 
             if (selection !== newSelectedText) setSelection(newSelectedText)
         }, 1500)
         return () => {
             clearInterval(intervalId);
-            console.log("1: ", 1);
         }
     }, []);
 
