@@ -138,16 +138,18 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     }, [location]);
 
     useEffect(() => {
-        if (!readerIframetRef.current) return;
+        const  intervalId = setInterval(() => {
+            if (!readerIframetRef.current) return;
 
-        const intervalId = setInterval(() => {
             const newSelectedText = (readerIframetRef?.current as unknown as { window: Window})?.window?.getSelection?.()?.toString() ?? "";
             console.log("selectedText: ", newSelectedText);
 
-
             if (selection !== newSelectedText) setSelection(newSelectedText)
         }, 1500)
-        return () => clearInterval(intervalId)
+        return () => {
+            clearInterval(intervalId);
+            console.log("1: ", 1);
+        }
     }, []);
 
     const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
