@@ -10,6 +10,7 @@ import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
+import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
@@ -33,7 +34,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
 
-    const [selection, setSelection] = useState<{ cfiRange: string; text: string } | null>(null);
+    const [selection, setSelection] = useState<string | null>(null);
 
     const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
     const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
@@ -78,42 +79,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
 
-    useEffect(() => {
-        const rendition = renditionRef.current;
-        if (!rendition) return;
-
-        const onRendered = (section: any, contents: any) => {
-            const doc = contents.document;
-
-            const handleSelectionChange = () => {
-                const selection = contents.window.getSelection();
-                if (!selection || selection.isCollapsed) return;
-
-                const text = selection.toString().trim();
-                if (!text) return;
-
-                try {
-                    const cfiRange = contents.cfiFromRange(selection.getRangeAt(0));
-
-                    setSelection({
-                        cfiRange,
-                        text,
-                    });
-                } catch (e) {
-                    // важно: на мобилках range может быть "грязным"
-                }
-            };
-
-            doc.addEventListener("selectionchange", handleSelectionChange);
-
-            contents.on("destroy", () => {
-                doc.removeEventListener("selectionchange", handleSelectionChange);
-            });
-        };
-
-        rendition.on("rendered", onRendered);
-        return () => rendition.off("rendered", onRendered);
-    }, []);
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
         setTextSize(next);
@@ -123,22 +88,22 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     //     console.log("book: ", renditionRef.current);
     // }
     const handleClearSelection = useCallback(() => {
-        if (selection?.cfiRange && renditionRef.current) {
-            renditionRef.current.annotations.remove(selection.cfiRange, 'highlight');
-        }
+
 
         setSelection(null);
     }, [selection]);
 
     const handleShareSelection = useCallback(() => {
-        if (!selection?.text) {
+        if (!selection || !book) {
             return;
         }
 
-        const excerpt = `“${selection.text}”\n\nExcerpt From\n${book?.title}\n${book?.authors.join(', ')}\nThis material may be protected by copyright`;
+        const excerpt = `“${selection}”\n\nExcerpt From\n${book.title}\n${book.authors.join(', ')}\nThis material may be protected by copyright`;
+        const deepLink =
+            buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'talegram_org_bot'}) ;
 
         try {
-            shareURL(window.location.href, excerpt);
+            shareURL(deepLink ?? '', excerpt);
         } catch (error) {
             console.error("Failed to share selection", error);
         }
@@ -352,6 +317,18 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
                     // затем накатываем твой цветовой theme
                     updateTheme(_rendition, theme);
 
+                    const handleRendered = (_: string, contents: any) => {
+                        console.log("222: ", 222);
+                        setInterval(() => {
+                            const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
+                            console.log("selectedText: ", selectedText);
+
+
+                            console.log("8: ", 8);
+                            setSelection(selectedText.trim());
+                        }, 1000)
+                    };
+                    _rendition.on('rendered', handleRendered);
                 }}
             />
         </div>
