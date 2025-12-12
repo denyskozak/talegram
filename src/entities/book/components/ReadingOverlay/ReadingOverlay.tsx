@@ -80,37 +80,40 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
 
     useEffect(() => {
         const rendition = renditionRef.current;
-        if (!rendition) {
-            return;
-        }
+        if (!rendition) return;
 
-        const handleSelected = (cfiRange: string, contents: any) => {
-            const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
-            if (!selectedText.trim()) {
-                setSelection(null);
-                return;
-            }
+        const onRendered = (section: any, contents: any) => {
+            const doc = contents.document;
 
-            if (selection?.cfiRange) {
-                rendition.annotations.remove(selection.cfiRange, 'highlight');
-            }
+            const handleSelectionChange = () => {
+                const selection = contents.window.getSelection();
+                if (!selection || selection.isCollapsed) return;
 
-            rendition.annotations.highlight(
-                cfiRange,
-                {},
-                () => rendition.annotations.remove(cfiRange, 'highlight'),
-                'highlight',
-            );
-            console.log("8: ", 8);
-            setSelection({cfiRange, text: selectedText.trim()});
-            contents?.window?.getSelection?.()?.removeAllRanges();
+                const text = selection.toString().trim();
+                if (!text) return;
+
+                try {
+                    const cfiRange = contents.cfiFromRange(selection.getRangeAt(0));
+
+                    setSelection({
+                        cfiRange,
+                        text,
+                    });
+                } catch (e) {
+                    // важно: на мобилках range может быть "грязным"
+                }
+            };
+
+            doc.addEventListener("selectionchange", handleSelectionChange);
+
+            contents.on("destroy", () => {
+                doc.removeEventListener("selectionchange", handleSelectionChange);
+            });
         };
 
-        rendition.on('selected', handleSelected);
-
-        return () => rendition.off('selected', handleSelected);
-    }, [selection, renditionRef.current]);
-
+        rendition.on("rendered", onRendered);
+        return () => rendition.off("rendered", onRendered);
+    }, []);
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
         setTextSize(next);
