@@ -150,6 +150,7 @@ function determineDownloadFileName(
 }
 
 async function streamFile(
+  req: http.IncomingMessage | null,
   res: http.ServerResponse,
   options: {
     filePath: string;
@@ -161,9 +162,47 @@ async function streamFile(
   try {
     const stats = await fs.stat(options.filePath);
 
+    const rangeHeader = req?.headers.range ?? null;
+
+    if (rangeHeader) {
+      const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader);
+
+      if (match) {
+        const start = match[1] ? Number.parseInt(match[1], 10) : 0;
+        const end = match[2] ? Number.parseInt(match[2], 10) : stats.size - 1;
+
+        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end < start || end >= stats.size) {
+          res.statusCode = 416;
+          res.setHeader('Content-Range', `bytes */${stats.size}`);
+          res.end();
+          return;
+        }
+
+        const chunkSize = end - start + 1;
+
+        res.statusCode = 206;
+        res.setHeader('Content-Type', options.mimeType);
+        res.setHeader('Content-Length', chunkSize.toString(10));
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${stats.size}`);
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Content-Disposition', formatContentDispositionHeader(options.fileName));
+
+        const stream = createReadStream(options.filePath, { start, end });
+
+        if (options.transform) {
+          await pipeline(stream, options.transform, res);
+        } else {
+          await pipeline(stream, res);
+        }
+
+        return;
+      }
+    }
+
     res.statusCode = 200;
     res.setHeader('Content-Type', options.mimeType);
     res.setHeader('Content-Length', stats.size.toString(10));
+    res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Disposition', formatContentDispositionHeader(options.fileName));
 
     if (options.transform) {
@@ -265,7 +304,7 @@ export async function handleBookPreviewRequest(
 }
 
 export async function handleBookFileDownloadRequest(
-  _req: http.IncomingMessage,
+  req: http.IncomingMessage,
   res: http.ServerResponse,
   params: { bookId: string; fileKind: BookFileKind; telegramUserId: string | null },
 ): Promise<void> {
@@ -341,15 +380,15 @@ export async function handleBookFileDownloadRequest(
   const resolvedMimeType = mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 
   if (params.fileKind === 'cover') {
-    await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType });
+    await streamFile(req, res, { filePath, fileName, mimeType: resolvedMimeType });
     return;
   }
 
-  await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType });
+  await streamFile(req, res, { filePath, fileName, mimeType: resolvedMimeType });
 }
 
 export async function handleProposalFileDownloadRequest(
-  _req: http.IncomingMessage,
+  req: http.IncomingMessage,
   res: http.ServerResponse,
   params: { proposalId: string; fileKind: BookFileKind; telegramUserId: string | null },
 ): Promise<void> {
@@ -423,11 +462,11 @@ export async function handleProposalFileDownloadRequest(
   const resolvedMimeType = mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 
   if (params.fileKind === 'cover') {
-    await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType });
+    await streamFile(req, res, { filePath, fileName, mimeType: resolvedMimeType });
     return;
   }
 
-  await streamFile(res, { filePath, fileName, mimeType: resolvedMimeType });
+  await streamFile(req, res, { filePath, fileName, mimeType: resolvedMimeType });
 }
 
 function matchesCoverFile(source: { coverFilePath?: string | null }, id: string): boolean {
@@ -459,7 +498,7 @@ function determineSourceFileKind(
 }
 
 export async function handleStoredFileDownloadRequest(
-  _req: http.IncomingMessage,
+  req: http.IncomingMessage,
   res: http.ServerResponse,
   params: { fileId: string; telegramUserId: string | null },
 ): Promise<void> {
@@ -494,7 +533,7 @@ export async function handleStoredFileDownloadRequest(
 
   if (book) {
     const fileKind = determineSourceFileKind(book, normalizedFileId);
-    await handleBookFileDownloadRequest(_req, res, { bookId: book.id, fileKind, telegramUserId: params.telegramUserId });
+    await handleBookFileDownloadRequest(req, res, { bookId: book.id, fileKind, telegramUserId: params.telegramUserId });
     return;
   }
 
@@ -515,7 +554,7 @@ export async function handleStoredFileDownloadRequest(
 
   if (proposal) {
     const fileKind = determineSourceFileKind(proposal, normalizedFileId);
-    await handleProposalFileDownloadRequest(_req, res, {
+    await handleProposalFileDownloadRequest(req, res, {
       proposalId: proposal.id,
       fileKind,
       telegramUserId: params.telegramUserId,
