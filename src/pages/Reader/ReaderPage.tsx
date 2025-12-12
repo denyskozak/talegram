@@ -55,7 +55,7 @@ export default function ReaderPage(): ReactNode | undefined {
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {previewMessage ? (
-                <div style={{padding: "12px"}}>
+                <div style={{marginTop: "14vh"}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
                         {previewMessage}
                     </Text>
