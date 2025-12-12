@@ -200,17 +200,18 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         tocButton: {
             ...ReactReaderStyle.tocButton,
             position: "fixed",
-            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : '5vh',
+            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "16vh" : '5vh',
             left: '5vw',
             background:  themeSetting.section,
-            width: '3em',
-            height: '3em',
+            width: '4em',
+            height: '4em',
             opacity: 0.9,
             zIndex: 3,
         },
         tocButtonExpanded: {
             ...ReactReaderStyle.tocButtonExpanded,
             background:  themeSetting.section,
+            transform: "scale(1.2)",
         },
         tocButtonBarTop: {
             ...ReactReaderStyle.tocButtonBarTop,
