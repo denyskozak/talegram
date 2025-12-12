@@ -143,15 +143,19 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         // контейнер самого ридера – растянем по ширине
         container: {
             ...ReactReaderStyle.container,
-            maxWidth: '100%',
-            width: '100%',
+            maxWidth: '100vw',
+            width: '100vw',
+            height: '100%',
             margin: 0,
+            overflow: 'hidden',
         },
         // область чтения без отступов
         readerArea: {
             ...ReactReaderStyle.readerArea,
             margin: 0,
             padding: 0,
+            height: '100%',
+            overflow: 'hidden',
         },
         // стрелки навигации – полностью отключаем
         arrow: {
@@ -223,6 +227,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             height: '100%',
             margin: 0,
             padding: 0,
+            overflow: 'hidden',
         },
     }
 
@@ -237,7 +242,9 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             'body': {
                 margin: '0 !important',
                 padding: '0 !important',
-                maxWidth: '100% !important',
+                maxWidth: '100vw !important',
+                width: '100vw !important',
+                overflowX: 'hidden !important',
             },
         });
 
@@ -246,7 +253,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
 
     return (
-        <div style={{height: '90vh', width: '100%', position: 'relative'}}>
+        <div style={{height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
             <div style={{
                 position: "absolute",
                 right: '4px',
