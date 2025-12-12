@@ -608,6 +608,7 @@
   },
   "reading-overlay": {
     "toggle-font-size": "Font-size",
+    "chapters": "Chapters",
     "selectionTitle": "Share this excerpt",
     "shareSelection": "Share",
     "clearSelection": "Clear"

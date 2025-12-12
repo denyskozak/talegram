@@ -9,6 +9,8 @@ import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Text} from "@telegram-apps/telegram-ui";
+// import {useMediaQuery} from "@uidotdev/usehooks";
+
 type ReadingOverlayProps = {
     fileUrl: string;
     onLocationChange: (location: string) => void;
@@ -27,13 +29,16 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     const renditionRef = useRef<Rendition | undefined>(undefined)
     const isDefaultThemeDark = themeSetting.text === '#ffffff' || themeSetting.text === '#FFFFFF';
     const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
-    const [textSize, setTextSize] = useState(2);
+    const [isMenuOpen, setMenuOpen] = useState(false);
+    const [textSize, setTextSize] = useState(3);
+
     const [selection, setSelection] = useState<{ cfiRange: string; text: string } | null>(null);
 
     const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
     const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
     const darkBackground = isDefaultThemeDark ? themeSetting.background : '#212121'
     const lightBackground = isDefaultThemeDark ? '#fff' : themeSetting.background
+
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
         const themes = rendition.themes
@@ -63,10 +68,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
     useEffect(() => {
         const textSizes: Record<number, string> = {
-            1: '100%',
-            2: '140%',
-            3: '160%',
-            4: '200%',
+            1: '80%',
+            2: '100%',
+            3: '140%',
+            4: '160%',
+            5: '200%',
         }
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
@@ -106,10 +112,13 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
     }, [selection]);
 
     const handleNextTextSize = () => {
-        const next = textSize + 1 > 4 ? 1 : textSize + 1;
+        const next = textSize + 1 > 5 ? 1 : textSize + 1;
         setTextSize(next);
     }
 
+    // const handleOpenChapters = () => {
+    //     console.log("book: ", renditionRef.current);
+    // }
     const handleClearSelection = useCallback(() => {
         if (selection?.cfiRange && renditionRef.current) {
             renditionRef.current.annotations.remove(selection.cfiRange, 'highlight');
@@ -170,6 +179,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             pointerEvents: 'none',
             width: 0,
         },
+        reader: {
+            ...ReactReaderStyle.reader,
+            inset: '0 16px'
+        },
     }
 
 
@@ -187,6 +200,8 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
 
     const darkReaderTheme: IReactReaderStyle = {
         ...baseReaderStyle,
+
+
         readerArea: {
             ...baseReaderStyle.readerArea,
             backgroundColor: darkBackground,
@@ -205,7 +220,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
-            background: '#fff',
+            background: themeSetting.text,
+            opacity: 0.9,
+            zIndex: 3,
+
         },
         tocButton: {
             ...ReactReaderStyle.tocButton,
@@ -251,11 +269,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
         themes.select('no-margins');
     }
 
-
     return (
         <div style={{height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
             <div style={{
-                position: "absolute",
+                position: "fixed",
                 right: '4px',
                 bottom: '4px',
                 zIndex: '10',
@@ -264,10 +281,19 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-                <Button mode="bezeled" size="s"
-                        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
-                <Button mode="bezeled" size="s"
-                        onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize === 1 || textSize === 2 ? '🔼' : '⬇️'}`}</Button>
+                <Button mode="filled" size="m" style={{opacity: 0.9, background: themeSetting.background}}
+                        onClick={() => setMenuOpen(!isMenuOpen)}><span>Menu ☰</span></Button>
+                {isMenuOpen
+                    ? (
+                        <>
+                            <Button mode="filled" size="s"
+                                    onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
+                            <Button mode="filled" size="s"
+                                    onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
+                            {/*<Button mode="filled" size="s"*/}
+                            {/*        onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>)*/}
+                        </>)
+                    : null}
             </div>
             {selection ? (
                 <div
@@ -305,6 +331,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange}: Rea
             <ReactReader
                 readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
+                showToc
                 location={location}
                 epubOptions={{
                     flow: "scrolled-doc",

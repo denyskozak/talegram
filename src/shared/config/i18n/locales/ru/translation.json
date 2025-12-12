@@ -607,6 +607,7 @@
   },
   "reading-overlay": {
     "toggle-font-size": "Шрифт",
+    "chapters": "Главы",
     "selectionTitle": "Поделиться цитатой",
     "shareSelection": "Поделиться",
     "clearSelection": "Сбросить"
