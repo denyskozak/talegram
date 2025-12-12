@@ -30,6 +30,7 @@ export default function ReaderPage(): ReactNode | undefined {
     if (id === undefined || type === undefined) return null;
 
 
+    const isPreview = searchParams.get('preview') === '1';
 
     const initialReaderLocation = useMemo(
         () =>  isPreview ? '0' : getStoredBookProgress('reader_location', id, '0'),
@@ -38,7 +39,6 @@ export default function ReaderPage(): ReactNode | undefined {
     const handleReaderLocationChange = (location: string) => {
         setStoredBookProgress('reader_location', id, String(location));
     };
-    const isPreview = searchParams.get('preview') === '1';
     const previewMessage = isPreview ? t("book.toast.previewChapters") : null;
     const downloadUrl = isPreview
         ? buildBookPreviewDownloadUrl(id || '', 'book', type, {telegramUserId})
