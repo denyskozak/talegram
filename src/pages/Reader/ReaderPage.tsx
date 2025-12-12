@@ -1,6 +1,6 @@
 import {ReactNode, useEffect, useMemo, useState} from "react";
 
-import {useParams, useSearchParams} from "react-router-dom";
+import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 import {Text} from "@telegram-apps/telegram-ui";
 import {useTranslation} from "react-i18next";
 
@@ -12,6 +12,7 @@ import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookPro
 import {catalogApi} from "@/entities/book/api.ts";
 import {Book} from "@/entities/book/types.ts";
 import {useLaunchParams} from "@tma.js/sdk-react";
+import {Button} from "@/shared/ui/Button.tsx";
 
 type ReaderRouteParams = {
     id?: string;
@@ -23,6 +24,7 @@ export default function ReaderPage(): ReactNode | undefined {
     const [searchParams] = useSearchParams();
     const {t} = useTranslation();
     const {launchParams} = useTMA();
+    const navigate = useNavigate();
     const [book, updateBook] = useState<Book | null>(null);
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -60,7 +62,7 @@ export default function ReaderPage(): ReactNode | undefined {
             {previewMessage ? (
                 <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
-                        {previewMessage}
+                        {previewMessage} <Button size="s" onClick={() => navigate(`/book/${id}`)}>{t("book.actions.buy")}</Button>
                     </Text>
                 </div>
             ) : null}
