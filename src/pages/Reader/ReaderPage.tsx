@@ -68,6 +68,7 @@ export default function ReaderPage(): ReactNode | undefined {
             ) : null}
             <ReadingOverlay
                 book={book}
+                isPreview={isPreview}
                 fileUrl={downloadUrl}
                 initialLocation={initialReaderLocation}
                 onLocationChange={handleReaderLocationChange}

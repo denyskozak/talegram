@@ -20,12 +20,13 @@ type ReadingOverlayProps = {
     fileUrl: string;
     onLocationChange: (location: string) => void;
     initialLocation: string
+    isPreview: boolean
 };
 
 type ITheme = 'light' | 'dark'
 
 
-export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book}: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
     const themeSetting = useTheme();
@@ -225,7 +226,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         tocButton: {
             ...ReactReaderStyle.tocButton,
             position: "fixed",
-            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "14vh" : '5vh',
+            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? isPreview ? "18vh" : '12vh' : '5vh',
             left: '5vw',
             background:  theme === 'dark' ? darkBackground : lightBackground,
             width: '3em',
