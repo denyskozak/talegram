@@ -182,7 +182,11 @@ export function ReviewsList({ api, bookId, onReviewCreated }: ReviewsListProps):
   const isSubmitDisabled =
     isSubmitting || authorName.trim().length === 0 || rating < 1 || rating > 5;
 
-  const locale = i18n.language.startsWith("ru") ? "ru-RU" : "en-US";
+  const locale = i18n.language.startsWith("ru")
+    ? "ru-RU"
+    : i18n.language.startsWith("uk")
+      ? "uk-UA"
+      : "en-US";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>

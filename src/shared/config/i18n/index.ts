@@ -3,10 +3,11 @@ import { initReactI18next } from "react-i18next";
 
 import enTranslation from "./locales/en/translation.json";
 import ruTranslation from "./locales/ru/translation.json";
+import ukTranslation from "./locales/uk/translation.json";
 
 const STORAGE_KEY = "open-reader-language";
 const FALLBACK_LANGUAGE = "en" as const;
-const SUPPORTED_LANGUAGES = ["en", "ru"] as const;
+const SUPPORTED_LANGUAGES = ["en", "ru", "uk"] as const;
 
 type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -19,6 +20,7 @@ type Resources = {
 const resources: Resources = {
   en: { translation: enTranslation },
   ru: { translation: ruTranslation },
+  uk: { translation: ukTranslation },
 };
 
 function resolveInitialLanguage(): SupportedLanguage {

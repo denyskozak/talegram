@@ -11,9 +11,9 @@
     "subtitle": "text and audio formats"
   },
   "languages": {
-    "en": "English",
-    "ru": "Russian",
-    "uk": "Ukrainian"
+    "en": "Англійська",
+    "ru": "Російська",
+    "uk": "Українська"
   },
   "header": {
     "languageToggle": "Switch language (current: {{language}})",
