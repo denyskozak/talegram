@@ -22,28 +22,39 @@ export function LanguageToggle(): JSX.Element {
     ? (normalizedLanguage as SupportedLanguage)
     : availableLanguages[0];
 
-  const nextLanguage = availableLanguages[(availableLanguages.indexOf(activeLanguage) + 1) % availableLanguages.length];
+  const buildAriaLabel = useMemo(
+    () => (language: SupportedLanguage) => {
+      const languageNameKey = `languages.${language}`;
+      return t("header.languageToggle", { language: t(languageNameKey) });
+    },
+    [t],
+  );
 
-  const label = LANGUAGE_LABELS[nextLanguage] ?? nextLanguage.toUpperCase();
-
-  const ariaLabel = useMemo(() => {
-    const languageNameKey = `languages.${activeLanguage}`;
-    return t("header.languageToggle", { language: t(languageNameKey) });
-  }, [activeLanguage, t]);
-
-  const handleToggle = () => {
-    void i18n.changeLanguage(nextLanguage);
+  const handleChangeLanguage = (language: SupportedLanguage) => {
+    if (language !== activeLanguage) {
+      void i18n.changeLanguage(language);
+    }
   };
 
   return (
-    <Button
-      size="s"
-      mode="plain"
-      onClick={handleToggle}
-      aria-label={ariaLabel}
-      style={{ minWidth: 44 }}
-    >
-      {label}
-    </Button>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      {availableLanguages.map((language) => {
+        const label = LANGUAGE_LABELS[language] ?? language.toUpperCase();
+        const isActive = language === activeLanguage;
+
+        return (
+          <Button
+            key={language}
+            size="s"
+            mode={isActive ? "filled" : "outline"}
+            onClick={() => handleChangeLanguage(language)}
+            aria-label={buildAriaLabel(language)}
+            style={{ minWidth: 44 }}
+          >
+            {label}
+          </Button>
+        );
+      })}
+    </div>
   );
 }

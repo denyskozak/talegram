@@ -33,13 +33,46 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
+    const [isHeaderVisible, setHeaderVisible] = useState(true);
 
     const [selection, setSelection] = useState<string | null>(null);
+    const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const lastScrollTopRef = useRef<number>(0);
 
     const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
     const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
     const darkBackground = isDefaultThemeDark ? themeSetting.background : '#212121'
     const lightBackground = isDefaultThemeDark ? '#fff' : themeSetting.background
+
+    const clearHideHeaderTimeout = () => {
+        if (hideHeaderTimeoutRef.current) {
+            clearTimeout(hideHeaderTimeoutRef.current);
+            hideHeaderTimeoutRef.current = null;
+        }
+    };
+
+    const showHeader = useCallback(() => {
+        clearHideHeaderTimeout();
+        setHeaderVisible(true);
+    }, []);
+
+    const scheduleHideHeader = useCallback(() => {
+        clearHideHeaderTimeout();
+        hideHeaderTimeoutRef.current = setTimeout(() => setHeaderVisible(false), 1000);
+    }, []);
+
+    const handleScrollDirection = useCallback(
+        (currentScrollTop: number) => {
+            if (currentScrollTop < lastScrollTopRef.current) {
+                showHeader();
+            } else if (currentScrollTop > lastScrollTopRef.current) {
+                scheduleHideHeader();
+            }
+
+            lastScrollTopRef.current = currentScrollTop;
+        },
+        [scheduleHideHeader, showHeader],
+    );
 
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
@@ -79,6 +112,8 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
 
+    useEffect(() => () => clearHideHeaderTimeout(), [])
+
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
         setTextSize(next);
@@ -114,6 +149,12 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     }, [location]);
 
     const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+
+    const headerVisibilityStyles = {
+        opacity: isHeaderVisible ? 1 : 0,
+        pointerEvents: isHeaderVisible ? 'auto' : 'none',
+        transition: 'opacity 0.3s ease',
+    } as const;
 
     const baseReaderStyle: IReactReaderStyle = {
         ...ReactReaderStyle,
@@ -154,6 +195,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
+            ...headerVisibilityStyles,
             background: themeSetting.text,
             zIndex: 4,
 
@@ -173,6 +215,14 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         tocButtonExpanded: {
             ...ReactReaderStyle.tocButtonExpanded,
             background:  themeSetting.section,
+        },
+        tocButtonBarTop: {
+            ...ReactReaderStyle.tocButtonBarTop,
+            ...headerVisibilityStyles,
+        },
+        titleArea: {
+            ...ReactReaderStyle.titleArea,
+            ...headerVisibilityStyles,
         },
     }
 
@@ -327,6 +377,22 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
 
                     const handleRendered = (_: string, contents: any) => {
                         console.log("222: ", 222);
+                        const documentElement = contents?.document?.documentElement;
+                        if (documentElement) {
+                            lastScrollTopRef.current = documentElement.scrollTop;
+                        }
+
+                        const handleScroll = () => {
+                            const scrollTop = contents?.document?.documentElement?.scrollTop
+                                || contents?.document?.body?.scrollTop
+                                || 0;
+                            handleScrollDirection(scrollTop);
+                        };
+
+                        contents?.document?.addEventListener?.('scroll', handleScroll, {passive: true});
+                        contents?.on?.('destroyed', () => {
+                            contents?.document?.removeEventListener?.('scroll', handleScroll);
+                        });
                         setInterval(() => {
                             const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
                             console.log("selectedText: ", selectedText);
