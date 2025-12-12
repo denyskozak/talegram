@@ -12,7 +12,7 @@ import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookPro
 import {catalogApi} from "@/entities/book/api";
 import type {Book} from "@/entities/book/types";
 
-const SEEK_OFFSET_SECONDS = 15;
+const SEEK_OFFSET_SECONDS = 30;
 
 export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
@@ -324,7 +324,7 @@ export default function ListenBookPage(): JSX.Element {
                 ) : null}
                 <div style={{display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center"}}>
                     <Text style={{margin: 0, fontWeight: 600}}>{t("book.listen.speed")}</Text>
-                    {[1, 1.5, 3].map((rate) => (
+                    {[1, 1.2, 1.3, 1.5].map((rate) => (
                         <Button
                             key={rate}
                             mode={playbackRate === rate ? "filled" : "outline"}
