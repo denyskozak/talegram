@@ -192,6 +192,9 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             background: themeSetting.text,
             opacity: 0.9,
             zIndex: 3,
+            position: "fixed",
+            top: '10%',
+            left: '5%'
 
         },
         tocButton: {
