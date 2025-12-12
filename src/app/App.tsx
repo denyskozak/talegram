@@ -12,7 +12,7 @@ import {ToastProvider} from "@/shared/ui/ToastProvider";
 import {DemoBanner} from "@/shared/ui/DemoBanner";
 import {FooterBar} from "@/widgets/FooterBar/FooterBar";
 import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
-import {useFooterVisibility} from "@/shared/hooks/useFooterVisibility";
+import {useFooterVisibility, useHeaderVisibility} from "@/shared/hooks/useFooterVisibility";
 import {useLaunchParams} from "@tma.js/sdk-react";
 import {StartRouteHandler} from "@/app/StartHandler.tsx";
 
@@ -149,6 +149,7 @@ function AppContent(): JSX.Element {
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
     const [isSplashVisible, setIsSplashVisible] = useState(true);
     const isFooterVisible = useFooterVisibility();
+    const isHeaderVisible = useHeaderVisibility();
 
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
@@ -176,7 +177,7 @@ function AppContent(): JSX.Element {
                         flexDirection: "column",
                     }}
                 >
-                    <HeaderBar/>
+                    {isHeaderVisible && <HeaderBar/>}
                     <main style={{flex: 1, width: "100%"}}>
                         <DemoBanner visible={!isTelegram}/>
                         <div style={{paddingBottom: 24}}>

@@ -1,25 +1,35 @@
-import { Button } from "@/shared/ui/Button";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-const LANGUAGE_LABELS: Record<string, string> = {
+import { SUPPORTED_LANGUAGES } from "@/shared/config/i18n";
+import { Button } from "@/shared/ui/Button";
+
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+
+const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: "EN",
   ru: "RU",
+  uk: "UK",
 };
 
 export function LanguageToggle(): JSX.Element {
   const { i18n, t } = useTranslation();
   const currentLanguage = i18n.language;
-  const normalizedLanguage = currentLanguage.slice(0, 2);
+  const normalizedLanguage = currentLanguage.slice(0, 2).toLowerCase();
 
-    const nextLanguage = normalizedLanguage === "ru" ? "en" : "ru";
+  const availableLanguages = SUPPORTED_LANGUAGES;
+  const activeLanguage = availableLanguages.includes(normalizedLanguage as SupportedLanguage)
+    ? (normalizedLanguage as SupportedLanguage)
+    : availableLanguages[0];
 
-    const label = LANGUAGE_LABELS[nextLanguage] ?? nextLanguage.toUpperCase();
+  const nextLanguage = availableLanguages[(availableLanguages.indexOf(activeLanguage) + 1) % availableLanguages.length];
+
+  const label = LANGUAGE_LABELS[nextLanguage] ?? nextLanguage.toUpperCase();
 
   const ariaLabel = useMemo(() => {
-    const languageNameKey = normalizedLanguage === "ru" ? "languages.ru" : "languages.en";
+    const languageNameKey = `languages.${activeLanguage}`;
     return t("header.languageToggle", { language: t(languageNameKey) });
-  }, [normalizedLanguage, t]);
+  }, [activeLanguage, t]);
 
   const handleToggle = () => {
     void i18n.changeLanguage(nextLanguage);
