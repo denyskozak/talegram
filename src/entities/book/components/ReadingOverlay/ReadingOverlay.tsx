@@ -116,9 +116,9 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         const excerpt = `\n\n“${selection}”\n\nExcerpt From\n${book.title}\n${book.authors.join(', ')}\nThis material may be protected by copyright`;
         const startParamParts = [`reader_${book.id}_books`];
 
-        if (location) {
-            startParamParts.push(`loc_${encodeURIComponent(location)}`);
-        }
+        // if (location) {
+        //     startParamParts.push(`loc_${encodeURIComponent(location)}`);
+        // }
 
         if (book.price !== 0) {
             startParamParts.push("preview_1");
