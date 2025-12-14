@@ -33,12 +33,13 @@ export default function ReaderPage(): ReactNode | undefined {
     );
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
+    console.log("book: ", book);
     useEffect(() => {
 
         function listener() {
             if (backButton.onClick.isAvailable()) {
 
-                console.log("window.history.length: ", window.history.length);
+                console.log("window.history.length: ", window.history.state);
                 if (window.history.length < 2 && book) {
                     navigate(`/book/${book.id}`);
                     return;
@@ -51,7 +52,7 @@ export default function ReaderPage(): ReactNode | undefined {
         return () => {
             backButton.offClick(listener);
         }
-    }, []);
+    }, [book]);
 
     if (id === undefined || type === undefined) return null;
     
