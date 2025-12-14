@@ -259,6 +259,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
             height: '100vh',
             margin: 0,
             padding: 0,
+            textAlign: 'center',
         },
 
         viewHolder: {
