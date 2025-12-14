@@ -39,8 +39,8 @@ export default function ReaderPage(): ReactNode | undefined {
             if (backButton.onClick.isAvailable()) {
 
                 console.log("window.history.length: ", window.history.length);
-                if (window.history.length < 2) {
-                    navigate(`/book/${book?.id}`);
+                if (window.history.length < 2 && book) {
+                    navigate(`/book/${book.id}`);
                     return;
                 }
             }
