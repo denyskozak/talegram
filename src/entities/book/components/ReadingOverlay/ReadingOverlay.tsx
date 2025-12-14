@@ -4,13 +4,15 @@ import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {type Rendition} from 'epubjs'
-import {shareURL} from "@tma.js/sdk";
+import {shareURL, backButton} from "@tma.js/sdk";
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
+import {useLaunchParams} from "@tma.js/sdk-react";
+import {useNavigate} from "react-router-dom";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
@@ -18,12 +20,13 @@ type ReadingOverlayProps = {
     fileUrl: string;
     onLocationChange: (location: string) => void;
     initialLocation: string
+    isPreview: boolean
 };
 
 type ITheme = 'light' | 'dark'
 
 
-export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book}: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
     const themeSetting = useTheme();
@@ -33,11 +36,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
     const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
-    const [isHeaderVisible, setHeaderVisible] = useState(true);
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const lastScrollTopRef = useRef<number>(0);
+    const readerIframetRef = useRef<null | HTMLIFrameElement>(null);
 
     const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
     const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
@@ -51,28 +54,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         }
     };
 
-    const showHeader = useCallback(() => {
-        clearHideHeaderTimeout();
-        setHeaderVisible(true);
-    }, []);
 
-    const scheduleHideHeader = useCallback(() => {
-        clearHideHeaderTimeout();
-        hideHeaderTimeoutRef.current = setTimeout(() => setHeaderVisible(false), 1000);
-    }, []);
-
-    const handleScrollDirection = useCallback(
-        (currentScrollTop: number) => {
-            if (currentScrollTop < lastScrollTopRef.current) {
-                showHeader();
-            } else if (currentScrollTop > lastScrollTopRef.current) {
-                scheduleHideHeader();
-            }
-
-            lastScrollTopRef.current = currentScrollTop;
-        },
-        [scheduleHideHeader, showHeader],
-    );
 
 
     function updateTheme(rendition: Rendition, theme: ITheme) {
@@ -93,7 +75,27 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             }
         }
     }
+    const navigate = useNavigate();
 
+    useEffect(() => {
+
+        function listener() {
+            if (backButton.onClick.isAvailable()) {
+
+
+            if (window.history.length < 2) {
+                navigate('/');
+                return;
+            }
+            }
+        }
+
+        // or
+        backButton.onClick(listener);
+        return () => {
+            backButton.offClick(listener);
+        }
+    }, []);
 
     useEffect(() => {
         if (renditionRef.current) {
@@ -153,13 +155,20 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
         onLocationChange?.(location)
     }, [location]);
 
-    const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+    useEffect(() => {
+        const  intervalId = setInterval(() => {
+            if (!readerIframetRef.current) return;
 
-    const headerVisibilityStyles = {
-        opacity: isHeaderVisible ? 1 : 0,
-        pointerEvents: isHeaderVisible ? 'auto' : 'none',
-        transition: 'opacity 0.3s ease',
-    } as const;
+            const newSelectedText = (readerIframetRef?.current as unknown as { window: Window})?.window?.getSelection?.()?.toString() ?? "";
+
+            if (selection !== newSelectedText) setSelection(newSelectedText)
+        }, 1500)
+        return () => {
+            clearInterval(intervalId);
+        }
+    }, []);
+
+    const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
 
     const baseReaderStyle: IReactReaderStyle = {
         ...ReactReaderStyle,
@@ -198,36 +207,33 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             ...ReactReaderStyle.reader,
             inset: '0  24px'
         },
+        tocButtonBarTop: {
+            ...ReactReaderStyle.tocButtonBarTop,
+            background:  theme === 'dark' ? darkText : lightText,
+            height: '4px',
+            zIndex: 100,
+        },
         tocButtonBar: {
             ...ReactReaderStyle.tocButtonBar,
-            ...headerVisibilityStyles,
-            background: themeSetting.text,
-            zIndex: 4,
-
-            // position: "absolute",
-            // top: '10%',
-            // left: '5%'
-
+            background:  theme === 'dark' ? darkText : lightText,
+            zIndex: 100,
+            height: '4px',
         },
         tocButton: {
             ...ReactReaderStyle.tocButton,
-            background:  themeSetting.section,
+            position: "fixed",
+            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? isPreview ? "25vh" : '12vh' : '5vh',
+            left: '5vw',
+            background:  theme === 'dark' ? darkBackground : lightBackground,
             width: '3em',
             height: '3em',
-            opacity: 0.9,
-            zIndex: 3,
+            opacity: 0.8,
+            zIndex: 99,
         },
-        tocButtonExpanded: {
-            ...ReactReaderStyle.tocButtonExpanded,
-            background:  themeSetting.section,
-        },
-        tocButtonBarTop: {
-            ...ReactReaderStyle.tocButtonBarTop,
-            ...headerVisibilityStyles,
-        },
+
+
         titleArea: {
             ...ReactReaderStyle.titleArea,
-            ...headerVisibilityStyles,
         },
     }
 
@@ -256,25 +262,21 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
             ...ReactReaderStyle.tocArea,
             background: '#212121',
         },
-
-
-
-
     }
 
     const epubViewStyles = {
         view: {
             // внутренний canvas epub.js
-            width: '100%',
-            height: '100%',
+            width: '100vw',
+            height: '100vh',
             margin: 0,
             padding: 0,
         },
 
         viewHolder: {
             // внутренний canvas epub.js
-            width: '100%',
-            height: '100%',
+            width: '100vw',
+            height: '100vh',
             margin: 0,
             padding: 0,
             overflow: 'hidden',
@@ -380,32 +382,12 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, book
                     // затем накатываем твой цветовой theme
                     updateTheme(_rendition, theme);
 
-                    const handleRendered = (_: string, contents: any) => {
-                        console.log("222: ", 222);
-                        const documentElement = contents?.document?.documentElement;
-                        if (documentElement) {
-                            lastScrollTopRef.current = documentElement.scrollTop;
+                    const handleRendered = (_: string, view: any) => {
+                        if (view) {
+                            readerIframetRef.current = view;
                         }
 
-                        const handleScroll = () => {
-                            const scrollTop = contents?.document?.documentElement?.scrollTop
-                                || contents?.document?.body?.scrollTop
-                                || 0;
-                            handleScrollDirection(scrollTop);
-                        };
 
-                        contents?.document?.addEventListener?.('scroll', handleScroll, {passive: true});
-                        contents?.on?.('destroyed', () => {
-                            contents?.document?.removeEventListener?.('scroll', handleScroll);
-                        });
-                        setInterval(() => {
-                            const selectedText = contents?.window?.getSelection?.()?.toString() ?? "";
-                            console.log("selectedText: ", selectedText);
-
-
-                            console.log("8: ", 8);
-                            setSelection(selectedText.trim());
-                        }, 1000)
                     };
                     _rendition.on('rendered', handleRendered);
                 }}
