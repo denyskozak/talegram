@@ -44,6 +44,7 @@ export default function ListenBookPage(): JSX.Element {
     const [currentTime, setCurrentTime] = useState(0);
     const [playbackRate, setPlaybackRate] = useState(1);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [shareFromCurrent, setShareFromCurrent] = useState(true);
     const isPreview = searchParams.get("preview") === "1";
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
 
@@ -245,7 +246,7 @@ export default function ListenBookPage(): JSX.Element {
         const parts = [`listen_${id}_${type}`];
         const currentSeconds = Math.floor(audioRef.current?.currentTime ?? currentTime ?? 0);
 
-        if (Number.isFinite(currentSeconds) && currentSeconds > 0) {
+        if (shareFromCurrent && Number.isFinite(currentSeconds) && currentSeconds > 0) {
             parts.push(`time_${currentSeconds}`);
         }
 
@@ -263,7 +264,7 @@ export default function ListenBookPage(): JSX.Element {
         } catch (error) {
             console.error("Failed to share audiobook", error);
         }
-    }, [book, currentTime, id, isPreview, type]);
+    }, [book, currentTime, id, isPreview, shareFromCurrent, type]);
 
     return (
         <div
@@ -375,6 +376,14 @@ export default function ListenBookPage(): JSX.Element {
                 </div>
                 {audioUrl ? (
                     <div style={{display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center"}}>
+                        <label style={{display: "inline-flex", alignItems: "center", gap: 8}}>
+                            <input
+                                type="checkbox"
+                                checked={shareFromCurrent}
+                                onChange={(event) => setShareFromCurrent(event.target.checked)}
+                            />
+                            <Text style={{margin: 0}}>{t("book.listen.shareFromCurrent")}</Text>
+                        </label>
                         <Button mode="outline" size="s" onClick={handleShareAudio}>
                             {t("book.share")}
                         </Button>

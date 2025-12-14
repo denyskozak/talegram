@@ -216,6 +216,7 @@
       "play": "Слушать",
       "pause": "Пауза",
       "seek": "Позиция воспроизведения",
+      "shareFromCurrent": "С текущей точки?",
       "seekBackward": "Отмотать на {{seconds}} с",
       "seekForward": "Вперёд на {{seconds}} с"
     },
