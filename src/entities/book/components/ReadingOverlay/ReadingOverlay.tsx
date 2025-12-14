@@ -4,7 +4,7 @@ import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {type Rendition} from 'epubjs'
-import {shareURL, backButton} from "@tma.js/sdk";
+import {shareURL} from "@tma.js/sdk";
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
@@ -12,7 +12,6 @@ import {Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 import {useLaunchParams} from "@tma.js/sdk-react";
-import {useNavigate} from "react-router-dom";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
@@ -75,27 +74,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
             }
         }
     }
-    const navigate = useNavigate();
-
-    useEffect(() => {
-
-        function listener() {
-            if (backButton.onClick.isAvailable()) {
-
-
-            if (window.history.length < 2) {
-                navigate('/');
-                return;
-            }
-            }
-        }
-
-        // or
-        backButton.onClick(listener);
-        return () => {
-            backButton.offClick(listener);
-        }
-    }, []);
 
     useEffect(() => {
         if (renditionRef.current) {
@@ -185,9 +163,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         readerArea: {
             ...ReactReaderStyle.readerArea,
             margin: 0,
-            padding: 0,
+            // padding: 0,
             height: '100%',
             inset: 0,
+            padding: '0 32px',
             overflow: 'hidden',
         },
         // стрелки навигации – полностью отключаем
@@ -205,7 +184,9 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         },
         reader: {
             ...ReactReaderStyle.reader,
-            inset: '0  24px'
+            // width: '99%',
+            inset: 0
+
         },
         tocButtonBarTop: {
             ...ReactReaderStyle.tocButtonBarTop,

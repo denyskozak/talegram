@@ -13,6 +13,7 @@ import {catalogApi} from "@/entities/book/api.ts";
 import {Book} from "@/entities/book/types.ts";
 import {useLaunchParams} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button.tsx";
+import {backButton} from "@tma.js/sdk";
 
 type ReaderRouteParams = {
     id?: string;
@@ -32,9 +33,28 @@ export default function ReaderPage(): ReactNode | undefined {
     );
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
+    useEffect(() => {
+
+        function listener() {
+            if (backButton.onClick.isAvailable()) {
+
+                console.log("window.history.length: ", window.history.length);
+                if (window.history.length < 2) {
+                    navigate('/');
+                    return;
+                }
+            }
+        }
+
+        // or
+        backButton.onClick(listener);
+        return () => {
+            backButton.offClick(listener);
+        }
+    }, []);
+
     if (id === undefined || type === undefined) return null;
-
-
+    
     const isPreview = searchParams.get('preview') === '1';
 
     const initialReaderLocation = useMemo(
