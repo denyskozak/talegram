@@ -162,7 +162,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         // область чтения без отступов
         readerArea: {
             ...ReactReaderStyle.readerArea,
-            margin: '32px 0 0 0',
+            margin: `${tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? '32px' : '0'} 0 0 0`,
             // padding: 0,
             height: '100%',
             inset: 0,
