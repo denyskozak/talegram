@@ -162,11 +162,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         // область чтения без отступов
         readerArea: {
             ...ReactReaderStyle.readerArea,
-            margin: 0,
+            margin: '32px 0 0 0',
             // padding: 0,
             height: '100%',
             inset: 0,
-            padding: '0 32px',
             overflow: 'hidden',
         },
         // стрелки навигации – полностью отключаем
@@ -185,8 +184,9 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         reader: {
             ...ReactReaderStyle.reader,
             // width: '99%',
-            inset: 0
-
+            inset: 0,
+            // justifyContent: "center",
+            textAlign: 'center',
         },
         tocButtonBarTop: {
             ...ReactReaderStyle.tocButtonBarTop,
@@ -200,6 +200,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
             zIndex: 100,
             height: '4px',
         },
+
         tocButton: {
             ...ReactReaderStyle.tocButton,
             position: "fixed",
@@ -225,6 +226,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
             ...baseReaderStyle.readerArea,
             backgroundColor: lightBackground,
         },
+        tocArea: {
+            ...ReactReaderStyle.tocArea,
+            margin: '32px 0 0 0',
+        },
     }
 
     const darkReaderTheme: IReactReaderStyle = {
@@ -242,6 +247,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         tocArea: {
             ...ReactReaderStyle.tocArea,
             background: '#212121',
+            margin: '32px 0 0 0',
         },
     }
 
