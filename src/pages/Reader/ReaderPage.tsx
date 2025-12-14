@@ -40,7 +40,7 @@ export default function ReaderPage(): ReactNode | undefined {
 
                 console.log("window.history.length: ", window.history.length);
                 if (window.history.length < 2) {
-                    navigate('/');
+                    navigate(`/book/${book?.id}`);
                     return;
                 }
             }

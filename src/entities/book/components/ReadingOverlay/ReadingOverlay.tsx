@@ -187,6 +187,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
             inset: 0,
             // justifyContent: "center",
             textAlign: 'center',
+            justifyContent: 'center',
         },
         tocButtonBarTop: {
             ...ReactReaderStyle.tocButtonBarTop,
