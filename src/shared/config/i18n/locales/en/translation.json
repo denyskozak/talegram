@@ -221,6 +221,7 @@
       "play": "Play",
       "pause": "Pause",
       "seek": "Seek position",
+      "shareFromCurrent": "From current position?",
       "seekBackward": "Rewind {{seconds}}s",
       "seekForward": "Forward {{seconds}}s"
     },

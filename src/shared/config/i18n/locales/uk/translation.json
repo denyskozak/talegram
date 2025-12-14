@@ -221,6 +221,7 @@
       "play": "Відтворити",
       "pause": "Пауза",
       "seek": "Перехід",
+      "shareFromCurrent": "З поточної точки?",
       "seekBackward": "Назад на {{seconds}}с",
       "seekForward": "Вперед на {{seconds}}с"
     },
