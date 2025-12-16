@@ -75,6 +75,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
        tocArea: {
             ...ReactReaderStyle.tocArea,
            backgroundColor: themeState.background,
+           marginTop: '10vh'
        },
         tocButton: {
             ...ReactReaderStyle.tocButton,
