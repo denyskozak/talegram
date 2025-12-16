@@ -349,8 +349,6 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                         });
                     };
                     _rendition.on('rendered', handleRendered);
-
-
                 }}
             />
         </div>

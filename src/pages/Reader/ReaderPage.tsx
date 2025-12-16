@@ -81,14 +81,11 @@ export default function ReaderPage(): ReactNode | undefined {
         }
     }, []);
 
-    console.log("tgWebAppFullscreen: ", tgWebAppFullscreen);
-    console.log("tgWebAppPlatform: ", tgWebAppPlatform);
     return (
         <div style={{
             display: "flex",
             background: theme.background,
             flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
-            <div>{tgWebAppFullscreen ? 1 : 0}, {tgWebAppPlatform}, {tgWebAppPlatform === 'ios'  ? 1 : 0}</div>
             {isPreview ? (
                 <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? "10vh" : 12, marginLeft: 12, marginRight: 12}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
