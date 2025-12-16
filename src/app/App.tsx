@@ -168,7 +168,7 @@ function AppContent(): JSX.Element {
         };
     }, []);
     const isDefaultThemeDark = theme.text === "#ffffff" || theme.text === "#FFFFFF";
-
+    console.log("isDefaultThemeDark: ", isDefaultThemeDark);
     return (
 
         <AppRoot
