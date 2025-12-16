@@ -35,7 +35,7 @@ export default function ReaderPage(): ReactNode | undefined {
         [launchParams],
     );
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
-    useScrollToTop([id]);
+    useScrollToTop();
 
     useEffect(() => {
 
