@@ -386,7 +386,7 @@
           "placeholder": "Виберіть жанр або збірку",
           "options": {
             "book": {
-              "novels": "Романи / Художня література",
+              "novels": "Романи",
               "philosophy": "Філософія",
               "scienceFiction": "Наукова фантастика",
               "fantasy": "Фентезі",

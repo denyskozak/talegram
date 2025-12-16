@@ -196,7 +196,7 @@ export default function HomeCategories(): JSX.Element {
             <Title level="1" weight="2">
                 {t("homeCategories.title")}
             </Title>
-            <div style={{display: "flex", flexDirection: "column", gap: 8, marginBottom: 16}}>
+            <div style={{display: "flex", flexDirection: "column", gap: 8, marginBottom: 16, marginTop: 16}}>
                 <SegmentedControl
                 >
                     {GLOBAL_CATEGORIES.map((category) => (

@@ -386,7 +386,7 @@
           "placeholder": "Select the genre or collection",
           "options": {
             "book": {
-              "novels": "Novels / Literary Fiction",
+              "novels": "Novels",
               "philosophy": "Philosophy",
               "scienceFiction": "Science Fiction",
               "fantasy": "Fantasy",
