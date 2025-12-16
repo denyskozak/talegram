@@ -53,9 +53,10 @@ export default function HomeCategories(): JSX.Element {
     useEffect(() => {
         void loadCategories({
             globalCategory: selectedGlobalCategory,
+            language: i18n.language,
             errorMessage: t("errors.loadCategories"),
         });
-    }, [loadCategories, selectedGlobalCategory, t]);
+    }, [i18n.language, loadCategories, selectedGlobalCategory, t]);
 
     useEffect(() => {
         if (selectedGlobalCategory === "book") {
@@ -85,6 +86,7 @@ export default function HomeCategories(): JSX.Element {
     const handleRetryCategories = () =>
         loadCategories({
             globalCategory: selectedGlobalCategory,
+            language: i18n.language,
             errorMessage: t("errors.loadCategories"),
             force: true,
         });

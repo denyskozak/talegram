@@ -15,6 +15,7 @@ import { getPurchaseDetails } from '../stores/purchasesStore.js';
 const listCategoriesInput = z.object({
   search: z.string().trim().optional(),
   globalCategory: z.enum(['article', 'book', 'comics']).optional(),
+  language: z.string().trim().min(1).optional(),
 });
 
 const listBooksInput = z.object({
@@ -99,4 +100,3 @@ export const catalogRouter = createRouter({
     });
   }),
 });
-

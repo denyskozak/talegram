@@ -75,6 +75,7 @@ export default function SearchPage(): JSX.Element {
                     }),
                     catalogApi.listCategories({
                         search: trimmedQuery,
+                        language: i18n.language,
                     }),
                 ]);
 
@@ -101,7 +102,7 @@ export default function SearchPage(): JSX.Element {
         return () => {
             cancelled = true;
         };
-    }, [queryTags, trimmedQuery, t, refreshToken]);
+    }, [i18n.language, queryTags, trimmedQuery, t, refreshToken]);
 
     const handleCategoryClick = (category: Category) => {
         if (isSpecialCategoryId(category.id)) {

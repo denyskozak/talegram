@@ -123,6 +123,15 @@ function normalizeGlobalCategory(value: unknown): string | null {
   return normalized;
 }
 
+function normalizeLanguage(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLocaleLowerCase();
+  return normalized.length > 0 ? normalized : null;
+}
+
 async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
   const ratingAverage = entity.middleRate ?? entity.ratingAverage ?? 0;
   const ratingVotes = entity.ratingVotes ?? 0;
@@ -175,9 +184,11 @@ function sortEntities(entities: BookEntity[], sort: BookSort): BookEntity[] {
 export async function listCategories(params: {
   search?: string;
   globalCategory?: string;
+  language?: string;
 } = {}): Promise<Category[]> {
   const repository = await getBookRepository();
   const normalizedGlobalCategory = normalizeGlobalCategory(params.globalCategory);
+  const normalizedLanguage = normalizeLanguage(params.language);
   const queryBuilder = repository.createQueryBuilder('book');
 
   if (normalizedGlobalCategory) {
@@ -185,6 +196,10 @@ export async function listCategories(params: {
       'LOWER(book.global_category) = :globalCategory',
       { globalCategory: normalizedGlobalCategory },
     );
+  }
+
+  if (normalizedLanguage) {
+    queryBuilder.andWhere('LOWER(book.language) = :language', { language: normalizedLanguage });
   }
 
   const filteredByGlobalCategory = await queryBuilder.getMany();

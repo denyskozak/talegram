@@ -5,6 +5,7 @@ import type { Book, CatalogApi, ID } from "./types";
 type ListCategoriesPayload = {
   search?: string;
   globalCategory?: "article" | "book" | "comics";
+  language?: string;
 };
 
 type ListBooksPayload = {
@@ -37,6 +38,7 @@ export const catalogApi: CatalogApi = {
       ? {
           search: query.search as any,
           globalCategory: query.globalCategory as any,
+          language: query.language as any,
         }
       : undefined;
 
@@ -83,4 +85,3 @@ export const catalogApi: CatalogApi = {
 export function getCategoryTags(categoryId: ID, limit?: number): Promise<string[]> {
   return trpc.catalog.listCategoryTags.query({ categoryId, limit });
 }
-
