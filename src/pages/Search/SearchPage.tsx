@@ -122,7 +122,7 @@ export default function SearchPage(): JSX.Element {
                     {t("search.title")}
                 </Title>
             </div>
-            <Card style={{margin: "16px 0"}}>
+            <Card style={{margin: "16px 0", width: '100%'}}>
                 <Input
                     type="search"
                     value={query}
@@ -186,10 +186,23 @@ export default function SearchPage(): JSX.Element {
                             {t("search.results.books")}
                         </Title>
                         {books.length > 0 ? (
-                            <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                            <div style={{
+
+                                display: "grid",
+                                gridAutoFlow: "row", // новые элементы добавляются в новые колонки
+                                gridTemplateColumns: "repeat(3, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
+                                gridAutoColumns: "calc(33% - 8px)", // ширина одной колонки ~ половина контейнера
+                                // overflowX: "auto", // горизонтальный скролл
+                                columnGap: 16,
+                                rowGap: 16,
+                                paddingRight: 4,
+                                paddingBottom: 4,
+                                marginTop: 8,
+                            }}>
                                 {books.map((book) => (
                                     <BookCard
                                         key={book.id}
+                                        showTags={false}
                                         book={book}
                                         onClick={() => navigate(`/book/${book.id}`)}
                                     />

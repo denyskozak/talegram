@@ -3,7 +3,7 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
-import {type Rendition} from 'epubjs'
+import {Rendition, type Contents} from 'epubjs'
 import {shareURL} from "@tma.js/sdk";
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
@@ -19,6 +19,7 @@ type ReadingOverlayProps = {
     onLocationChange: (location: string) => void;
     initialLocation: string
     isPreview: boolean
+    mobileFullScreen: boolean
 };
 
 
@@ -26,7 +27,7 @@ type ITheme = 'light' | 'dark'
 
 
 
-export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
     const themeSetting = useTheme();
@@ -38,7 +39,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const readerIframetRef = useRef<null | HTMLIFrameElement>(null);
+    const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
 
@@ -74,7 +75,11 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
        tocArea: {
             ...ReactReaderStyle.tocArea,
            backgroundColor: themeState.background,
-       }
+       },
+        tocButton: {
+            ...ReactReaderStyle.tocButton,
+            top: mobileFullScreen ? '10vh' : ReactReaderStyle.tocButton.top
+        }
     }
 
     useEffect(() => {
@@ -187,12 +192,15 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         h1, h2, h3, h4, h5, h6, p, blockquote, pre { 
           background-color: transparent !important;
         }    
+        iframe { pointer-events: auto !important; }
+
       `)
         );
 
         // ВАЖНО: добавляем в КОНЕЦ head, чтобы быть последними по каскаду
         doc.head.appendChild(style);
     };
+
 
     return (
         <div style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
@@ -265,15 +273,78 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
                     _rendition.hooks.content.register(injectCss);
 
 
-
-                    const handleRendered = (_: string, view: any) => {
+                    const handleRendered = (_: string, view: Contents) => {
                         if (view) {
                             readerIframetRef.current = view;
                         }
 
+                        const doc = view.document;
 
+                        const links = Array.from(doc.querySelectorAll("a"));
+                        console.log("links: ", links);
+                        links.forEach((a) => {
+                            const href = a.getAttribute("href");
+                            console.log("href: ", href);
+                            if (!href) return;
+
+                            // пропускаем внутреннюю навигацию EPUB
+                            if (
+                                href.startsWith("#") ||
+                                href.startsWith("epubcfi(")
+                            ) {
+                                return;
+                            }
+
+                            // 1️⃣ убираем стандартное поведение
+                            a.removeAttribute("href");
+
+                            // 2️⃣ делаем ссылку "кнопкой"
+                            a.setAttribute("role", "link");
+                            a.style.cursor = "pointer";
+
+                            // 3️⃣ вешаем своё поведение
+
+                            function logAllEvents(el: EventTarget, label = "") {
+                                const events = [
+                                    // mouse
+                                    "click", "mousedown", "mouseup",
+                                    "mouseenter", "mouseleave", "mouseover", "mouseout",
+
+                                    // touch
+                                    "touchstart", "touchmove", "touchend", "touchcancel",
+
+                                    // pointer
+                                    "pointerdown", "pointermove", "pointerup", "pointercancel",
+
+                                    // keyboard
+                                    "keydown", "keyup",
+
+                                    // focus
+                                    "focus", "blur",
+
+                                    // misc
+                                    "contextmenu",
+                                ];
+
+                                const handler = (e: Event) => {
+                                    console.log(`[${label}]`, e.type, e);
+                                };
+
+                                events.forEach((ev) =>
+                                    el.addEventListener(ev, handler, {capture: true})
+                                );
+
+
+
+
+                            }
+                            logAllEvents(a)
+
+                        });
                     };
                     _rendition.on('rendered', handleRendered);
+
+
                 }}
             />
         </div>

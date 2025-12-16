@@ -82,7 +82,6 @@ export default function ReaderPage(): ReactNode | undefined {
         <div style={{
             display: "flex",
             background: theme.background,
-            paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0,
             flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {isPreview ? (
                 <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 12, marginLeft: 12, marginRight: 12}}>
@@ -94,6 +93,7 @@ export default function ReaderPage(): ReactNode | undefined {
             <ReadingOverlay
                 book={book}
                 isPreview={isPreview}
+                mobileFullScreen={Boolean(tgWebAppFullscreen && tgWebAppPlatform)}
                 fileUrl={downloadUrl}
                 initialLocation={initialReaderLocation}
                 onLocationChange={handleReaderLocationChange}
