@@ -8,7 +8,6 @@ export function StartRouteHandler(): null {
     const  startParam  = launchParams?.tgWebAppData?.start_param ?? '';
 
     const handledRef = useRef(false);
-    console.log("startParam: ", startParam);
 
     useEffect(() => {
         if (typeof startParam !== 'string') return;

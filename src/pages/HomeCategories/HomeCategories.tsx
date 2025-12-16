@@ -79,7 +79,7 @@ export default function HomeCategories(): JSX.Element {
             return;
         }
 
-        navigate(`/category/${category.id}`);
+        navigate(`/category/${encodeURIComponent(category.id)}`);
     };
 
     const handleRetryCategories = () =>

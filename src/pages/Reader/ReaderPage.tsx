@@ -80,8 +80,8 @@ export default function ReaderPage(): ReactNode | undefined {
     }, []);
     return (
         <div style={{display: "flex", flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
-            {previewMessage ? (
-                <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0}}>
+            {isPreview ? (
+                <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 12, marginLeft: 12, marginRight: 12}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
                         {previewMessage} <Button size="s" onClick={() => navigate(`/book/${id}`)}>{t("book.actions.buy")}</Button>
                     </Text>

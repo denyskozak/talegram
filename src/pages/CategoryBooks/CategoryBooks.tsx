@@ -158,8 +158,8 @@ export default function CategoryBooks(): JSX.Element {
       {error && <ErrorBanner message={error} onRetry={() => loadBooks(true)} />}
       <div style={{
           display: "grid",
-          gridAutoFlow: "column", // новые элементы добавляются в новые колонки
-          gridTemplateRows: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
+          gridAutoFlow: "row", // новые элементы добавляются в новые колонки
+          gridTemplateColumns: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
           gridAutoColumns: "calc(50% - 8px)", // ширина одной колонки ~ половина контейнера
           // overflowX: "auto", // горизонтальный скролл
           columnGap: 16,
@@ -169,7 +169,7 @@ export default function CategoryBooks(): JSX.Element {
           marginTop: 8,
       }}>
         {books.map((book) => (
-          <BookCard key={book.id} book={book} onClick={() => navigate(`/book/${book.id}`)} />
+          <BookCard key={book.id} showTags={false} book={book} onClick={() => navigate(`/book/${book.id}`)} />
         ))}
         {isLoading && books.length === 0 && (
           <>

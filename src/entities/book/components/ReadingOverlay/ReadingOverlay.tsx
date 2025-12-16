@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 
 import "./ReadingOverlay.css";
-import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
+import {ReactReader} from "react-reader";
 
 import {type Rendition} from 'epubjs'
 import {shareURL} from "@tma.js/sdk";
@@ -11,7 +11,6 @@ import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 import {Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
-import {useLaunchParams} from "@tma.js/sdk-react";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 
 type ReadingOverlayProps = {
@@ -22,8 +21,6 @@ type ReadingOverlayProps = {
     isPreview: boolean
 };
 
-type ITheme = 'light' | 'dark'
-
 
 export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
@@ -31,20 +28,13 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
     const themeSetting = useTheme();
     const bookRef = useRef<any | null>(null);
     const renditionRef = useRef<Rendition | undefined>(undefined)
-    const isDefaultThemeDark = themeSetting.text === '#ffffff' || themeSetting.text === '#FFFFFF';
-    const [theme, setTheme] = useState<ITheme>(isDefaultThemeDark ? 'dark' : 'light');
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
-    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const readerIframetRef = useRef<null | HTMLIFrameElement>(null);
 
-    const darkText = isDefaultThemeDark ? themeSetting.text : '#fff'
-    const lightText = isDefaultThemeDark ? '#000' : themeSetting.text
-    const darkBackground = isDefaultThemeDark ? themeSetting.background : '#212121'
-    const lightBackground = isDefaultThemeDark ? '#fff' : themeSetting.background
 
     const clearHideHeaderTimeout = () => {
         if (hideHeaderTimeoutRef.current) {
@@ -53,33 +43,6 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         }
     };
 
-
-
-
-    function updateTheme(rendition: Rendition, theme: ITheme) {
-        const themes = rendition.themes
-
-        applyLayoutOverrides(rendition);
-
-        switch (theme) {
-            case 'dark': {
-                themes.override('color', darkText)
-                themes.override('background', darkBackground)
-                break
-            }
-            case 'light': {
-                themes.override('color', lightText)
-                themes.override('background', lightBackground)
-                break
-            }
-        }
-    }
-
-    useEffect(() => {
-        if (renditionRef.current) {
-            updateTheme(renditionRef.current, theme)
-        }
-    }, [theme])
 
     useEffect(() => {
         const textSizes: Record<number, string> = {
@@ -146,156 +109,10 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         }
     }, []);
 
-    const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+    // const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
 
-    const baseReaderStyle: IReactReaderStyle = {
-        ...ReactReaderStyle,
-        // контейнер самого ридера – растянем по ширине
-        container: {
-            ...ReactReaderStyle.container,
-            maxWidth: '100vw',
-            width: '100vw',
-            height: '100%',
-            margin: 0,
-            overflow: 'hidden',
-        },
-        // область чтения без отступов
-        readerArea: {
-            ...ReactReaderStyle.readerArea,
-            margin: `${tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? '32px' : '0'} 0 0 0`,
-            // padding: 0,
-            height: '100%',
-            inset: 0,
-            overflow: 'hidden',
-        },
-        // стрелки навигации – полностью отключаем
-        arrow: {
-            ...ReactReaderStyle.arrow,
-            display: 'none',
-            pointerEvents: 'none',
-            width: 0,
-        },
-        arrowHover: {
-            ...ReactReaderStyle.arrowHover,
-            display: 'none',
-            pointerEvents: 'none',
-            width: 0,
-        },
-        reader: {
-            ...ReactReaderStyle.reader,
-            // width: '99%',
-            inset: 0,
-            // justifyContent: "center",
-            textAlign: 'center',
-            justifyContent: 'center',
-        },
-        tocButtonBarTop: {
-            ...ReactReaderStyle.tocButtonBarTop,
-            background:  theme === 'dark' ? darkText : lightText,
-            height: '4px',
-            zIndex: 100,
-        },
-        tocButtonBar: {
-            ...ReactReaderStyle.tocButtonBar,
-            background:  theme === 'dark' ? darkText : lightText,
-            zIndex: 100,
-            height: '4px',
-        },
-
-        tocButton: {
-            ...ReactReaderStyle.tocButton,
-            position: "fixed",
-            top: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? isPreview ? "25vh" : '12vh' : '5vh',
-            left: '5vw',
-            background:  theme === 'dark' ? darkBackground : lightBackground,
-            width: '3em',
-            height: '3em',
-            opacity: 0.8,
-            zIndex: 99,
-        },
-
-
-        titleArea: {
-            ...ReactReaderStyle.titleArea,
-        },
-    }
-
-
-    const lightReaderTheme: IReactReaderStyle = {
-        ...baseReaderStyle,
-        readerArea: {
-            ...baseReaderStyle.readerArea,
-            backgroundColor: lightBackground,
-        },
-        tocArea: {
-            ...ReactReaderStyle.tocArea,
-            margin: '32px 0 0 0',
-        },
-    }
-
-    const darkReaderTheme: IReactReaderStyle = {
-        ...baseReaderStyle,
-
-
-        readerArea: {
-            ...baseReaderStyle.readerArea,
-            backgroundColor: darkBackground,
-        },
-        titleArea: {
-            ...ReactReaderStyle.titleArea,
-            color: '#ccc',
-        },
-        tocArea: {
-            ...ReactReaderStyle.tocArea,
-            background: '#212121',
-            margin: '32px 0 0 0',
-        },
-    }
-
-    const epubViewStyles = {
-        view: {
-            // внутренний canvas epub.js
-            width: '100vw',
-            height: '100vh',
-            margin: 0,
-            padding: 0,
-        },
-
-        viewHolder: {
-            // внутренний canvas epub.js
-            width: '100vw',
-            height: '100vh',
-            margin: 0,
-            padding: 0,
-            overflow: 'hidden',
-        },
-    }
-
-    function applyLayoutOverrides(rendition: Rendition) {
-        const themes = rendition.themes;
-
-        themes.register('no-margins', {
-            'html': {
-                margin: '0 !important',
-                padding: '0 !important',
-            },
-            'body': {
-                margin: '0 !important',
-                padding: '0 !important',
-                maxWidth: '100vw !important',
-                width: '100vw !important',
-                overflowX: 'hidden !important',
-            },
-        });
-
-        themes.select('no-margins');
-    }
-
-
-    console.log("selection: ", selection);
-    console.log("darkBackground: ", darkBackground);
     return (
-        <div style={{height: '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
+        <div style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
             <div style={{
                 position: "fixed",
                 right: '4px',
@@ -306,14 +123,14 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-                <Button mode="filled" size="m" style={{opacity: 0.9, background: darkBackground}}
+                <Button  mode="bezeled" size="m" style={{opacity: 0.9}}
                         onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ☰</span></Button>
                 {isMenuOpen
                     ? (
                         <>
-                            <Button mode="filled" size="s"
-                                    onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>
-                            <Button mode="filled" size="s"
+                            {/*<Button mode="filled" size="s"*/}
+                            {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
+                            <Button mode="bezeled" size="m"
                                     onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
                             {/*<Button mode="filled" size="s"*/}
                             {/*        onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>)*/}
@@ -350,25 +167,15 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
                 </div>
             ) : null}
             <ReactReader
-                readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
+                // readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
                 showToc
                 location={location}
-                epubOptions={{
-                    flow: "scrolled-doc",
-                    manager: "continuous",
-                    spread: "none",
-                }}
-                epubViewStyles={epubViewStyles}
-
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 getRendition={(_rendition) => {
                     renditionRef.current = _rendition
                     bookRef.current = _rendition.book;
 
-
-                    // затем накатываем твой цветовой theme
-                    updateTheme(_rendition, theme);
 
                     const handleRendered = (_: string, view: any) => {
                         if (view) {
