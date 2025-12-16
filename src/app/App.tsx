@@ -167,6 +167,7 @@ function AppContent(): JSX.Element {
             clearTimeout(timeoutId);
         };
     }, []);
+    const isDefaultThemeDark = theme.text === "#ffffff" || theme.text === "#FFFFFF";
 
     return (
 
@@ -176,6 +177,7 @@ function AppContent(): JSX.Element {
                 background: theme.background,
                 color: theme.text,
             }}
+            appearance={isDefaultThemeDark ? 'dark' : 'light'}
         >
             <ToastProvider>
                 <div

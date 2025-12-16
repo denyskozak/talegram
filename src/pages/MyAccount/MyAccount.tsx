@@ -32,7 +32,7 @@ import {
   getTelegramUserId,
 } from "@/shared/lib/telegram";
 import { isGlobalCategory } from "@/shared/lib/globalCategories";
-import { downloadFile } from "@tma.js/sdk-react";
+import {downloadFile, useLaunchParams} from "@tma.js/sdk-react";
 import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 import { Button } from "@/shared/ui/Button";
 import { useMyAccountStore } from "./store";
@@ -40,6 +40,7 @@ import { useMyAccountStore } from "./store";
 export default function MyAccount(): JSX.Element {
   const { t, i18n } = useTranslation();
   const theme = useTheme();
+
   const { launchParams } = useTMA();
   const { showToast } = useToast();
   const navigate = useNavigate();
