@@ -79,8 +79,13 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
        },
         tocButton: {
             ...ReactReaderStyle.tocButton,
-            top: mobileFullScreen ? '10vh' : ReactReaderStyle.tocButton.top
-        }
+            top: mobileFullScreen ? '5vh' : ReactReaderStyle.tocButton.top,
+            left: '3vw',
+            transform: "scale(1.2)",
+            backgroundColor: themeState.accent,
+        },
+
+
     }
 
     useEffect(() => {
