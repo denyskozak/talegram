@@ -16,7 +16,7 @@ export type Review = {
 };
 
 export interface CatalogApi {
-  listCategories(query?: { search?: string; globalCategory?: string }): Promise<Category[]>;
+  listCategories(query?: { search?: string; globalCategory?: string; language?: string }): Promise<Category[]>;
   listGlobalCategories(): Promise<string[]>;
   listBooks(params: {
     categoryId?: ID;

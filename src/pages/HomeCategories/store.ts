@@ -11,6 +11,7 @@ type HomeStore = {
   categoriesError: string | null;
   categoriesInitialized: boolean;
   categoriesGlobalCategory: GlobalCategory | null;
+  categoriesLanguage: string | null;
   topBooks: Book[];
   isTopBooksLoading: boolean;
   topBooksError: string | null;
@@ -18,6 +19,7 @@ type HomeStore = {
   topBooksLanguage: string | null;
   loadCategories: (params: {
     globalCategory: GlobalCategory;
+    language: string;
     errorMessage: string;
     force?: boolean;
   }) => Promise<void>;
@@ -35,25 +37,32 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
   categoriesError: null,
   categoriesInitialized: false,
   categoriesGlobalCategory: null,
+  categoriesLanguage: null,
   topBooks: [],
   isTopBooksLoading: false,
   topBooksError: null,
   topBooksInitialized: false,
   topBooksLanguage: null,
-  loadCategories: async ({ globalCategory, errorMessage, force = false }) => {
-    const { categoriesInitialized, categoriesGlobalCategory } = get();
-    if (categoriesInitialized && categoriesGlobalCategory === globalCategory && !force) {
+  loadCategories: async ({ globalCategory, language, errorMessage, force = false }) => {
+    const { categoriesInitialized, categoriesGlobalCategory, categoriesLanguage } = get();
+    if (
+      categoriesInitialized &&
+      categoriesGlobalCategory === globalCategory &&
+      categoriesLanguage === language &&
+      !force
+    ) {
       return;
     }
 
     set({ isCategoriesLoading: true, categoriesError: null });
 
     try {
-      const items = await catalogApi.listCategories({ globalCategory });
+      const items = await catalogApi.listCategories({ globalCategory, language });
       set({
         categories: items,
         categoriesInitialized: true,
         categoriesGlobalCategory: globalCategory,
+        categoriesLanguage: language,
       });
     } catch (error) {
       console.error("Failed to load categories", error);
@@ -61,6 +70,7 @@ export const useHomeStore = create<HomeStore>((set, get) => ({
         categoriesError: errorMessage,
         categories: [],
         categoriesInitialized: false,
+        categoriesLanguage: null,
       });
     } finally {
       set({ isCategoriesLoading: false });

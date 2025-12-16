@@ -40,14 +40,14 @@ export default function CategoryBooks(): JSX.Element {
     }
 
     try {
-      const allCategories = await catalogApi.listCategories();
+      const allCategories = await catalogApi.listCategories({ language: i18n.language });
       const current = allCategories.find((item) => item.id === id) ?? null;
       setCategory(current);
     } catch (err) {
       console.error(err);
       setError(t("errors.fetchCategory"));
     }
-  }, [id, t]);
+  }, [i18n.language, id, t]);
 
   const loadBooks = useCallback(
     async (reset = false) => {
