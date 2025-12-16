@@ -17,7 +17,7 @@ import {ErrorBanner} from "@/shared/ui/ErrorBanner";
 import {BookCardSkeleton, CategoryTileSkeleton} from "@/shared/ui/Skeletons";
 
 export default function SearchPage(): JSX.Element {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
