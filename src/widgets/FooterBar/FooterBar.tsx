@@ -66,17 +66,17 @@ export function FooterBar(): JSX.Element {
   const navItems: NavItem[] = useMemo(
     () => [
       {
-        iconSrc: `/icons/my_account_${iconMode}_mode.svg`,
+        iconSrc: `/icons/my_account_${iconMode}_mode_1.svg`,
         label: t("navigation.account"),
         path: "/account",
       },
       {
-        iconSrc: `/icons/books_${iconMode}_mode.svg`,
+        iconSrc: `/icons/books_${iconMode}_mode_1.svg`,
         label: t("navigation.books"),
         path: "/",
       },
       {
-        iconSrc: `/icons/settings_${iconMode}_mode.svg`,
+        iconSrc: `/icons/settings_${iconMode}_mode_1.svg`,
         label: t("navigation.settings"),
         path: "/settings",
       },
