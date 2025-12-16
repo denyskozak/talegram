@@ -15,6 +15,7 @@ import {useLaunchParams} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button.tsx";
 import {backButton} from "@tma.js/sdk";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
+import {useScrollToTop} from "@/shared/hooks/useScrollToTop.ts";
 
 type ReaderRouteParams = {
     id?: string;
@@ -34,6 +35,7 @@ export default function ReaderPage(): ReactNode | undefined {
         [launchParams],
     );
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
+    useScrollToTop([id]);
 
     useEffect(() => {
 
