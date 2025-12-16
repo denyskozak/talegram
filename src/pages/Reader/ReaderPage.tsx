@@ -14,6 +14,7 @@ import {Book} from "@/entities/book/types.ts";
 import {useLaunchParams} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button.tsx";
 import {backButton} from "@tma.js/sdk";
+import {useTheme} from "@/app/providers/ThemeProvider.tsx";
 
 type ReaderRouteParams = {
     id?: string;
@@ -25,6 +26,7 @@ export default function ReaderPage(): ReactNode | undefined {
     const [searchParams] = useSearchParams();
     const {t} = useTranslation();
     const {launchParams} = useTMA();
+    const theme = useTheme();
     const navigate = useNavigate();
     const [book, updateBook] = useState<Book | null>(null);
     const telegramUserId = useMemo(
@@ -33,14 +35,12 @@ export default function ReaderPage(): ReactNode | undefined {
     );
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
-    console.log("book: ", book);
     useEffect(() => {
 
         function listener() {
             if (backButton.onClick.isAvailable()) {
 
-                console.log("window.history.length: ", window.history.state);
-                if (window.history.length < 2 && book) {
+                if (book) {
                     navigate(`/book/${book.id}`);
                     return;
                 }
@@ -79,7 +79,11 @@ export default function ReaderPage(): ReactNode | undefined {
         }
     }, []);
     return (
-        <div style={{display: "flex", flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
+        <div style={{
+            display: "flex",
+            background: theme.background,
+            paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 0,
+            flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {isPreview ? (
                 <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 12, marginLeft: 12, marginRight: 12}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>

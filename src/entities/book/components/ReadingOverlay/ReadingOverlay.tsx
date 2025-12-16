@@ -1,7 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 
 import "./ReadingOverlay.css";
-import {ReactReader} from "react-reader";
+import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {type Rendition} from 'epubjs'
 import {shareURL} from "@tma.js/sdk";
@@ -22,6 +22,10 @@ type ReadingOverlayProps = {
 };
 
 
+type ITheme = 'light' | 'dark'
+
+
+
 export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
@@ -30,11 +34,54 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
     const renditionRef = useRef<Rendition | undefined>(undefined)
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
+    const rendition = useRef<Rendition | undefined>(undefined)
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const readerIframetRef = useRef<null | HTMLIFrameElement>(null);
+    const themeState = useTheme();
+    const [theme] = useState<ITheme>('dark')
 
+    function updateTheme(rendition: Rendition) {
+        const themes = rendition.themes
+        themes.override('color', themeState.text)
+        themes.override('background', themeState.background)
+    }
+
+    const readerTheme: IReactReaderStyle = {
+        ...ReactReaderStyle,
+        arrow: {
+            ...ReactReaderStyle.arrow,
+            color: themeState.accent,
+        },
+        arrowHover: {
+            ...ReactReaderStyle.arrowHover,
+            color: themeState.section,
+        },
+        readerArea: {
+            ...ReactReaderStyle.readerArea,
+            backgroundColor: themeState.background,
+            transition: undefined,
+        },
+        reader: {
+            ...ReactReaderStyle.reader,
+            color: themeState.background,
+            transition: undefined,
+        },
+
+
+
+       tocArea: {
+            ...ReactReaderStyle.tocArea,
+           backgroundColor: themeState.background,
+       }
+    }
+
+    useEffect(() => {
+        if (rendition.current) {
+            updateTheme(rendition.current)
+        }
+    }, [theme])
 
     const clearHideHeaderTimeout = () => {
         if (hideHeaderTimeoutRef.current) {
@@ -109,7 +156,43 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
         }
     }, []);
 
+
+
     // const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+
+    const injectCss = (contents: { document: Document}) => {
+        const doc = contents.document;
+
+        // удалим старый стиль, если он уже был
+        const prev = doc.getElementById("app-link-fix");
+        if (prev) prev.remove();
+
+        const style = doc.createElement("style");
+        style.id = "app-link-fix";
+        style.type = "text/css";
+        style.appendChild(
+            doc.createTextNode(`    
+            
+        
+        /* максимальная "пробивная" сила */
+        a, a:link, a:visited,
+        .calibre6 a, a.calibre6,
+        [class*="calibre"] a {
+          color: ${themeState.accent} !important;
+          text-decoration: underline !important;
+        }
+        a:hover, a:active {
+          opacity: 0.85 !important;
+        }
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre { 
+          background-color: transparent !important;
+        }    
+      `)
+        );
+
+        // ВАЖНО: добавляем в КОНЕЦ head, чтобы быть последними по каскаду
+        doc.head.appendChild(style);
+    };
 
     return (
         <div style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
@@ -130,7 +213,7 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
                         <>
                             {/*<Button mode="filled" size="s"*/}
                             {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
-                            <Button mode="bezeled" size="m"
+                            <Button mode="filled" size="s"
                                     onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
                             {/*<Button mode="filled" size="s"*/}
                             {/*        onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>)*/}
@@ -172,9 +255,15 @@ export function ReadingOverlay({fileUrl, initialLocation, onLocationChange, isPr
                 showToc
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
+                readerStyles={readerTheme}
+
                 getRendition={(_rendition) => {
+                    updateTheme(_rendition)
+
                     renditionRef.current = _rendition
                     bookRef.current = _rendition.book;
+                    _rendition.hooks.content.register(injectCss);
+
 
 
                     const handleRendered = (_: string, view: any) => {
