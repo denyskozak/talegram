@@ -79,7 +79,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
        },
         tocButton: {
             ...ReactReaderStyle.tocButton,
-            top: mobileFullScreen ? '8vh' : ReactReaderStyle.tocButton.top,
+            top: mobileFullScreen ? '12vh' : ReactReaderStyle.tocButton.top,
             left: '3vw',
             transform: "scale(1.4)",
             backgroundColor: themeState.accent,
@@ -288,65 +288,65 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
                         const links = Array.from(doc.querySelectorAll("a"));
                         console.log("links: ", links);
-                        // links.forEach((a) => {
-                        //     const href = a.getAttribute("href");
-                        //     console.log("href: ", href);
-                        //     if (!href) return;
-                        //
-                        //     // пропускаем внутреннюю навигацию EPUB
-                        //     if (
-                        //         href.startsWith("#") ||
-                        //         href.startsWith("epubcfi(")
-                        //     ) {
-                        //         return;
-                        //     }
-                        //
-                        //     // 1️⃣ убираем стандартное поведение
-                        //     a.removeAttribute("href");
-                        //
-                        //     // 2️⃣ делаем ссылку "кнопкой"
-                        //     a.setAttribute("role", "link");
-                        //     a.style.cursor = "pointer";
-                        //
-                        //     // 3️⃣ вешаем своё поведение
-                        //
-                        //     function logAllEvents(el: EventTarget, label = "") {
-                        //         const events = [
-                        //             // mouse
-                        //             "click", "mousedown", "mouseup",
-                        //             "mouseenter", "mouseleave", "mouseover", "mouseout",
-                        //
-                        //             // touch
-                        //             "touchstart", "touchmove", "touchend", "touchcancel",
-                        //
-                        //             // pointer
-                        //             "pointerdown", "pointermove", "pointerup", "pointercancel",
-                        //
-                        //             // keyboard
-                        //             "keydown", "keyup",
-                        //
-                        //             // focus
-                        //             "focus", "blur",
-                        //
-                        //             // misc
-                        //             "contextmenu",
-                        //         ];
-                        //
-                        //         const handler = (e: Event) => {
-                        //             console.log(`[${label}]`, e.type, e);
-                        //         };
-                        //
-                        //         events.forEach((ev) =>
-                        //             el.addEventListener(ev, handler, {capture: true})
-                        //         );
-                        //
-                        //
-                        //
-                        //
-                        //     }
-                        //     logAllEvents(a)
-                        //
-                        // });
+                        links.forEach((a) => {
+                            const href = a.getAttribute("href");
+                            console.log("href: ", href);
+                            if (!href) return;
+
+                            // пропускаем внутреннюю навигацию EPUB
+                            if (
+                                href.startsWith("#") ||
+                                href.startsWith("epubcfi(")
+                            ) {
+                                return;
+                            }
+
+                            // 1️⃣ убираем стандартное поведение
+                            a.removeAttribute("href");
+
+                            // 2️⃣ делаем ссылку "кнопкой"
+                            a.setAttribute("role", "link");
+                            a.style.cursor = "pointer";
+
+                            // 3️⃣ вешаем своё поведение
+
+                            function logAllEvents(el: EventTarget, label = "") {
+                                const events = [
+                                    // mouse
+                                    "click", "mousedown", "mouseup",
+                                    "mouseenter", "mouseleave", "mouseover", "mouseout",
+
+                                    // touch
+                                    "touchstart", "touchmove", "touchend", "touchcancel",
+
+                                    // pointer
+                                    "pointerdown", "pointermove", "pointerup", "pointercancel",
+
+                                    // keyboard
+                                    "keydown", "keyup",
+
+                                    // focus
+                                    "focus", "blur",
+
+                                    // misc
+                                    "contextmenu",
+                                ];
+
+                                const handler = (e: Event) => {
+                                    console.log(`[${label}]`, e.type, e);
+                                };
+
+                                events.forEach((ev) =>
+                                    el.addEventListener(ev, handler, {capture: true})
+                                );
+
+
+
+
+                            }
+                            logAllEvents(a)
+
+                        });
                     };
                     _rendition.on('rendered', handleRendered);
 
