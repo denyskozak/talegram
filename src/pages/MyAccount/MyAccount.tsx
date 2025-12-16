@@ -32,7 +32,7 @@ import {
   getTelegramUserId,
 } from "@/shared/lib/telegram";
 import { isGlobalCategory } from "@/shared/lib/globalCategories";
-import {downloadFile, useLaunchParams} from "@tma.js/sdk-react";
+import {downloadFile} from "@tma.js/sdk-react";
 import { buildBookFileDownloadUrl } from "@/shared/api/storage";
 import { Button } from "@/shared/ui/Button";
 import { useMyAccountStore } from "./store";
