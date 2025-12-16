@@ -98,7 +98,7 @@ export default function HomeCategories(): JSX.Element {
             force: true,
         });
 
-    const handleViewAllTopBooks = () => navigate(SPECIAL_CATEGORY_MAP["most-read"].path);
+    // const handleViewAllTopBooks = () => navigate(SPECIAL_CATEGORY_MAP["most-read"].path);
 
     return (
         <main style={{padding: "16px 16px 32px", margin: "0 auto", maxWidth: 720}}>
@@ -172,25 +172,25 @@ export default function HomeCategories(): JSX.Element {
                             description={t("homeCategories.popularBooksEmptyDescription")}
                         />
                     )}
-                    {topBooks.length > 0 && (
-                        <div style={{display: "flex", justifyContent: "flex-end"}}>
-                            <button
-                                type="button"
-                                onClick={handleViewAllTopBooks}
-                                style={{
-                                    background: "transparent",
-                                    border: "none",
-                                    color: "var(--tg-theme-link-color, #3390ff)",
-                                    cursor: "pointer",
-                                    fontSize: 16,
-                                    fontWeight: 600,
-                                    padding: 8,
-                                }}
-                            >
-                                {t("homeCategories.popularBooksShowAll")}
-                            </button>
-                        </div>
-                    )}
+                    {/*{topBooks.length > 0 && (*/}
+                    {/*    <div style={{display: "flex", justifyContent: "flex-end"}}>*/}
+                    {/*        <button*/}
+                    {/*            type="button"*/}
+                    {/*            onClick={handleViewAllTopBooks}*/}
+                    {/*            style={{*/}
+                    {/*                background: "transparent",*/}
+                    {/*                border: "none",*/}
+                    {/*                color: "var(--tg-theme-link-color, #3390ff)",*/}
+                    {/*                cursor: "pointer",*/}
+                    {/*                fontSize: 16,*/}
+                    {/*                fontWeight: 600,*/}
+                    {/*                padding: 8,*/}
+                    {/*            }}*/}
+                    {/*        >*/}
+                    {/*            {t("homeCategories.popularBooksShowAll")}*/}
+                    {/*        </button>*/}
+                    {/*    </div>*/}
+                    {/*)}*/}
                 </section>
             )}
             <Title level="1" weight="2">
