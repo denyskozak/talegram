@@ -615,8 +615,8 @@ export default function BookPage(): JSX.Element {
 
     return (
         <>
-            <main style={{maxWidth: 720, margin: "auto", paddingBottom: 96}}>
-                <div style={{padding: 16, display: "flex", flexDirection: "column", gap: 16}}>
+            <main style={{maxWidth: 720, margin: "auto", padding: '0 16px 96px 16px'}}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 16}}>
                     <div
                         style={{
                             display: "flex",
