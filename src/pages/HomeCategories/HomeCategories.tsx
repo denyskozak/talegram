@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Card, SegmentedControl, Tappable, Title } from "@telegram-apps/telegram-ui";
@@ -26,6 +26,10 @@ export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
+    const popularBooksContainerRef = useRef<HTMLDivElement | null>(null);
+    const [isUserScrollingPopular, setIsUserScrollingPopular] = useState(false);
+    const popularAnimationFrame = useRef<number | null>(null);
+    const popularPreviousTimestamp = useRef<number | null>(null);
     const {
       categories,
       isCategoriesLoading,
@@ -98,6 +102,68 @@ export default function HomeCategories(): JSX.Element {
             force: true,
         });
 
+    const stopPopularAnimation = () => {
+        if (popularAnimationFrame.current !== null) {
+            cancelAnimationFrame(popularAnimationFrame.current);
+            popularAnimationFrame.current = null;
+        }
+
+        popularPreviousTimestamp.current = null;
+    };
+
+    const handlePopularPointerDown = () => {
+        setIsUserScrollingPopular(true);
+        stopPopularAnimation();
+    };
+
+    const handlePopularPointerUp = () => {
+        setIsUserScrollingPopular(false);
+    };
+
+    useEffect(() => {
+        const container = popularBooksContainerRef.current;
+
+        if (!container || topBooks.length === 0 || isUserScrollingPopular) {
+            stopPopularAnimation();
+            return;
+        }
+
+        let direction: 1 | -1 = 1;
+        const speedPxPerMs = 0.03;
+
+        const animate = (timestamp: number) => {
+            if (!container || isUserScrollingPopular) {
+                return;
+            }
+
+            if (popularPreviousTimestamp.current !== null) {
+                const delta = timestamp - popularPreviousTimestamp.current;
+                const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+
+                if (maxScrollLeft > 0) {
+                    container.scrollLeft += direction * delta * speedPxPerMs;
+
+                    if (container.scrollLeft <= 0) {
+                        direction = 1;
+                        container.scrollLeft = 0;
+                    } else if (container.scrollLeft >= maxScrollLeft) {
+                        direction = -1;
+                        container.scrollLeft = maxScrollLeft;
+                    }
+                }
+            }
+
+            popularPreviousTimestamp.current = timestamp;
+            popularAnimationFrame.current = requestAnimationFrame(animate);
+        };
+
+        popularAnimationFrame.current = requestAnimationFrame(animate);
+
+        return () => {
+            stopPopularAnimation();
+        };
+    }, [isUserScrollingPopular, topBooks.length]);
+
     // const handleViewAllTopBooks = () => navigate(SPECIAL_CATEGORY_MAP["most-read"].path);
 
     return (
@@ -130,7 +196,18 @@ export default function HomeCategories(): JSX.Element {
                         </Title>
                     </div>
                     {topBooksError && <ErrorBanner message={topBooksError} onRetry={handleTopRetry}/>}
-                    <div style={{overflowX: "auto", paddingBottom: 8}}>
+                    <div
+                        ref={popularBooksContainerRef}
+                        onPointerDown={handlePopularPointerDown}
+                        onPointerUp={handlePopularPointerUp}
+                        onPointerCancel={handlePopularPointerUp}
+                        onPointerLeave={(event) => {
+                            if (event.buttons === 0) {
+                                handlePopularPointerUp();
+                            }
+                        }}
+                        style={{overflowX: "auto", paddingBottom: 8}}
+                    >
                         <div
                             style={{
                                 display: "grid",
