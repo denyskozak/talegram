@@ -172,7 +172,7 @@ function AppContent(): JSX.Element {
 
         <AppRoot
             style={{
-                paddingTop: tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "5vh" : 0,
+                paddingTop: tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? "5vh" : 0,
                 background: theme.background,
                 color: theme.text,
             }}

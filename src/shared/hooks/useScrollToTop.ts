@@ -13,15 +13,17 @@ export function useScrollToTop(
   { behavior = "smooth", element }: UseScrollToTopOptions = {},
 ): void {
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    setTimeout(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
 
-    if (element) {
-      element.scrollTo({ top: 0, behavior });
-      return;
-    }
+        if (element) {
+            element.scrollTo({ top: 0, behavior });
+            return;
+        }
 
-    window.scrollTo({ top: 0, behavior });
+        window.scrollTo({ top: 0, behavior });
+    })
   }, [...dependencies, element, behavior]);
 }

@@ -86,7 +86,7 @@ export default function ReaderPage(): ReactNode | undefined {
             background: theme.background,
             flexDirection: "column", gap: 12, width: "100vw", overflow: "hidden"}}>
             {isPreview ? (
-                <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform !== 'weba' ? "10vh" : 12, marginLeft: 12, marginRight: 12}}>
+                <div style={{marginTop:tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? "10vh" : 12, marginLeft: 12, marginRight: 12}}>
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
                         {previewMessage} <Button size="s" onClick={() => navigate(`/book/${id}`)}>{t("book.actions.buy")}</Button>
                     </Text>
@@ -95,7 +95,7 @@ export default function ReaderPage(): ReactNode | undefined {
             <ReadingOverlay
                 book={book}
                 isPreview={isPreview}
-                mobileFullScreen={Boolean(tgWebAppFullscreen && tgWebAppPlatform)}
+                mobileFullScreen={Boolean(tgWebAppFullscreen && tgWebAppPlatform === 'ios' )}
                 fileUrl={downloadUrl}
                 initialLocation={initialReaderLocation}
                 onLocationChange={handleReaderLocationChange}
