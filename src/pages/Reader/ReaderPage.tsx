@@ -11,7 +11,6 @@ import {getTelegramUserId} from "@/shared/lib/telegram";
 import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
 import {catalogApi} from "@/entities/book/api.ts";
 import {Book} from "@/entities/book/types.ts";
-import {useLaunchParams} from "@tma.js/sdk-react";
 import {Button} from "@/shared/ui/Button.tsx";
 import {backButton} from "@tma.js/sdk";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
@@ -34,7 +33,8 @@ export default function ReaderPage(): ReactNode | undefined {
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
-    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
+    const {tgWebAppFullscreen, tgWebAppPlatform} = launchParams ?? {};
+
     useScrollToTop();
 
     useEffect(() => {
