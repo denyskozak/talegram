@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import {useEffect, useLayoutEffect, useMemo, useRef, useState} from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, useMotionValue, animate } from "motion/react";
 
 import { Card, SegmentedControl, Tappable, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
@@ -22,13 +23,82 @@ import { BookCardSkeleton } from "@/shared/ui/Skeletons";
 import { useHomeStore } from "./store";
 import { useMediaQuery } from "@uidotdev/usehooks";
 
+
+export function AutoScroller({ children, disabled = false }: { children: React.ReactNode, disabled?: boolean }) {
+    const trackRef = useRef<HTMLDivElement | null>(null);
+    const viewportRef = useRef<HTMLDivElement | null>(null);
+
+    const x = useMotionValue(0);
+    const controlsRef = useRef<ReturnType<typeof animate> | null>(null);
+
+    const [distance, setDistance] = useState(0);
+
+    console.log("disabled: ", disabled);
+
+
+    useLayoutEffect(() => {
+        const viewport = viewportRef.current;
+        const track = trackRef.current;
+        if (!viewport || !track) return;
+
+        const measure = () => {
+            const max = Math.max(0, track.scrollWidth - viewport.clientWidth);
+            setDistance(max);
+            // clamp текущую позицию, чтобы не “улетать” за границы
+            const current = x.get();
+            x.set(Math.max(-max, Math.min(0, current)));
+        };
+
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(viewport);
+        ro.observe(track);
+        return () => ro.disconnect();
+    }, [children, x]);
+
+    useEffect(() => {
+        // стоп текущей анимации перед любым переключением
+        controlsRef.current?.stop();
+        controlsRef.current = null;
+
+        if (disabled || distance <= 0) return;
+
+        // ping-pong (реверс): 0 -> -distance -> 0 -> ...
+        controlsRef.current = animate(x, [0, -distance], {
+            duration: 20,
+            ease: "linear",
+            delay: 1,
+            repeat: 3,
+            repeatType: "reverse",
+        });
+
+        return () => {
+            controlsRef.current?.stop();
+            controlsRef.current = null;
+        };
+    }, [disabled, distance, x]);
+
+    return (
+        <div  ref={viewportRef} style={{overflowX: "scroll", overflowY: "hidden" }}>
+            <motion.div
+                ref={trackRef}
+                style={{ display: "flex",  x, willChange: "transform"}}
+                initial={false}
+
+            >
+                {children}
+            </motion.div>
+        </div>
+    );
+}
+
 export default function HomeCategories(): JSX.Element {
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const [selectedGlobalCategory, setSelectedGlobalCategory] = useState<GlobalCategory>("book");
-    const popularBooksContainerRef = useRef<HTMLDivElement | null>(null);
     const [isUserScrollingPopular, setIsUserScrollingPopular] = useState(false);
     const popularAnimationFrame = useRef<number | null>(null);
+    const pointerUpTimeout = useRef< NodeJS.Timeout | null>(null);
     const popularPreviousTimestamp = useRef<number | null>(null);
     const {
       categories,
@@ -44,6 +114,7 @@ export default function HomeCategories(): JSX.Element {
     const isLargeDevice = useMediaQuery(
         "only screen and (min-width : 993px)"
     );
+
     useScrollRestoration("home-categories");
 
     const translatedSpecialCategories = useMemo<SpecialCategory[]>(
@@ -60,6 +131,8 @@ export default function HomeCategories(): JSX.Element {
             language: i18n.language,
             errorMessage: t("errors.loadCategories"),
         });
+
+
     }, [i18n.language, loadCategories, selectedGlobalCategory, t]);
 
     useEffect(() => {
@@ -73,6 +146,12 @@ export default function HomeCategories(): JSX.Element {
 
         clearTopBooks();
     }, [clearTopBooks, i18n.language, loadTopBooks, selectedGlobalCategory, t]);
+
+    useEffect(() => {
+        return () => {
+            if (pointerUpTimeout.current) clearTimeout(pointerUpTimeout.current);
+        }
+    }, []);
 
     const specialCategories: SpecialCategory[] = translatedSpecialCategories;
 
@@ -117,52 +196,12 @@ export default function HomeCategories(): JSX.Element {
     };
 
     const handlePopularPointerUp = () => {
-        setIsUserScrollingPopular(false);
+        pointerUpTimeout.current  = setTimeout(() => {
+            console.log("pointerUpTimeout.current): ", pointerUpTimeout.current);
+            if (!pointerUpTimeout.current) return;
+            setIsUserScrollingPopular(false)
+        }, 2000);
     };
-
-    useEffect(() => {
-        const container = popularBooksContainerRef.current;
-
-        if (!container || topBooks.length === 0 || isUserScrollingPopular) {
-            stopPopularAnimation();
-            return;
-        }
-
-        let direction: 1 | -1 = 1;
-        const speedPxPerMs = 0.03;
-
-        const animate = (timestamp: number) => {
-            if (!container || isUserScrollingPopular) {
-                return;
-            }
-
-            if (popularPreviousTimestamp.current !== null) {
-                const delta = timestamp - popularPreviousTimestamp.current;
-                const maxScrollLeft = Math.max(0, container.scrollWidth - container.clientWidth);
-
-                if (maxScrollLeft > 0) {
-                    container.scrollLeft += direction * delta * speedPxPerMs;
-
-                    if (container.scrollLeft <= 0) {
-                        direction = 1;
-                        container.scrollLeft = 0;
-                    } else if (container.scrollLeft >= maxScrollLeft) {
-                        direction = -1;
-                        container.scrollLeft = maxScrollLeft;
-                    }
-                }
-            }
-
-            popularPreviousTimestamp.current = timestamp;
-            popularAnimationFrame.current = requestAnimationFrame(animate);
-        };
-
-        popularAnimationFrame.current = requestAnimationFrame(animate);
-
-        return () => {
-            stopPopularAnimation();
-        };
-    }, [isUserScrollingPopular, topBooks.length]);
 
     // const handleViewAllTopBooks = () => navigate(SPECIAL_CATEGORY_MAP["most-read"].path);
 
@@ -197,7 +236,7 @@ export default function HomeCategories(): JSX.Element {
                     </div>
                     {topBooksError && <ErrorBanner message={topBooksError} onRetry={handleTopRetry}/>}
                     <div
-                        ref={popularBooksContainerRef}
+
                         onPointerDown={handlePopularPointerDown}
                         onPointerUp={handlePopularPointerUp}
                         onPointerCancel={handlePopularPointerUp}
@@ -208,28 +247,33 @@ export default function HomeCategories(): JSX.Element {
                         }}
                         style={{overflowX: "auto", paddingBottom: 8}}
                     >
-                        <div
-                            style={{
-                                display: "grid",
-                                gridAutoFlow: "column", // новые элементы добавляются в новые колонки
-                                gridTemplateRows: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
-                                gridAutoColumns: `calc(${isLargeDevice ? '20%' : '33.3%'} - 8px)`, // ширина одной колонки ~ половина контейнера
-                                overflowX: "auto", // горизонтальный скролл
-                                columnGap: 16,
-                                rowGap: 16,
-                                paddingRight: 4,
-                                paddingBottom: 4,
-                            }}
-                        >
-                            {topBooks.map((book, index) => (
-                                <div key={book.id + index} style={{minWidth: 0, width: "100%"}}>
-                                    <BookCard
-                                        onlyImage
-                                        book={book}
-                                        onClick={() => navigate(`/book/${book.id}`)}
-                                    />
-                                </div>
-                            ))}
+                        {!isTopBooksLoading && topBooks.length > 0 ? (
+                            <AutoScroller disabled={isUserScrollingPopular || isTopBooksLoading || topBooks.length === 0 }>
+                            <div
+                                style={{
+                                    display: "grid",
+                                    gridAutoFlow: "column", // новые элементы добавляются в новые колонки
+                                    gridTemplateRows: "repeat(2, minmax(0, 1fr))", // 3 строки (3 элемента в столбце)
+                                    gridAutoColumns: `calc(${isLargeDevice ? '20%' : '33.3%'} - 8px)`, // ширина одной колонки ~ половина контейнера
+                                    columnGap: 16,
+                                    // width: '100%',
+
+                                    rowGap: 16,
+                                    paddingRight: 4,
+                                    paddingBottom: 4,
+                                }}
+                            >
+                                {topBooks.map((book, index) => (
+                                    <div key={book.id + index} style={{minWidth: 0, width: "100%"}}>
+                                        <BookCard
+                                            onlyImage
+                                            book={book}
+                                            onClick={() => navigate(`/book/${book.id}`)}
+                                        />
+                                    </div>
+                                ))}
+
+
 
                             {isTopBooksLoading && topBooks.length === 0 && Array.from({length: 6}).map((_, index) => (
                                 <div key={index} style={{minWidth: 0, width: "100%"}}>
@@ -241,7 +285,11 @@ export default function HomeCategories(): JSX.Element {
                                     <BookCardSkeleton height="auto" />
                                 </div>
                             )}
-                        </div>
+
+                            </div>
+
+                            </AutoScroller>)
+                            : null}
                     </div>
                     {!isTopBooksLoading && topBooks.length === 0 && !topBooksError && (
                         <EmptyState
