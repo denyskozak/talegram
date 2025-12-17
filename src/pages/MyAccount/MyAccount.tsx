@@ -392,7 +392,7 @@ export default function MyAccount(): JSX.Element {
               : t("account.telegramUserIdUnavailable")}
           </Text>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <Button type="button" size="l" mode="secondary" onClick={() => navigate("/settings")}>
+            <Button type="button" size="l" mode="filled" onClick={() => navigate("/settings")}>
               {t("navigation.settings")}
             </Button>
             {isAllowedAuthor && (
