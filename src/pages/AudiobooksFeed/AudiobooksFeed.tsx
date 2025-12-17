@@ -1,16 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { Virtuoso } from "react-virtuoso";
-import { Spinner, Text, Title } from "@telegram-apps/telegram-ui";
+import { Chip, Spinner, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
 
 import { catalogApi } from "@/entities/book/api";
 import type { Book } from "@/entities/book/types";
+import { BookRating } from "@/entities/book/components/BookRating";
 import { useTMA } from "@/app/providers/TMAProvider";
 import { getTelegramUserId } from "@/shared/lib/telegram";
 import { buildBookPreviewDownloadUrl } from "@/shared/api/storage";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useTheme } from "@/app/providers/ThemeProvider";
+import { Button } from "@/shared/ui/Button";
+import {
+  isBookLiked,
+  loadLikedBookIds,
+  persistLikedBookIds,
+  toggleLikedBookId,
+} from "@/shared/lib/likedBooks";
+import { purchasesApi } from "@/entities/purchase/api";
+import { useToast } from "@/shared/ui/ToastProvider";
+import { shareURL } from "@tma.js/sdk";
+import { buildMiniAppDirectLink } from "@/shared/lib/telegram";
 
 function AudiobookSlide({
   book,
@@ -24,11 +38,53 @@ function AudiobookSlide({
   unknownAuthorLabel: string;
 }): JSX.Element {
   const theme = useTheme();
+  const navigate = useNavigate();
+  const { showToast } = useToast();
+  const { t } = useTranslation();
+  const { launchParams } = useTMA();
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const likedBookIdsRef = useRef<Set<string>>(new Set());
+  const [isLiked, setIsLiked] = useState(false);
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const authors = useMemo(
     () => (book.authors?.length ? book.authors.join(", ") : unknownAuthorLabel),
     [book.authors, unknownAuthorLabel],
   );
+  const telegramUserId = useMemo(
+    () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
+    [launchParams],
+  );
+  const hasAudiobook = Boolean(book.audiobookFilePath);
+  const hasFullAccess = isPurchased || book.price === 0;
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!telegramUserId || !book.id) {
+      setIsPurchased(false);
+      return undefined;
+    }
+
+    const checkPurchase = async () => {
+      try {
+        const status = await purchasesApi.getStatus({ bookId: book.id });
+        if (!cancelled) {
+          setIsPurchased(status.purchased);
+        }
+      } catch (error) {
+        console.error("Failed to check purchase status", error);
+        if (!cancelled) {
+          setIsPurchased(false);
+        }
+      }
+    };
+
+    void checkPurchase();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [book.id, telegramUserId]);
 
   useEffect(() => {
     const audioElement = audioRef.current;
@@ -55,19 +111,172 @@ function AudiobookSlide({
     audioRef.current?.pause();
   }, []);
 
+  useEffect(() => {
+    const likedSet = loadLikedBookIds(telegramUserId);
+    likedBookIdsRef.current = likedSet;
+    setIsLiked(isBookLiked(book.id, likedSet));
+  }, [book.id, telegramUserId]);
+
+  const handleToggleLike = useCallback(() => {
+    const { liked, updated } = toggleLikedBookId(book.id, likedBookIdsRef.current);
+    likedBookIdsRef.current = updated;
+    setIsLiked(liked);
+    persistLikedBookIds(updated, telegramUserId);
+  }, [book.id, telegramUserId]);
+
+  const handleShare = useCallback(() => {
+    try {
+      const deepLink = buildMiniAppDirectLink({ startParam: `book_${book.id}`, botUsername: "talegram_org_bot" });
+      shareURL(deepLink ?? "", "Invite you to read book");
+    } catch (err) {
+      showToast(t("book.toast.linkFailed"));
+      console.error(err);
+    }
+  }, [book.id, showToast, t]);
+
+  const handleShareRead = useCallback(() => {
+    try {
+      const deepLink = buildMiniAppDirectLink({
+        startParam: `reader_${book.id}_books_${book.price === 0 ? "" : "preview_1"}`,
+        botUsername: "talegram_org_bot",
+      });
+
+      shareURL(deepLink ?? "", "Invite you to read book");
+    } catch (err) {
+      showToast(t("book.toast.linkFailed"));
+      console.error(err);
+    }
+  }, [book.id, book.price, showToast, t]);
+
+  const handleTagClick = useCallback(
+    (tag: string) => {
+      navigate(`/search?q=${encodeURIComponent(`#${tag}`)}`);
+    },
+    [navigate],
+  );
+
+  const handleOpenBook = useCallback(() => {
+    navigate(`/book/${encodeURIComponent(book.id)}`);
+  }, [book.id, navigate]);
+
+  const handleListen = useCallback(() => {
+    if (!hasAudiobook) {
+      showToast(t("book.audiobook.unavailable"));
+      return;
+    }
+
+    if (!hasFullAccess) {
+      showToast(t("book.toast.listenAccessRequired"));
+      return;
+    }
+
+    navigate(`/listen/${encodeURIComponent(book.id)}/books`);
+  }, [book.id, hasAudiobook, hasFullAccess, navigate, showToast, t]);
+
+  const handleListenPreview = useCallback(() => {
+    if (!hasAudiobook) {
+      showToast(t("book.audiobook.unavailable"));
+      return;
+    }
+
+    navigate(`/listen/${encodeURIComponent(book.id)}/books?preview=1`);
+  }, [book.id, hasAudiobook, navigate, showToast, t]);
+
   return (
     <div className="audiobook-slide">
       <img alt={book.title} className="audiobook-cover" src={book.coverUrl} />
       <div className="audiobook-overlay">
-        <div className="audiobook-meta">
-          <Title weight="2" style={{ color: theme.text }}>
-            {book.title}
-          </Title>
-          {authors ? (
-            <Text weight="2" style={{ color: theme.subtitle }}>
-              {authors}
-            </Text>
+        <div className="audiobook-meta" role="group" aria-label={t("book.bookInfo")}>
+          <div className="audiobook-meta-header">
+            <div className="audiobook-meta-titles">
+              <Title weight="2" style={{ color: theme.text }}>
+                {book.title}
+              </Title>
+              {authors ? (
+                <Text weight="2" style={{ color: theme.subtitle }}>
+                  {authors}
+                </Text>
+              ) : null}
+            </div>
+            <div className="audiobook-meta-actions">
+              <Button aria-label={t("book.share")} mode="plain" onClick={handleShare}>
+                🔗
+              </Button>
+              <Button
+                aria-label={t(isLiked ? "book.actions.unlike" : "book.actions.like", { title: book.title })}
+                mode="plain"
+                onClick={handleToggleLike}
+                aria-pressed={isLiked}
+              >
+                <span aria-hidden="true">{isLiked ? "❤️" : "💙"}</span>
+              </Button>
+            </div>
+          </div>
+
+          <div className="audiobook-meta-rating">
+            <BookRating value={book.rating.average} votes={book.rating.votes} />
+            <Chip mode="outline" style={{ fontWeight: 600 }}>
+              {book.price} {book.currency} ⭐
+            </Chip>
+            {hasAudiobook ? (
+              <Chip mode="outline" style={{ fontWeight: 600 }}>
+                {t("book.audiobook.badge")}
+              </Chip>
+            ) : null}
+          </div>
+
+          {book.tags?.length ? (
+            <div className="audiobook-meta-tags">
+              {book.tags.map((tag) => (
+                <Chip key={tag} mode="outline" onClick={() => handleTagClick(tag)}>
+                  #{tag}
+                </Chip>
+              ))}
+            </div>
           ) : null}
+
+          {book.description ? (
+            <div className="audiobook-meta-description">
+              <Text style={{ color: theme.text }}>
+                {showFullDescription || book.description.length <= 220
+                  ? book.description
+                  : `${book.description.slice(0, 220)}...`}
+              </Text>
+              {book.description.length > 220 ? (
+                <Button mode="plain" onClick={() => setShowFullDescription((prev) => !prev)}>
+                  {showFullDescription ? t("book.description.showLess") : t("book.description.showMore")}
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div className="audiobook-meta-controls">
+            {hasFullAccess ? (
+              <>
+                <Button size="m" onClick={handleListen}>
+                  {t("book.actions.listen")}
+                </Button>
+                <Button size="m" mode="outline" onClick={handleOpenBook}>
+                  {t("book.actions.read")}
+                </Button>
+                <Button size="m" mode="outline" onClick={handleShareRead}>
+                  {t("book.actions.share-read")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button size="m" onClick={handleListenPreview}>
+                  {t("book.actions.previewAudio")}
+                </Button>
+                <Button size="m" mode="outline" onClick={handleOpenBook}>
+                  {t("book.actions.preview")}
+                </Button>
+                <Button size="m" mode="outline" onClick={handleShareRead}>
+                  {t("book.actions.share-preview")}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
       {audioUrl ? <audio preload="auto" ref={audioRef} src={audioUrl} /> : null}
@@ -94,11 +303,20 @@ export default function AudiobooksFeed(): JSX.Element {
     setIsLoading(true);
     setError(null);
 
+    const shuffleBooks = (items: Book[]) => {
+      const array = [...items];
+      for (let i = array.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
     const load = async () => {
       try {
         const response = await catalogApi.listAudiobooks();
         if (!cancelled) {
-          setBooks(response);
+          setBooks(shuffleBooks(response));
         }
       } catch (err) {
         if (!cancelled) {
@@ -199,12 +417,52 @@ export default function AudiobooksFeed(): JSX.Element {
           .audiobook-overlay {
             position: relative;
             width: 100%;
-            padding: 24px 20px 56px;
+            padding: 24px 20px 96px;
             box-sizing: border-box;
             background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.75) 60%, rgba(0, 0, 0, 0.95) 100%);
           }
           .audiobook-meta {
             max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+          }
+          .audiobook-meta-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            justify-content: space-between;
+          }
+          .audiobook-meta-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+          }
+          .audiobook-meta-actions {
+            display: flex;
+            gap: 4px;
+          }
+          .audiobook-meta-rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .audiobook-meta-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+          }
+          .audiobook-meta-description {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          .audiobook-meta-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
           }
           .audiobook-loader {
             height: 100vh;
