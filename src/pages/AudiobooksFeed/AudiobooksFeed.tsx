@@ -412,15 +412,15 @@ export default function AudiobooksFeed(): JSX.Element {
             top: 5%;
             left: 50%;
             transform: translateX(-50%);
-            width: 70%;
-            height: 50%;
+            width: 60%;
+            height: 45%;
             object-fit: fit;
             border-radius: 20px;
             filter: brightness(0.6);
           }
           .audiobook-overlay {
             position: absolute;
-            bottom: 10%;
+            bottom: 20%;
             left: 0;
             width: 100%;
             padding: 24px 20px 96px;
