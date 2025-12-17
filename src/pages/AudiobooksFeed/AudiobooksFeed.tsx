@@ -37,11 +37,11 @@ function AudiobookSlide({
   audioUrl: string | null;
   unknownAuthorLabel: string;
 }): JSX.Element {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { t } = useTranslation();
   const { launchParams } = useTMA();
+  const theme = useTheme();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const likedBookIdsRef = useRef<Set<string>>(new Set());
   const [isLiked, setIsLiked] = useState(false);
@@ -292,6 +292,7 @@ export default function AudiobooksFeed(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
+    const theme = useTheme();
 
   const telegramUserId = useMemo(
     () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -391,7 +392,6 @@ export default function AudiobooksFeed(): JSX.Element {
         {`
           .audiobook-feed {
             height: 100vh;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.65) 50%, rgba(0, 0, 0, 0.85) 100%);
           }
           .audiobook-virtuoso {
             scroll-snap-type: y mandatory;
@@ -405,16 +405,16 @@ export default function AudiobooksFeed(): JSX.Element {
             align-items: flex-end;
             justify-content: flex-start;
             overflow: hidden;
-            background: #000;
+         
           }
           .audiobook-cover {
             position: absolute;
             top: 5%;
             left: 50%;
             transform: translateX(-50%);
-            width: 80%;
-            height: 70%;
-            object-fit: cover;
+            width: 70%;
+            height: 50%;
+            object-fit: fit;
             border-radius: 20px;
             filter: brightness(0.6);
           }
@@ -425,7 +425,7 @@ export default function AudiobooksFeed(): JSX.Element {
             width: 100%;
             padding: 24px 20px 96px;
             box-sizing: border-box;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.75) 60%, rgba(0, 0, 0, 0.95) 100%);
+            background: ${theme.background};
           }
           .audiobook-meta {
             max-width: 720px;

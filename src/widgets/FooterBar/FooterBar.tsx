@@ -65,21 +65,21 @@ export function FooterBar(): JSX.Element {
 
   const navItems: NavItem[] = useMemo(
     () => [
-      {
-        iconSrc: `/icons/my_account_${iconMode}_mode_2.svg`,
-        label: t("navigation.account"),
-        path: "/account",
-      },
+        {
+            iconSrc: `/icons/audiobooks_${iconMode}_mode.svg`,
+            label: t("navigation.audiobooks"),
+            path: "/audiobooks",
+        },
       {
         iconSrc: `/icons/books_${iconMode}_mode_2.svg`,
         label: t("navigation.books"),
         path: "/",
       },
-      {
-        iconSrc: `/icons/audiobooks_${iconMode}_mode.svg`,
-        label: t("navigation.audiobooks"),
-        path: "/audiobooks",
-      },
+        {
+            iconSrc: `/icons/my_account_${iconMode}_mode_2.svg`,
+            label: t("navigation.account"),
+            path: "/account",
+        },
     ],
     [iconMode, t],
   );
