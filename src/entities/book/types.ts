@@ -27,6 +27,7 @@ export interface CatalogApi {
     limit?: number;
     language?: string;
   }): Promise<{ items: Book[]; nextCursor?: string }>;
+  listAudiobooks(): Promise<Book[]>;
   getBook(id: ID): Promise<Book>;
   listReviews(bookId: ID, cursor?: string, limit?: number): Promise<{ items: Review[]; nextCursor?: string }>;
   createReview(payload: {

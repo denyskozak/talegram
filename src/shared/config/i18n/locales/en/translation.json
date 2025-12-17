@@ -31,6 +31,7 @@
     "label": "Primary navigation",
     "account": "My account",
     "books": "Books",
+    "audiobooks": "Audiobooks",
     "settings": "Settings"
   },
   "footer": {
@@ -606,6 +607,15 @@
     "subtitle": "Need help? We're just a message away.",
     "description": "Reach our support team on Telegram and we'll get back to you shortly.",
     "telegramCta": "Open @lawyerdsupport"
+  },
+  "audiobooks": {
+    "loading": "Loading audiobooks...",
+    "error": "Failed to load audiobooks. Please try again.",
+    "empty": {
+      "title": "No audiobooks yet",
+      "description": "Check back later or browse other categories."
+    },
+    "unknownAuthor": "Unknown author"
   },
   "reading-overlay": {
     "toggle-font-size": "Font-size",

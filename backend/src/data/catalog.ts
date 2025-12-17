@@ -325,6 +325,19 @@ export async function listAllBooks(): Promise<CatalogBook[]> {
   return Promise.all(entities.map((entity) => mapEntityToBook(entity)));
 }
 
+export async function listAudiobooks(): Promise<CatalogBook[]> {
+  const repository = await getBookRepository();
+  const entities = await repository.find();
+
+  const withAudiobooks = entities.filter(
+    (entity) => typeof entity.audiobookFilePath === 'string' && entity.audiobookFilePath.trim().length > 0,
+  );
+
+  const sorted = sortEntities(withAudiobooks, 'popular');
+
+  return Promise.all(sorted.map((entity) => mapEntityToBook(entity)));
+}
+
 export async function listCategoryTags(categoryId: ID, limit = 9): Promise<string[]> {
   const repository = await getBookRepository();
   const entities = await repository.find();

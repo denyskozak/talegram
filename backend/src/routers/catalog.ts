@@ -5,6 +5,7 @@ import {
   createReview,
   getBook,
   listBooks,
+  listAudiobooks,
   listCategories,
   listCategoryTags,
   listGlobalCategories,
@@ -80,6 +81,7 @@ export const catalogRouter = createRouter({
 
     return book;
   }),
+  listAudiobooks: procedure.query(() => listAudiobooks()),
   listReviews: procedure
     .input(listReviewsInput)
     .query(({ input }) => listReviews(input.bookId, input)),
