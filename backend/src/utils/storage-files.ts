@@ -15,6 +15,7 @@ import { respondWithError } from '../http/responses.js';
 export type BookFileKind = 'book' | 'cover' | 'audiobook';
 
 const STORAGE_ROOT = process.env.FILE_STORAGE_ROOT ?? path.resolve(process.cwd(), 'data/storage');
+const DOWNLOAD_CACHE_CONTROL = 'private, max-age=3600, must-revalidate';
 
 const MIME_EXTENSION_MAP: Record<string, string> = {
   'application/pdf': 'pdf',
@@ -117,6 +118,14 @@ function formatContentDispositionHeader(fileName: string): string {
   return `attachment; filename="${sanitizeForHeader(fileName)}"`;
 }
 
+function applyDownloadCacheHeaders(res: http.ServerResponse, lastModified?: Date): void {
+  res.setHeader('Cache-Control', DOWNLOAD_CACHE_CONTROL);
+
+  if (lastModified) {
+    res.setHeader('Last-Modified', lastModified.toUTCString());
+  }
+}
+
 function determineDownloadFileName(
   entity: { title?: string | null; coverFileName?: string | null; audiobookFileName?: string | null; fileName?: string | null },
   fileKind: BookFileKind,
@@ -186,6 +195,7 @@ async function streamFile(
         res.setHeader('Content-Range', `bytes ${start}-${end}/${stats.size}`);
         res.setHeader('Accept-Ranges', 'bytes');
         res.setHeader('Content-Disposition', formatContentDispositionHeader(options.fileName));
+        applyDownloadCacheHeaders(res, stats.mtime);
 
         const stream = createReadStream(options.filePath, { start, end });
 
@@ -204,6 +214,7 @@ async function streamFile(
     res.setHeader('Content-Length', stats.size.toString(10));
     res.setHeader('Accept-Ranges', 'bytes');
     res.setHeader('Content-Disposition', formatContentDispositionHeader(options.fileName));
+    applyDownloadCacheHeaders(res, stats.mtime);
 
     if (options.transform) {
       await pipeline(createReadStream(options.filePath), options.transform, res);
@@ -296,6 +307,7 @@ export async function handleBookPreviewRequest(
     res.setHeader('Content-Type', resolvedMimeType);
     res.setHeader('Content-Length', previewBuffer.byteLength.toString(10));
     res.setHeader('Content-Disposition', `inline; filename="${sanitizeForHeader(fileName)}"`);
+    applyDownloadCacheHeaders(res);
     res.end(previewBuffer);
   } catch (error) {
     console.error('Failed to prepare preview file', { bookId: normalizedBookId, error });
