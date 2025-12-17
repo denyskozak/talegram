@@ -175,6 +175,21 @@ export default function BookPage(): JSX.Element {
         }
     }, [book, showToast, t]);
 
+    const handleShareRead = useCallback(async () => {
+        if (!book) {
+            return;
+        }
+
+        try {
+            const deepLink =
+                buildMiniAppDirectLink({startParam: `reader_${book.id}_books_${book.price === 0 ? '' : 'preview_1'}` , botUsername: 'talegram_org_bot'}) ;
+
+            shareURL(deepLink ?? '', 'Invite you to read book');
+        } catch (err) {
+            showToast(t("book.toast.linkFailed"));
+            console.error(err);
+        }
+    }, [book, showToast, t]);
 
     const handleToggleLike = useCallback(() => {
         if (!book) {

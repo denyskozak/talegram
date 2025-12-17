@@ -10,7 +10,7 @@ import type { Book } from "@/entities/book/types";
 import { BookRating } from "@/entities/book/components/BookRating";
 import { useTMA } from "@/app/providers/TMAProvider";
 import { getTelegramUserId } from "@/shared/lib/telegram";
-import { buildBookPreviewDownloadUrl } from "@/shared/api/storage";
+import {buildBookFileDownloadUrl, buildBookPreviewDownloadUrl} from "@/shared/api/storage";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useTheme } from "@/app/providers/ThemeProvider";
@@ -184,7 +184,7 @@ function AudiobookSlide({
 
   return (
     <div className="audiobook-slide">
-      <img alt={book.title} className="audiobook-cover" src={book.coverUrl} />
+      <img alt={book.title} className="audiobook-cover" src={buildBookFileDownloadUrl(book.id, "cover")} />
       <div className="audiobook-overlay">
         <div className="audiobook-meta" role="group" aria-label={t("book.bookInfo")}>
           <div className="audiobook-meta-header">
@@ -373,14 +373,16 @@ export default function AudiobooksFeed(): JSX.Element {
       <Virtuoso
         className="audiobook-virtuoso"
         data={books}
-        itemContent={(index, book) => (
-          <AudiobookSlide
-            audioUrl={getAudioUrl(book.id)}
-            book={book}
-            isActive={index === activeIndex}
-            unknownAuthorLabel={t("audiobooks.unknownAuthor")}
-          />
-        )}
+        itemContent={(index, book: unknown) => {
+            return (
+                <AudiobookSlide
+                    audioUrl={getAudioUrl((book as Book).id)}
+                    book={book as Book}
+                    isActive={index === activeIndex}
+                    unknownAuthorLabel={t("audiobooks.unknownAuthor")}
+                />
+            )
+        }}
         rangeChanged={(range) => setActiveIndex(range.start)}
         style={{ height: "100vh" }}
         totalCount={books.length}
@@ -407,15 +409,19 @@ export default function AudiobooksFeed(): JSX.Element {
           }
           .audiobook-cover {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 70%;
             object-fit: cover;
+            border-radius: 20px;
             filter: brightness(0.6);
           }
           .audiobook-overlay {
-            position: relative;
+            position: absolute;
+            bottom: 10%;
+            left: 0;
             width: 100%;
             padding: 24px 20px 96px;
             box-sizing: border-box;
@@ -444,7 +450,7 @@ export default function AudiobooksFeed(): JSX.Element {
             gap: 4px;
           }
           .audiobook-meta-rating {
-            display: flex;
+            display: none;
             align-items: center;
             gap: 8px;
             flex-wrap: wrap;
@@ -455,7 +461,7 @@ export default function AudiobooksFeed(): JSX.Element {
             flex-wrap: wrap;
           }
           .audiobook-meta-description {
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 8px;
           }
