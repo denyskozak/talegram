@@ -17,6 +17,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "react-virtuoso": [
+        "./src/shared/external/react-virtuoso.tsx"
       ]
     },
     "resolveJsonModule": true,

@@ -76,6 +76,11 @@ export function FooterBar(): JSX.Element {
         path: "/",
       },
       {
+        iconSrc: `/icons/audiobooks_${iconMode}_mode.svg`,
+        label: t("navigation.audiobooks"),
+        path: "/audiobooks",
+      },
+      {
         iconSrc: `/icons/settings_${iconMode}_mode_2.svg`,
         label: t("navigation.settings"),
         path: "/settings",
