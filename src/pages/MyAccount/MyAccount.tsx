@@ -391,11 +391,16 @@ export default function MyAccount(): JSX.Element {
               ? t("account.telegramUserId", { id: telegramUserId })
               : t("account.telegramUserIdUnavailable")}
           </Text>
-          {isAllowedAuthor && (
-            <Button type="button" size="l" onClick={() => navigate("/account/published")}>
-              {t("account.publishedBooks")}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <Button type="button" size="l" mode="secondary" onClick={() => navigate("/settings")}>
+              {t("navigation.settings")}
             </Button>
-          )}
+            {isAllowedAuthor && (
+              <Button type="button" size="l" onClick={() => navigate("/account/published")}>
+                {t("account.publishedBooks")}
+              </Button>
+            )}
+          </div>
         </header>
 
         <SegmentedControl>
