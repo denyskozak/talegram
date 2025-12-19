@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Virtuoso } from "react-virtuoso";
@@ -11,7 +11,7 @@ import type { Book } from "@/entities/book/types";
 import { BookRating } from "@/entities/book/components/BookRating";
 import { useTMA } from "@/app/providers/TMAProvider";
 import { getTelegramUserId } from "@/shared/lib/telegram";
-import {buildBookFileDownloadUrl, buildBookPreviewDownloadUrl} from "@/shared/api/storage";
+import { buildBookFileDownloadUrl, buildBookPreviewDownloadUrl } from "@/shared/api/storage";
 import { ErrorBanner } from "@/shared/ui/ErrorBanner";
 import { EmptyState } from "@/shared/ui/EmptyState";
 import { useTheme } from "@/app/providers/ThemeProvider";
@@ -26,7 +26,9 @@ import { purchasesApi } from "@/entities/purchase/api";
 import { useToast } from "@/shared/ui/ToastProvider";
 import { shareURL } from "@tma.js/sdk";
 import { buildMiniAppDirectLink } from "@/shared/lib/telegram";
-import {useScrollToTop} from "@/shared/hooks/useScrollToTop.ts";
+import { useScrollToTop } from "@/shared/hooks/useScrollToTop.ts";
+
+const PREVIEW_DURATION_SECONDS = 50;
 
 function AudiobookSlide({
   book,
@@ -42,7 +44,7 @@ function AudiobookSlide({
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { t } = useTranslation();
-    useScrollToTop();
+  useScrollToTop();
 
   const { launchParams } = useTMA();
   const theme = useTheme();
@@ -51,6 +53,8 @@ function AudiobookSlide({
   const [isLiked, setIsLiked] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
+  const [audioDuration, setAudioDuration] = useState(PREVIEW_DURATION_SECONDS);
+  const [currentTime, setCurrentTime] = useState(0);
   const authors = useMemo(
     () => (book.authors?.length ? book.authors.join(", ") : unknownAuthorLabel),
     [book.authors, unknownAuthorLabel],
@@ -61,6 +65,13 @@ function AudiobookSlide({
   );
   const hasAudiobook = Boolean(book.audiobookFilePath);
   const hasFullAccess = isPurchased || book.price === 0;
+  const formatTime = useCallback((value: number) => {
+    const safeValue = Number.isFinite(value) && value > 0 ? value : 0;
+    const minutes = Math.floor(safeValue / 60);
+    const seconds = Math.floor(safeValue % 60);
+
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,6 +114,7 @@ function AudiobookSlide({
     }
 
     audioElement.currentTime = 0;
+    setCurrentTime(0);
     const playPromise = audioElement.play();
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch((error) => {
@@ -116,6 +128,11 @@ function AudiobookSlide({
   }, []);
 
   useEffect(() => {
+    setAudioDuration(PREVIEW_DURATION_SECONDS);
+    setCurrentTime(0);
+  }, [audioUrl]);
+
+  useEffect(() => {
     const likedSet = loadLikedBookIds(telegramUserId);
     likedBookIdsRef.current = likedSet;
     setIsLiked(isBookLiked(book.id, likedSet));
@@ -127,6 +144,78 @@ function AudiobookSlide({
     setIsLiked(liked);
     persistLikedBookIds(updated, telegramUserId);
   }, [book.id, telegramUserId]);
+
+  const resetPreview = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) {
+      return;
+    }
+
+    audioElement.currentTime = 0;
+    setCurrentTime(0);
+
+    if (isActive) {
+      const playPromise = audioElement.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch((error) => console.warn("Failed to restart preview", error));
+      }
+    }
+  }, [isActive]);
+
+  const handleAudioLoadedMetadata = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) {
+      return;
+    }
+
+    const duration = Number.isFinite(audioElement.duration) ? audioElement.duration : PREVIEW_DURATION_SECONDS;
+    const limitedDuration = Math.min(duration, PREVIEW_DURATION_SECONDS);
+    setAudioDuration(limitedDuration);
+    setCurrentTime(Math.min(audioElement.currentTime, limitedDuration));
+  }, []);
+
+  const handleTimeUpdate = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement) {
+      return;
+    }
+
+    const time = Math.min(audioElement.currentTime, PREVIEW_DURATION_SECONDS);
+    if (time >= PREVIEW_DURATION_SECONDS) {
+      resetPreview();
+      return;
+    }
+
+    setCurrentTime(time);
+  }, [resetPreview]);
+
+  const handleAudioEnded = useCallback(() => {
+    resetPreview();
+  }, [resetPreview]);
+
+  const handleManualSeek = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const target = Number.parseFloat(event.target.value);
+      const audioElement = audioRef.current;
+
+      if (!audioElement || Number.isNaN(target)) {
+        return;
+      }
+
+      const clamped = Math.min(Math.max(target, 0), audioDuration || PREVIEW_DURATION_SECONDS);
+
+      try {
+        audioElement.currentTime = clamped;
+        setCurrentTime(clamped);
+        if (audioElement.paused && isActive) {
+          void audioElement.play();
+        }
+      } catch (error) {
+        console.warn("Failed to set preview position", error);
+      }
+    },
+    [audioDuration, isActive],
+  );
 
   const handleShare = useCallback(() => {
     try {
@@ -297,9 +386,37 @@ function AudiobookSlide({
               <path d="m7 15 5 5 5-5" />
             </motion.svg>
           </div>
+          {audioUrl ? (
+            <div className="audiobook-progress" aria-label={t("book.actions.previewAudio")}>
+              <input
+                type="range"
+                min={0}
+                max={audioDuration || PREVIEW_DURATION_SECONDS}
+                step={1}
+                value={Math.min(currentTime, audioDuration)}
+                onChange={handleManualSeek}
+                aria-label={t("book.listen.seek")}
+              />
+              <div className="audiobook-progress-times">
+                <Text>{formatTime(currentTime)}</Text>
+                <Text>{formatTime(audioDuration)}</Text>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
-      {audioUrl ? <audio preload="auto" ref={audioRef} src={audioUrl} /> : null}
+      {audioUrl ? (
+        <audio
+          preload="auto"
+          ref={audioRef}
+          src={audioUrl}
+          onLoadedMetadata={handleAudioLoadedMetadata}
+          onDurationChange={handleAudioLoadedMetadata}
+          onTimeUpdate={handleTimeUpdate}
+          onPause={handleTimeUpdate}
+          onEnded={handleAudioEnded}
+        />
+      ) : null}
     </div>
   );
 }
@@ -312,7 +429,7 @@ export default function AudiobooksFeed(): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
-    const theme = useTheme();
+  const theme = useTheme();
 
   const telegramUserId = useMemo(
     () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -394,16 +511,14 @@ export default function AudiobooksFeed(): JSX.Element {
       <Virtuoso
         className="audiobook-virtuoso"
         data={books}
-        itemContent={(index, book: unknown) => {
-            return (
-                <AudiobookSlide
-                    audioUrl={getAudioUrl((book as Book).id)}
-                    book={book as Book}
-                    isActive={index === activeIndex}
-                    unknownAuthorLabel={t("audiobooks.unknownAuthor")}
-                />
-            )
-        }}
+        itemContent={(index, book: unknown) => (
+          <AudiobookSlide
+            audioUrl={getAudioUrl((book as Book).id)}
+            book={book as Book}
+            isActive={index === activeIndex}
+            unknownAuthorLabel={t("audiobooks.unknownAuthor")}
+          />
+        )}
         rangeChanged={(range) => setActiveIndex(range.start)}
         style={{ height: "100vh" }}
         totalCount={books.length}
@@ -498,6 +613,21 @@ export default function AudiobooksFeed(): JSX.Element {
           .audiobook-scroll-arrow {
             width: 28px;
             height: 28px;
+          }
+          .audiobook-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 8px;
+          }
+          .audiobook-progress input[type="range"] {
+            width: 100%;
+          }
+          .audiobook-progress-times {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: ${theme.subtitle};
           }
           .audiobook-loader {
             height: 100vh;
