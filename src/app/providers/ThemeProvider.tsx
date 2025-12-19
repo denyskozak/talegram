@@ -10,6 +10,7 @@ export type ThemeColors = {
     subtitle: string;
     hint: string;
     accent: string;
+    accept: string;
     section: string;
     separator: string;
 };
@@ -20,6 +21,7 @@ const defaultColors: ThemeColors = {
     subtitle: "#7f7f81",
     hint: "#7f7f81",
     accent: "#3390ff",
+    accept: "#3390ff",
     section: "#f3f3f5",
     separator: "#d3d3d7",
 };
@@ -35,6 +37,7 @@ function mapTheme(theme?: ThemeParamsState | null): ThemeColors {
         subtitle: theme.subtitle_text_color!,
         hint: theme.hint_color!,
         accent: theme.button_color!,
+        accept: theme.button_color!,
         section: theme.secondary_bg_color!,
         separator: theme.section_separator_color!,
     };

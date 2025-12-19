@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Virtuoso } from "react-virtuoso";
 import { Chip, Spinner, Text, Title } from "@telegram-apps/telegram-ui";
 import { useTranslation } from "react-i18next";
+import { motion } from "motion/react";
 
 import { catalogApi } from "@/entities/book/api";
 import type { Book } from "@/entities/book/types";
@@ -280,6 +281,22 @@ function AudiobookSlide({
               </>
             )}
           </div>
+          <div aria-hidden="true" className="audiobook-scroll-indicator">
+            <motion.svg
+              animate={{ y: [0, 6, 0] }}
+              className="audiobook-scroll-arrow"
+              fill="none"
+              stroke={theme.accept}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 4v16" />
+              <path d="m7 15 5 5 5-5" />
+            </motion.svg>
+          </div>
         </div>
       </div>
       {audioUrl ? <audio preload="auto" ref={audioRef} src={audioUrl} /> : null}
@@ -472,6 +489,15 @@ export default function AudiobooksFeed(): JSX.Element {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+          }
+          .audiobook-scroll-indicator {
+            display: flex;
+            justify-content: center;
+            padding-top: 8px;
+          }
+          .audiobook-scroll-arrow {
+            width: 28px;
+            height: 28px;
           }
           .audiobook-loader {
             height: 100vh;
