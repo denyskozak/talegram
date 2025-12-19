@@ -370,22 +370,7 @@ function AudiobookSlide({
               </>
             )}
           </div>
-          <div aria-hidden="true" className="audiobook-scroll-indicator">
-            <motion.svg
-              animate={{ y: [0, 6, 0] }}
-              className="audiobook-scroll-arrow"
-              fill="none"
-              stroke={theme.accent}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2.5"
-              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-              viewBox="0 0 24 24"
-            >
-              <path d="M12 4v16" />
-              <path d="m7 15 5 5 5-5" />
-            </motion.svg>
-          </div>
+
           {audioUrl ? (
             <div className="audiobook-progress" aria-label={t("book.actions.previewAudio")}>
               <input
@@ -403,6 +388,22 @@ function AudiobookSlide({
               </div>
             </div>
           ) : null}
+            <div aria-hidden="true" className="audiobook-scroll-indicator">
+                <motion.svg
+                    animate={{ y: [0, 6, 0] }}
+                    className="audiobook-scroll-arrow"
+                    fill="none"
+                    stroke={theme.accent}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    viewBox="0 0 24 24"
+                >
+                    <path d="M12 4v16" />
+                    <path d="m7 15 5 5 5-5" />
+                </motion.svg>
+            </div>
         </div>
       </div>
       {audioUrl ? (
