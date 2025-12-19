@@ -611,8 +611,8 @@ export default function AudiobooksFeed(): JSX.Element {
             padding-top: 8px;
           }
           .audiobook-scroll-arrow {
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 48px;
           }
           .audiobook-progress {
             display: flex;
