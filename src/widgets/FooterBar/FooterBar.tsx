@@ -7,11 +7,12 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 
 type NavItem = {
   iconSrc: string;
+    width?: number;
   label: string;
   path: string;
 };
 
-function FooterNavItem({ item, isActive }: { item: NavItem; isActive: boolean }): JSX.Element {
+function FooterNavItem({ item, isActive, width = 36 }: { item: NavItem; isActive: boolean, width?: number }): JSX.Element {
   const theme = useTheme();
 
   return (
@@ -28,8 +29,8 @@ function FooterNavItem({ item, isActive }: { item: NavItem; isActive: boolean })
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 6,
-          padding: "10px 0",
+          gap: 4    ,
+          padding: "8px 0",
         }}
       >
         <div
@@ -37,12 +38,14 @@ function FooterNavItem({ item, isActive }: { item: NavItem; isActive: boolean })
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: isActive ? theme.accent : theme.text,
           }}
         >
-          <img alt={item.label} height={36} src={item.iconSrc} width={36} />
+          <img alt={item.label} height={36} src={item.iconSrc} width={width} />
         </div>
-        <Text weight={isActive ? "2" : "1"} style={{ fontSize: 12 }}>
+        <Text weight={isActive ? "2" : "1"} style={{
+            fontSize: 12,
+            color: isActive ? theme.accent : theme.text,
+        }}>
           {item.label}
         </Text>
       </div>
@@ -74,11 +77,13 @@ export function FooterBar(): JSX.Element {
         iconSrc: `/icons/books_${iconMode}_mode_2.svg`,
         label: t("navigation.books"),
         path: "/",
+          width: 30,
       },
         {
             iconSrc: `/icons/my_account_${iconMode}_mode_2.svg`,
             label: t("navigation.account"),
             path: "/account",
+            width: 26,
         },
     ],
     [iconMode, t],
@@ -100,14 +105,14 @@ export function FooterBar(): JSX.Element {
         style={{
           margin: "0 auto",
           maxWidth: 720,
-          padding: "6px 16px",
+          padding: "2px 32px",
           display: "flex",
           alignItems: "center",
           gap: 8,
         }}
       >
         {navItems.map((item) => (
-          <FooterNavItem isActive={isActive(item.path)} item={item} key={item.path} />
+          <FooterNavItem isActive={isActive(item.path)} item={item} width={item.width} key={item.path} />
         ))}
       </nav>
     </footer>
