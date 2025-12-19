@@ -7,12 +7,12 @@ import { useTheme } from "@/app/providers/ThemeProvider";
 
 type NavItem = {
   iconSrc: string;
-    width?: number;
+  icon: string;
   label: string;
   path: string;
 };
 
-function FooterNavItem({ item, isActive, width = 36 }: { item: NavItem; isActive: boolean, width?: number }): JSX.Element {
+function FooterNavItem({ item, isActive}: { item: NavItem; isActive: boolean }): JSX.Element {
   const theme = useTheme();
 
   return (
@@ -40,10 +40,11 @@ function FooterNavItem({ item, isActive, width = 36 }: { item: NavItem; isActive
             justifyContent: "center",
           }}
         >
-          <img alt={item.label} height={36} src={item.iconSrc} width={width} />
+            <span style={{fontSize: 32}}>{item.icon}</span>
+          {/*<img alt={item.label} height={36} src={item.iconSrc} width={width} />*/}
         </div>
         <Text weight={isActive ? "2" : "1"} style={{
-            fontSize: 12,
+            fontSize: 14,
             color: isActive ? theme.accent : theme.text,
         }}>
           {item.label}
@@ -70,20 +71,21 @@ export function FooterBar(): JSX.Element {
     () => [
         {
             iconSrc: `/icons/audiobooks_${iconMode}_mode.svg`,
+            icon: '🎧',
             label: t("navigation.audiobooks"),
             path: "/audiobooks",
         },
       {
         iconSrc: `/icons/books_${iconMode}_mode_2.svg`,
+          icon: '📖',
         label: t("navigation.books"),
         path: "/",
-          width: 30,
       },
         {
             iconSrc: `/icons/my_account_${iconMode}_mode_2.svg`,
             label: t("navigation.account"),
+            icon: '👤',
             path: "/account",
-            width: 26,
         },
     ],
     [iconMode, t],
@@ -112,7 +114,7 @@ export function FooterBar(): JSX.Element {
         }}
       >
         {navItems.map((item) => (
-          <FooterNavItem isActive={isActive(item.path)} item={item} width={item.width} key={item.path} />
+          <FooterNavItem isActive={isActive(item.path)} item={item} key={item.path} />
         ))}
       </nav>
     </footer>

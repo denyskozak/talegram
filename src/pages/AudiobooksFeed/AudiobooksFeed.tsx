@@ -388,20 +388,21 @@ function AudiobookSlide({
           <div className="audiobook-meta-controls">
             {hasFullAccess ? (
               <>
+                  <Button
+                      disabled={!audioUrl || !isActive}
+                      mode="outline"
+                      onClick={handleTogglePlayback}
+                      size="m"
+                  >
+                      {t(isAudioPlaying ? "book.listen.pause" : "book.listen.play")}
+                  </Button>
                 <Button size="m" onClick={handleListen}>
                   {t("book.actions.listen")}
                 </Button>
                 <Button size="m" mode="outline" onClick={handleOpenBook}>
                   {t("book.actions.read")}
                 </Button>
-                <Button
-                  disabled={!audioUrl || !isActive}
-                  mode="outline"
-                  onClick={handleTogglePlayback}
-                  size="m"
-                >
-                  {t(isAudioPlaying ? "book.listen.pause" : "book.listen.play")}
-                </Button>
+
                 <Button size="m" mode="outline" onClick={handleShareRead}>
                   {t("book.actions.share-read")}
                 </Button>
