@@ -286,7 +286,7 @@ function AudiobookSlide({
               animate={{ y: [0, 6, 0] }}
               className="audiobook-scroll-arrow"
               fill="none"
-              stroke={theme.accept}
+              stroke={theme.accent}
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth="2.5"
