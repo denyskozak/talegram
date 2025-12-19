@@ -35,11 +35,13 @@ function AudiobookSlide({
   isActive,
   audioUrl,
   unknownAuthorLabel,
+  onScrollNext,
 }: {
   book: Book;
   isActive: boolean;
   audioUrl: string | null;
   unknownAuthorLabel: string;
+  onScrollNext: () => void;
 }): JSX.Element {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -447,22 +449,27 @@ function AudiobookSlide({
               </div>
             </div>
           ) : null}
-            <div aria-hidden="true" className="audiobook-scroll-indicator">
-                <motion.svg
-                    animate={{ y: [0, 6, 0] }}
-                    className="audiobook-scroll-arrow"
-                    fill="none"
-                    stroke={theme.accent}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2.5"
-                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
-                    viewBox="0 0 24 24"
-                >
-                    <path d="M12 4v16" />
-                    <path d="m7 15 5 5 5-5" />
-                </motion.svg>
-            </div>
+          <button
+            aria-label={t("audiobooks.scrollNext", { defaultValue: "Scroll to next slide" })}
+            className="audiobook-scroll-indicator"
+            onClick={onScrollNext}
+            type="button"
+          >
+            <motion.svg
+              animate={{ y: [0, 6, 0] }}
+              className="audiobook-scroll-arrow"
+              fill="none"
+              stroke={theme.accent}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2.5"
+              transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 4v16" />
+              <path d="m7 15 5 5 5-5" />
+            </motion.svg>
+          </button>
         </div>
       </div>
       {audioUrl ? (
@@ -491,6 +498,7 @@ export default function AudiobooksFeed(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
   const theme = useTheme();
+  const virtuosoRef = useRef<HTMLDivElement | null>(null);
 
   const telegramUserId = useMemo(
     () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
@@ -550,6 +558,19 @@ export default function AudiobooksFeed(): JSX.Element {
     [telegramUserId],
   );
 
+  const handleScrollToNextSlide = useCallback(() => {
+    const container = virtuosoRef.current;
+    if (!container) {
+      return;
+    }
+
+    const nextIndex = Math.min(activeIndex + 1, books.length - 1);
+    const slideHeight = container.clientHeight || 0;
+    const nextOffset = slideHeight * nextIndex;
+
+    container.scrollTo({ top: nextOffset, behavior: "smooth" });
+  }, [activeIndex, books.length]);
+
   if (error) {
     return <ErrorBanner message={error} onRetry={handleRetry} />;
   }
@@ -577,9 +598,11 @@ export default function AudiobooksFeed(): JSX.Element {
             audioUrl={getAudioUrl((book as Book).id)}
             book={book as Book}
             isActive={index === activeIndex}
+            onScrollNext={handleScrollToNextSlide}
             unknownAuthorLabel={t("audiobooks.unknownAuthor")}
           />
         )}
+        ref={virtuosoRef}
         rangeChanged={(range) => setActiveIndex(range.start)}
         style={{ height: "100vh" }}
         totalCount={books.length}
@@ -667,9 +690,20 @@ export default function AudiobooksFeed(): JSX.Element {
             gap: 8px;
           }
           .audiobook-scroll-indicator {
+            background: transparent;
+            border: none;
             display: flex;
             justify-content: center;
             padding-top: 8px;
+            cursor: pointer;
+          }
+          .audiobook-scroll-indicator:focus-visible {
+            outline: 2px solid ${theme.accent};
+            outline-offset: 4px;
+          }
+          .audiobook-scroll-indicator:disabled {
+            cursor: default;
+            opacity: 0.6;
           }
           .audiobook-scroll-arrow {
             width: 32px;
