@@ -55,6 +55,7 @@ function AudiobookSlide({
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [audioDuration, setAudioDuration] = useState(PREVIEW_DURATION_SECONDS);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const authors = useMemo(
     () => (book.authors?.length ? book.authors.join(", ") : unknownAuthorLabel),
     [book.authors, unknownAuthorLabel],
@@ -108,6 +109,7 @@ function AudiobookSlide({
     }
 
     audioElement.pause();
+    setIsAudioPlaying(false);
 
     if (!isActive) {
       return;
@@ -116,10 +118,14 @@ function AudiobookSlide({
     audioElement.currentTime = 0;
     setCurrentTime(0);
     const playPromise = audioElement.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch((error) => {
-        console.warn("Failed to autoplay audiobook", error);
-      });
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => setIsAudioPlaying(true))
+        .catch((error) => {
+          console.warn("Failed to autoplay audiobook", error);
+        });
+    } else {
+      setIsAudioPlaying(true);
     }
   }, [audioUrl, isActive]);
 
@@ -130,6 +136,7 @@ function AudiobookSlide({
   useEffect(() => {
     setAudioDuration(PREVIEW_DURATION_SECONDS);
     setCurrentTime(0);
+    setIsAudioPlaying(false);
   }, [audioUrl]);
 
   useEffect(() => {
@@ -157,8 +164,17 @@ function AudiobookSlide({
     if (isActive) {
       const playPromise = audioElement.play();
       if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch((error) => console.warn("Failed to restart preview", error));
+        playPromise
+          .then(() => setIsAudioPlaying(true))
+          .catch((error) => {
+            setIsAudioPlaying(false);
+            console.warn("Failed to restart preview", error);
+          });
+      } else {
+        setIsAudioPlaying(!audioElement.paused);
       }
+    } else {
+      setIsAudioPlaying(false);
     }
   }, [isActive]);
 
@@ -188,6 +204,15 @@ function AudiobookSlide({
 
     setCurrentTime(time);
   }, [resetPreview]);
+
+  const handleAudioPause = useCallback(() => {
+    handleTimeUpdate();
+    setIsAudioPlaying(false);
+  }, [handleTimeUpdate]);
+
+  const handleAudioPlay = useCallback(() => {
+    setIsAudioPlaying(true);
+  }, []);
 
   const handleAudioEnded = useCallback(() => {
     resetPreview();
@@ -240,6 +265,23 @@ function AudiobookSlide({
       console.error(err);
     }
   }, [book.id, book.price, showToast, t]);
+
+  const handleTogglePlayback = useCallback(() => {
+    const audioElement = audioRef.current;
+    if (!audioElement || !isActive) {
+      return;
+    }
+
+    if (audioElement.paused) {
+      const playPromise = audioElement.play();
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise.catch((error) => console.warn("Failed to resume audiobook preview", error));
+      }
+    } else {
+      audioElement.pause();
+      setIsAudioPlaying(false);
+    }
+  }, [isActive]);
 
   const handleTagClick = useCallback(
     (tag: string) => {
@@ -352,6 +394,14 @@ function AudiobookSlide({
                 <Button size="m" mode="outline" onClick={handleOpenBook}>
                   {t("book.actions.read")}
                 </Button>
+                <Button
+                  disabled={!audioUrl || !isActive}
+                  mode="outline"
+                  onClick={handleTogglePlayback}
+                  size="m"
+                >
+                  {t(isAudioPlaying ? "book.listen.pause" : "book.listen.play")}
+                </Button>
                 <Button size="m" mode="outline" onClick={handleShareRead}>
                   {t("book.actions.share-read")}
                 </Button>
@@ -363,6 +413,14 @@ function AudiobookSlide({
                 </Button>
                 <Button size="m" mode="outline" onClick={handleOpenBook}>
                   {t("book.actions.preview")}
+                </Button>
+                <Button
+                  disabled={!audioUrl || !isActive}
+                  mode="outline"
+                  onClick={handleTogglePlayback}
+                  size="m"
+                >
+                  {t(isAudioPlaying ? "book.listen.pause" : "book.listen.play")}
                 </Button>
                 <Button size="m" mode="outline" onClick={handleShareRead}>
                   {t("book.actions.share-preview")}
@@ -414,7 +472,8 @@ function AudiobookSlide({
           onLoadedMetadata={handleAudioLoadedMetadata}
           onDurationChange={handleAudioLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
-          onPause={handleTimeUpdate}
+          onPause={handleAudioPause}
+          onPlay={handleAudioPlay}
           onEnded={handleAudioEnded}
         />
       ) : null}
