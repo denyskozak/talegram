@@ -25,6 +25,7 @@ import { purchasesApi } from "@/entities/purchase/api";
 import { useToast } from "@/shared/ui/ToastProvider";
 import { shareURL } from "@tma.js/sdk";
 import { buildMiniAppDirectLink } from "@/shared/lib/telegram";
+import {useScrollToTop} from "@/shared/hooks/useScrollToTop.ts";
 
 function AudiobookSlide({
   book,
@@ -40,6 +41,8 @@ function AudiobookSlide({
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { t } = useTranslation();
+    useScrollToTop();
+
   const { launchParams } = useTMA();
   const theme = useTheme();
   const audioRef = useRef<HTMLAudioElement | null>(null);

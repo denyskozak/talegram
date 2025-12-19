@@ -4,9 +4,11 @@ import { useTranslation } from "react-i18next";
 import { LanguageToggle } from "@/shared/ui/LanguageToggle";
 import { useTheme } from "@/app/providers/ThemeProvider";
 import { Button } from "@/shared/ui/Button";
+import {useScrollToTop} from "@/shared/hooks/useScrollToTop.ts";
 
 export default function SettingsPage(): JSX.Element {
   const { t } = useTranslation();
+    useScrollToTop();
   const theme = useTheme();
   const supportLink = "https://t.me/lawyerdsupport";
 
