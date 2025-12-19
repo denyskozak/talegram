@@ -176,13 +176,15 @@ function AppContent(): JSX.Element {
                 paddingTop: tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? "5vh" : 0,
                 background: theme.background,
                 color: theme.text,
+                height: "100dvh",
+                width: "100dvw",
             }}
             appearance={isDefaultThemeDark ? 'dark' : 'light'}
         >
             <ToastProvider>
                 <div
                     style={{
-                        minHeight: "100vh",
+                        minHeight: "100dvh",
                         display: "flex",
                         flexDirection: "column",
                     }}
