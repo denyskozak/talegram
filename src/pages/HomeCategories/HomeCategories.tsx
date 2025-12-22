@@ -264,7 +264,7 @@ export default function HomeCategories(): JSX.Element {
                                 }}
                             >
                                 {topBooks.map((book, index) => (
-                                    <div key={book.id + index} style={{minWidth: 0, width: "100%"}}>
+                                    <div key={book.id + index} style={{minWidth: `60px`, minHeight: '200px'}}>
                                         <BookCard
                                             onlyImage
                                             book={book}
@@ -274,14 +274,13 @@ export default function HomeCategories(): JSX.Element {
                                 ))}
 
 
-
                             {isTopBooksLoading && topBooks.length === 0 && Array.from({length: 6}).map((_, index) => (
-                                <div key={index} style={{minWidth: 0, width: "100%"}}>
+                                <div key={index} style={{minWidth: `60px`, minHeight: '200px'}}>
                                     <BookCardSkeleton height="auto" />
                                 </div>
                             ))}
                             {isTopBooksLoading && topBooks.length > 0 && (
-                                <div style={{minWidth: 0, width: "100%"}}>
+                                <div style={{minWidth: `60px`, minHeight: '200px'}}>
                                     <BookCardSkeleton height="auto" />
                                 </div>
                             )}

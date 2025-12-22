@@ -172,6 +172,7 @@ function AppContent(): JSX.Element {
     return (
 
         <AppRoot
+            className="asd"
             style={{
                 paddingTop: tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? "5vh" : 0,
                 background: theme.background,
@@ -187,6 +188,7 @@ function AppContent(): JSX.Element {
                         minHeight: "100dvh",
                         display: "flex",
                         flexDirection: "column",
+                        background: theme.background,
                     }}
                 >
                     {isHeaderVisible && <HeaderBar/>}

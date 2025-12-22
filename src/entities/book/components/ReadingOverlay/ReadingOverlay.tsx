@@ -43,6 +43,118 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
 
+    const navLockRef = useRef(false);
+
+    const isCoverItem = (it: any) => {
+        const props = Array.isArray(it?.properties) ? it.properties.join(" ") : String(it?.properties || "");
+        const idref = String(it?.idref || "").toLowerCase();
+        const href = String(it?.href || "").toLowerCase();
+        return props.includes("cover") || idref.includes("cover") || href.includes("cover");
+    };
+
+    const getLocKey = (r: any) => {
+        const loc = r?.currentLocation?.();
+        const idx = loc?.start?.index;
+        const cfi = loc?.start?.cfi || loc?.start?.location;
+        const href = loc?.start?.href;
+        return `${idx ?? "x"}|${href ?? "x"}|${cfi ?? "x"}`;
+    };
+
+    const findNextReadableIndex = (items: any[], fromIndex: number) => {
+        for (let i = fromIndex + 1; i < items.length; i++) {
+            const it = items[i];
+            if (it?.linear === "no") continue;
+            if (isCoverItem(it)) continue;
+            return i;
+        }
+        return -1;
+    };
+
+    const findPrevReadableIndex = (items: any[], fromIndex: number) => {
+        for (let i = fromIndex - 1; i >= 0; i--) {
+            const it = items[i];
+            if (it?.linear === "no") continue;
+            if (isCoverItem(it)) continue;
+            return i;
+        }
+        return -1;
+    };
+
+    const safeNext = async () => {
+        const r: any = renditionRef.current;
+        if (!r || navLockRef.current) return;
+        navLockRef.current = true;
+
+        try {
+            await r.book?.ready;
+
+            const beforeKey = getLocKey(r);
+            await r.next();
+
+            // Дадим epubjs шанс обновить currentLocation
+            await new Promise((res) => setTimeout(res, 0));
+
+            const afterKey = getLocKey(r);
+            if (afterKey !== beforeKey) return; // нормальный переход сработал
+
+            // Если "залипли" (часто Cover) — прыгаем на следующий readable spine item
+            const spine = r.book?.spine;
+            const items: any[] = spine?.items || [];
+            const idx = r.currentLocation?.()?.start?.index ?? 0;
+
+            const nextIdx = findNextReadableIndex(items, idx);
+            if (nextIdx !== -1) {
+                await r.display(items[nextIdx].href);
+            }
+        } finally {
+            navLockRef.current = false;
+        }
+    };
+
+    const safePrev = async () => {
+        const r: any = renditionRef.current;
+        if (!r || navLockRef.current) return;
+        navLockRef.current = true;
+
+        try {
+            await r.book?.ready;
+
+            const beforeKey = getLocKey(r);
+            await r.prev();
+
+            await new Promise((res) => setTimeout(res, 0));
+
+            const afterKey = getLocKey(r);
+            if (afterKey !== beforeKey) return;
+
+            const spine = r.book?.spine;
+            const items: any[] = spine?.items || [];
+            const idx = r.currentLocation?.()?.start?.index ?? 0;
+
+            const prevIdx = findPrevReadableIndex(items, idx);
+            if (prevIdx !== -1) {
+                await r.display(items[prevIdx].href);
+            }
+        } finally {
+            navLockRef.current = false;
+        }
+    };
+
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "ArrowRight") {
+                e.preventDefault();
+                safeNext();
+            } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                safePrev();
+            }
+        };
+
+        window.addEventListener("keydown", onKeyDown, { passive: false });
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, []);
+
     function updateTheme(rendition: Rendition) {
         const themes = rendition.themes
         themes.override('color', themeState.text)
@@ -51,14 +163,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
     const readerTheme: IReactReaderStyle = {
         ...ReactReaderStyle,
-        arrow: {
-            ...ReactReaderStyle.arrow,
-            color: themeState.accent,
-        },
-        arrowHover: {
-            ...ReactReaderStyle.arrowHover,
-            color: themeState.section,
-        },
+
         readerArea: {
             ...ReactReaderStyle.readerArea,
             backgroundColor: themeState.background,
@@ -70,7 +175,24 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             transition: undefined,
         },
 
-
+        // arrow: {
+        //     ...ReactReaderStyle.arrow,
+        //     color: themeState.accent,
+        // },
+        // arrowHover: {
+        //     ...ReactReaderStyle.arrowHover,
+        //     color: themeState.section,
+        // },
+        arrow: {
+            ...ReactReaderStyle.arrow,
+            color: themeState.accent,
+            display: "none",
+        },
+        arrowHover: {
+            ...ReactReaderStyle.arrowHover,
+            color: themeState.section,
+            display: "none",
+        },
 
        tocArea: {
             ...ReactReaderStyle.tocArea,
@@ -210,6 +332,56 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
     return (
         <div style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
+            <button
+                type="button"
+                onClick={safePrev}
+                aria-label="Previous"
+                style={{
+                    position: "absolute",
+                    left: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 20,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 999,
+                    border: "none",
+                    background: themeSetting.background,
+                    color: themeState.accent,
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                    opacity: 0.85,
+                    fontSize: 32,
+                    cursor: "pointer",
+                }}
+            >
+                ⬅️
+            </button>
+
+            {/* ПРАВАЯ стрелка */}
+            <button
+                type="button"
+                onClick={safeNext}
+                aria-label="Next"
+                style={{
+                    position: "absolute",
+                    right: 8,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 20,
+                    width: 44,
+                    height: 44,
+                    borderRadius: 999,
+                    border: "none",
+                    background: themeSetting.background,
+                    color: themeState.accent,
+                    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                    opacity: 0.85,
+                    cursor: "pointer",
+                    fontSize: 32,
+                }}
+            >
+                ➡️
+            </button>
             <div style={{
                 position: "fixed",
                 right: '4px',
@@ -220,6 +392,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
+
                 <Button  mode="bezeled" size="m" style={{opacity: 0.9}}
                         onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ☰</span></Button>
                 {isMenuOpen
