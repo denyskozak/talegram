@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
 
 import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
@@ -45,6 +45,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     const [chapters, setChapters] = useState<TocItem[]>([]);
     const [isChaptersModalOpen, setChaptersModalOpen] = useState(false);
     const [chaptersLoading, setChaptersLoading] = useState(false);
+    const [isMenuModalVisibleGood, setMenuModalVisibleGood] = useState(true);
     const [currentChapterHref, setCurrentChapterHref] = useState<string | null>(null);
 
     const [selection, setSelection] = useState<string | null>(null);
@@ -52,6 +53,11 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
+
+    useLayoutEffect(() => {
+        const timeoutId = setTimeout(() => {setMenuModalVisibleGood(false)}, 6 * 1000);
+        return () => clearTimeout(timeoutId)
+    }, []);
 
     const navLockRef = useRef(false);
 
@@ -463,8 +469,8 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                 flexDirection: 'row-reverse'
             }}>
 
-                <Button  mode="bezeled" size="m" style={{opacity: 0.9}}
-                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ☰</span></Button>
+                <Button  mode={isMenuModalVisibleGood ? "filled" : "bezeled"} size="m" style={{opacity: 0.9}}
+                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ⚙️</span></Button>
                 {isMenuOpen && !isChaptersModalOpen
                     ? (
                         <>
