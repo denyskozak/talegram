@@ -477,9 +477,11 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                         </>)
                     : null}
             </div>
-            <Modal open={isChaptersModalOpen} onOpenChange={setChaptersModalOpen}>
-                <Modal.Header>{t("reading-overlay.chapters")}</Modal.Header>
-                <div style={{padding: 16, display: "flex", flexDirection: "column", gap: 12}}>
+            <Modal
+
+                header={<Modal.Header>{t("reading-overlay.chapters")}</Modal.Header>} open={isChaptersModalOpen} onOpenChange={setChaptersModalOpen}>
+
+                <div style={{height: '60vh', padding: 16, display: "flex", flexDirection: "column", gap: 12}}>
                     {chaptersLoading ? (
                         <Text>{t("reading-overlay.chaptersLoading")}</Text>
                     ) : chapters.length ? (
