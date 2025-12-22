@@ -32,8 +32,14 @@ type TocItem = {
 }
 
 
-
-export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
+export function ReadingOverlay({
+                                   fileUrl,
+                                   mobileFullScreen,
+                                   initialLocation,
+                                   onLocationChange,
+                                   isPreview,
+                                   book
+                               }: ReadingOverlayProps): JSX.Element {
     const [location, setLocation] = useState<string>(initialLocation);
     const {t} = useTranslation();
     const themeSetting = useTheme();
@@ -55,7 +61,9 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     const [theme] = useState<ITheme>('dark')
 
     useLayoutEffect(() => {
-        const timeoutId = setTimeout(() => {setMenuModalVisibleGood(false)}, 6 * 1000);
+        const timeoutId = setTimeout(() => {
+            setMenuModalVisibleGood(false)
+        }, 6 * 1000);
         return () => clearTimeout(timeoutId)
     }, []);
 
@@ -169,7 +177,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             }
         };
 
-        window.addEventListener("keydown", onKeyDown, { passive: false });
+        window.addEventListener("keydown", onKeyDown, {passive: false});
         return () => window.removeEventListener("keydown", onKeyDown);
     }, []);
 
@@ -212,11 +220,11 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             display: "none",
         },
 
-       tocArea: {
+        tocArea: {
             ...ReactReaderStyle.tocArea,
-           backgroundColor: themeState.background,
-           marginTop: '10vh'
-       },
+            backgroundColor: themeState.background,
+            marginTop: '10vh'
+        },
         tocButton: {
             ...ReactReaderStyle.tocButton,
             top: mobileFullScreen ? '12vh' : ReactReaderStyle.tocButton.top,
@@ -285,7 +293,10 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             startParamParts.push("preview_1");
         }
 
-        const deepLink = buildMiniAppDirectLink({startParam: startParamParts.join("_"), botUsername: 'talegram_org_bot'}) ;
+        const deepLink = buildMiniAppDirectLink({
+            startParam: startParamParts.join("_"),
+            botUsername: 'talegram_org_bot'
+        });
 
         try {
             shareURL(deepLink ?? '', excerpt);
@@ -300,10 +311,12 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     }, [location]);
 
     useEffect(() => {
-        const  intervalId = setInterval(() => {
+        const intervalId = setInterval(() => {
             if (!readerIframetRef.current) return;
 
-            const newSelectedText = (readerIframetRef?.current as unknown as { window: Window})?.window?.getSelection?.()?.toString() ?? "";
+            const newSelectedText = (readerIframetRef?.current as unknown as {
+                window: Window
+            })?.window?.getSelection?.()?.toString() ?? "";
 
             if (selection !== newSelectedText) setSelection(newSelectedText)
         }, 1500)
@@ -313,10 +326,9 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     }, []);
 
 
-
     // const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
 
-    const injectCss = (contents: { document: Document}) => {
+    const injectCss = (contents: { document: Document }) => {
         const doc = contents.document;
 
         // удалим старый стиль, если он уже был
@@ -455,7 +467,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             <div style={{
                 position: "fixed",
                 top: '12vh',
-                right: '2vh',
+                right: '1vh',
                 zIndex: '100',
                 width: 'fit-content',
                 gap: '5px',
@@ -463,8 +475,13 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                 flexDirection: 'row-reverse'
             }}>
 
-                <Button  mode={isMenuModalVisibleGood ? "filled" : "bezeled"} size="m" style={{ opacity: 0.9}}
-                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ fontSize: 24}}>⚙️</span></Button>
+                <button style={{
+                    background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
+                    border: 'none',
+                    borderRadius: 900,
+                    opacity: 0.9
+                }}
+                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{fontSize: 24}}>⚙️</span></button>
                 {isMenuOpen && !isChaptersModalOpen
                     ? (
                         <>
@@ -479,7 +496,8 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             </div>
             <Modal
 
-                header={<Modal.Header>{t("reading-overlay.chapters")}</Modal.Header>} open={isChaptersModalOpen} onOpenChange={setChaptersModalOpen}>
+                header={<Modal.Header>{t("reading-overlay.chapters")}</Modal.Header>} open={isChaptersModalOpen}
+                onOpenChange={setChaptersModalOpen}>
 
                 <div style={{height: '60vh', padding: 16, display: "flex", flexDirection: "column", gap: 12}}>
                     {chaptersLoading ? (
@@ -602,9 +620,8 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                                 );
 
 
-
-
                             }
+
                             logAllEvents(a)
 
                         });
