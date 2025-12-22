@@ -12,6 +12,10 @@ import {Modal, Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
+import {hapticFeedback} from '@tma.js/sdk';
+
+
+const { selectionChanged } = hapticFeedback;
 
 type ReadingOverlayProps = {
     book?: Book | null;
@@ -132,6 +136,7 @@ export function ReadingOverlay({
             if (nextIdx !== -1) {
                 await r.display(items[nextIdx].href);
             }
+            selectionChanged.ifAvailable();
         } finally {
             navLockRef.current = false;
         }
@@ -161,6 +166,7 @@ export function ReadingOverlay({
             if (prevIdx !== -1) {
                 await r.display(items[prevIdx].href);
             }
+            selectionChanged.ifAvailable();
         } finally {
             navLockRef.current = false;
         }
@@ -266,26 +272,30 @@ export function ReadingOverlay({
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
         setTextSize(next);
+        selectionChanged.ifAvailable()
     }
 
     const handleOpenChapters = () => {
         setChaptersModalOpen(true);
+        selectionChanged.ifAvailable()
     }
 
     const handleCloseChapters = () => {
         setChaptersModalOpen(false);
+        selectionChanged.ifAvailable()
     }
     const handleClearSelection = useCallback(() => {
 
 
         setSelection(null);
+        selectionChanged.ifAvailable()
     }, [selection]);
 
     const handleShareSelection = useCallback(() => {
         if (!selection || !book) {
             return;
         }
-
+        selectionChanged.ifAvailable()
         const excerpt = `\n\n“${selection}”\n\nExcerpt From\n${book.title}\n${book.authors.join(', ')}\nThis material may be protected by copyright`;
         const startParamParts = [`reader_${book.id}_books`];
 
@@ -466,7 +476,7 @@ export function ReadingOverlay({
             </button>
             <div style={{
                 position: "fixed",
-                top: '12vh',
+                top: '16vh',
                 right: '1vh',
                 zIndex: '100',
                 width: 'fit-content',
@@ -481,7 +491,10 @@ export function ReadingOverlay({
                     borderRadius: 900,
                     opacity: 0.9
                 }}
-                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{fontSize: 24}}>⚙️</span></button>
+                        onClick={() => {
+                            setMenuOpen(!isMenuOpen);
+                            selectionChanged.ifAvailable();
+                        }}><span style={{fontSize: 24}}>⚙️</span></button>
                 {isMenuOpen && !isChaptersModalOpen
                     ? (
                         <>
