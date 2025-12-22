@@ -414,20 +414,17 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                 aria-label="Previous"
                 style={{
                     position: "absolute",
-                    left: 8,
+                    left: '2vw',
                     top: "50%",
                     transform: "translateY(-50%)",
                     zIndex: 2,
+                    border: "none",
                     width: 44,
                     height: 44,
-                    borderRadius: 999,
-                    border: "none",
-                    background: themeSetting.background,
-                    color: themeState.accent,
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                    backgroundColor: themeState.background,
                     opacity: 0.85,
-                    fontSize: 32,
                     cursor: "pointer",
+                    fontSize: 32,
                 }}
             >
                 ⬅️
@@ -440,17 +437,14 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                 aria-label="Next"
                 style={{
                     position: "absolute",
-                    right: 8,
+                    right: '2vw',
                     top: "50%",
                     transform: "translateY(-50%)",
                     zIndex: 2,
+                    border: "none",
                     width: 44,
                     height: 44,
-                    borderRadius: 999,
-                    border: "none",
-                    background: themeSetting.background,
-                    color: themeState.accent,
-                    boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
+                    backgroundColor: themeState.background,
                     opacity: 0.85,
                     cursor: "pointer",
                     fontSize: 32,
@@ -460,8 +454,8 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             </button>
             <div style={{
                 position: "fixed",
-                right: '4px',
-                bottom: '4px',
+                top: '12vh',
+                right: '2vh',
                 zIndex: '100',
                 width: 'fit-content',
                 gap: '5px',
@@ -469,8 +463,8 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                 flexDirection: 'row-reverse'
             }}>
 
-                <Button  mode={isMenuModalVisibleGood ? "filled" : "bezeled"} size="m" style={{opacity: 0.9}}
-                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ⚙️</span></Button>
+                <Button  mode={isMenuModalVisibleGood ? "filled" : "bezeled"} size="m" style={{ opacity: 0.9}}
+                        onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ fontSize: 24}}>⚙️</span></Button>
                 {isMenuOpen && !isChaptersModalOpen
                     ? (
                         <>
