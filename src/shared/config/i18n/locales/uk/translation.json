@@ -619,6 +619,11 @@
   },
   "reading-overlay": {
     "toggle-font-size": "Розмір шрифту",
+    "chapters": "Розділи",
+    "chaptersLoading": "Завантажуємо розділи…",
+    "noChapters": "Розділів немає",
+    "closeChapters": "Закрити",
+    "chapterUnnamed": "Без назви",
     "selectionTitle": "Поділитися уривком",
     "shareSelection": "Поділитися",
     "clearSelection": "Очистити"

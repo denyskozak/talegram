@@ -620,6 +620,10 @@
   "reading-overlay": {
     "toggle-font-size": "Font-size",
     "chapters": "Chapters",
+    "chaptersLoading": "Loading chapters…",
+    "noChapters": "No chapters available",
+    "closeChapters": "Close",
+    "chapterUnnamed": "Untitled chapter",
     "selectionTitle": "Share this excerpt",
     "shareSelection": "Share",
     "clearSelection": "Clear"
