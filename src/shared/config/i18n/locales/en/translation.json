@@ -619,7 +619,7 @@
   },
   "reading-overlay": {
     "toggle-font-size": "Font-size",
-    "chapters": "Chapters",
+    "chapters": "Chapters \uD83D\uDCDA",
     "chaptersLoading": "Loading chapters…",
     "noChapters": "No chapters available",
     "closeChapters": "Close",

@@ -619,7 +619,7 @@
   },
   "reading-overlay": {
     "toggle-font-size": "Розмір шрифту",
-    "chapters": "Розділи",
+    "chapters": "Розділи \uD83D\uDCDA",
     "chaptersLoading": "Завантажуємо розділи…",
     "noChapters": "Розділів немає",
     "closeChapters": "Закрити",

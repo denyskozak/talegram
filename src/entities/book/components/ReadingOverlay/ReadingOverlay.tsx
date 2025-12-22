@@ -290,7 +290,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
     useEffect(() => {
         onLocationChange?.(location)
-        setCurrentChapterHref(normalizeHref(renditionRef.current?.currentLocation?.()?.start?.href ?? null));
+        setCurrentChapterHref(normalizeHref(renditionRef.current?.location?.start?.href ?? null));
     }, [location]);
 
     useEffect(() => {
@@ -465,7 +465,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
                 <Button  mode="bezeled" size="m" style={{opacity: 0.9}}
                         onClick={() => setMenuOpen(!isMenuOpen)}><span style={{ color: '#'}}>Menu ☰</span></Button>
-                {isMenuOpen
+                {isMenuOpen && !isChaptersModalOpen
                     ? (
                         <>
                             {/*<Button mode="filled" size="s"*/}

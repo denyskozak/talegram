@@ -618,7 +618,7 @@
   },
   "reading-overlay": {
     "toggle-font-size": "Шрифт",
-    "chapters": "Главы",
+    "chapters": "Главы \uD83D\uDCDA",
     "chaptersLoading": "Загружаем главы…",
     "noChapters": "Главы отсутствуют",
     "closeChapters": "Закрыть",
