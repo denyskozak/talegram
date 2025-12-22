@@ -8,7 +8,7 @@ import {shareURL} from "@tma.js/sdk";
 import {Button} from "@/shared/ui/Button.tsx";
 import {useTranslation} from "react-i18next";
 import {useTheme} from "@/app/providers/ThemeProvider.tsx";
-import {Text} from "@telegram-apps/telegram-ui";
+import {Modal, Text} from "@telegram-apps/telegram-ui";
 import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
@@ -25,6 +25,12 @@ type ReadingOverlayProps = {
 
 type ITheme = 'light' | 'dark'
 
+type TocItem = {
+    label: string;
+    href: string;
+    subitems?: TocItem[];
+}
+
 
 
 export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLocationChange, isPreview, book}: ReadingOverlayProps): JSX.Element {
@@ -36,6 +42,10 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     const [isMenuOpen, setMenuOpen] = useState(false);
     const [textSize, setTextSize] = useState(3);
     const rendition = useRef<Rendition | undefined>(undefined)
+    const [chapters, setChapters] = useState<TocItem[]>([]);
+    const [isChaptersModalOpen, setChaptersModalOpen] = useState(false);
+    const [chaptersLoading, setChaptersLoading] = useState(false);
+    const [currentChapterHref, setCurrentChapterHref] = useState<string | null>(null);
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -44,6 +54,8 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
     const [theme] = useState<ITheme>('dark')
 
     const navLockRef = useRef(false);
+
+    const normalizeHref = (href?: string | null) => href?.split("#")[0] ?? null;
 
     const isCoverItem = (it: any) => {
         const props = Array.isArray(it?.properties) ? it.properties.join(" ") : String(it?.properties || "");
@@ -242,9 +254,13 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
         setTextSize(next);
     }
 
-    // const handleOpenChapters = () => {
-    //     console.log("book: ", renditionRef.current);
-    // }
+    const handleOpenChapters = () => {
+        setChaptersModalOpen(true);
+    }
+
+    const handleCloseChapters = () => {
+        setChaptersModalOpen(false);
+    }
     const handleClearSelection = useCallback(() => {
 
 
@@ -274,6 +290,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
     useEffect(() => {
         onLocationChange?.(location)
+        setCurrentChapterHref(normalizeHref(renditionRef.current?.currentLocation?.()?.start?.href ?? null));
     }, [location]);
 
     useEffect(() => {
@@ -327,6 +344,59 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
 
         // ВАЖНО: добавляем в КОНЕЦ head, чтобы быть последними по каскаду
         doc.head.appendChild(style);
+    };
+
+    const loadChapters = (r: Rendition) => {
+        const book = r.book;
+        if (!book) return;
+        setChaptersLoading(true);
+        book.loaded.navigation
+            .then((nav: { toc?: TocItem[] }) => {
+                setChapters(nav?.toc ?? []);
+            })
+            .catch((error: unknown) => {
+                console.error("Failed to load chapters", error);
+                setChapters([]);
+            })
+            .finally(() => setChaptersLoading(false));
+    };
+
+    const handleChapterSelect = (href: string) => {
+        if (!renditionRef.current) return;
+        setChaptersModalOpen(false);
+        renditionRef.current.display(href);
+    };
+
+    const renderToc = (items: TocItem[], depth = 0) => {
+        if (!items?.length) return null;
+        return items.map((item) => {
+            const isActive = normalizeHref(item.href) === currentChapterHref;
+            return (
+                <div key={`${item.href}-${depth}`} style={{display: "flex", flexDirection: "column", gap: 4}}>
+                    <Button
+                        mode={isActive ? "filled" : "outline"}
+                        size="m"
+                        onClick={() => handleChapterSelect(item.href)}
+                        style={{
+                            justifyContent: "flex-start",
+                            textAlign: "left",
+                            paddingLeft: 12 + depth * 12,
+                            paddingRight: 12,
+                            whiteSpace: "normal",
+                        }}
+                    >
+                        <span style={{overflow: "hidden", textOverflow: "ellipsis", display: "block", width: "100%"}}>
+                            {item.label || t("reading-overlay.chapterUnnamed")}
+                        </span>
+                    </Button>
+                    {item.subitems ? (
+                        <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                            {renderToc(item.subitems, depth + 1)}
+                        </div>
+                    ) : null}
+                </div>
+            );
+        });
     };
 
 
@@ -402,11 +472,26 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                             {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
                             <Button mode="filled" size="s"
                                     onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
-                            {/*<Button mode="filled" size="s"*/}
-                            {/*        onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>)*/}
+                            <Button mode="filled" size="s"
+                                    onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
                         </>)
                     : null}
             </div>
+            <Modal open={isChaptersModalOpen} onOpenChange={setChaptersModalOpen}>
+                <Modal.Header>{t("reading-overlay.chapters")}</Modal.Header>
+                <div style={{padding: 16, display: "flex", flexDirection: "column", gap: 12}}>
+                    {chaptersLoading ? (
+                        <Text>{t("reading-overlay.chaptersLoading")}</Text>
+                    ) : chapters.length ? (
+                        renderToc(chapters)
+                    ) : (
+                        <Text>{t("reading-overlay.noChapters")}</Text>
+                    )}
+                    <Button mode="outline" onClick={handleCloseChapters}>
+                        {t("reading-overlay.closeChapters")}
+                    </Button>
+                </div>
+            </Modal>
             {selection && book ? (
                 <div
                     style={{
@@ -439,7 +524,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
             <ReactReader
                 // readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
-                showToc
+                showToc={false}
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 readerStyles={readerTheme}
@@ -450,6 +535,7 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
                     renditionRef.current = _rendition
                     bookRef.current = _rendition.book;
                     _rendition.hooks.content.register(injectCss);
+                    loadChapters(_rendition);
 
 
                     const handleRendered = (_: string, view: Contents) => {
@@ -527,4 +613,3 @@ export function ReadingOverlay({fileUrl, mobileFullScreen, initialLocation, onLo
         </div>
     );
 }
-

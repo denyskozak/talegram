@@ -619,6 +619,10 @@
   "reading-overlay": {
     "toggle-font-size": "Шрифт",
     "chapters": "Главы",
+    "chaptersLoading": "Загружаем главы…",
+    "noChapters": "Главы отсутствуют",
+    "closeChapters": "Закрыть",
+    "chapterUnnamed": "Без названия",
     "selectionTitle": "Поделиться цитатой",
     "shareSelection": "Поделиться",
     "clearSelection": "Сбросить"
