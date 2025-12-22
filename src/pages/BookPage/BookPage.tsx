@@ -653,7 +653,7 @@ export default function BookPage(): JSX.Element {
                                 </Button>
                             </div>
                         </div>
-                        <Card style={{borderRadius: 24, margin: "0 auto", overflow: "hidden", width: getImageWidth()}}>
+                        <Card style={{borderRadius: 24, margin: "12px auto", overflow: "hidden", width: getImageWidth()}}>
                             <div style={{position: "relative", aspectRatio: "10 / 12"}}>
                                 <img
                                     src={coverSrc}
@@ -664,7 +664,7 @@ export default function BookPage(): JSX.Element {
                         </Card>
                     </div>
                 </div>
-                <div style={{display: "flex", flexDirection: "column", gap: 16}}>
+                <div style={{display: "flex", flexDirection: "column",  gap: 16}}>
                     <div style={{display: "flex", flexWrap: "wrap", gap: 8}}>
                         {book.tags.map((tag) => (
                             <Chip key={tag} mode="outline" onClick={() => handleTagClick(tag)}>

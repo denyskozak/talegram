@@ -21,6 +21,13 @@ export function StartRouteHandler(): null {
             });
             return;
         }
+
+        if (startParam.startsWith("audiobooks")) {
+            navigate(`/audiobooks`, {
+                replace: true,
+            });
+            return;
+        }
         
         if (startParam.startsWith("reader_")) {
             const hasPreview = startParam.includes("preview_1");
