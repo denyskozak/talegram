@@ -144,7 +144,11 @@ export default function SearchPage(): JSX.Element {
 
             {isLoading && (
                 <div style={{display: "flex", flexDirection: "column", gap: 24}}>
-                    <div style={{display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"}}>
+                    <div style={{
+                        display: "grid",
+                        gap: 16,
+                        gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"
+                    }}>
                         {Array.from({length: 4}).map((_, index) => (
                             <CategoryTileSkeleton key={`category-skeleton-${index}`}/>
                         ))}
@@ -159,27 +163,25 @@ export default function SearchPage(): JSX.Element {
 
             {!isLoading && trimmedQuery && (
                 <div style={{display: "flex", flexDirection: "column", gap: 24}}>
-                    <section>
+                    {categories.length > 0 ? (<section>
                         <Title level="2" weight="2" style={{marginBottom: 12}}>
                             {t("search.results.categories")}
                         </Title>
-                        {categories.length > 0 ? (
-                            <div style={{display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"}}>
-                                {categories.map((category) => (
-                                    <CategoryTile
-                                        key={category.id}
-                                        category={category}
-                                        onClick={() => handleCategoryClick(category)}
-                                    />
-                                ))}
-                            </div>
-                        ) : (
-                            <EmptyState
-                                title={t("search.results.noCategories")}
-                                description={t("search.results.adjustQuery")}
-                            />
-                        )}
-                    </section>
+
+                        <div style={{
+                            display: "grid",
+                            gap: 16,
+                            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))"
+                        }}>
+                            {categories.map((category) => (
+                                <CategoryTile
+                                    key={category.id}
+                                    category={category}
+                                    onClick={() => handleCategoryClick(category)}
+                                />
+                            ))}
+                        </div>
+                    </section>) : null}
 
                     <section>
                         <Title level="2" weight="2" style={{marginBottom: 12}}>
