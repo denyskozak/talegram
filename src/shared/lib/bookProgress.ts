@@ -1,6 +1,6 @@
 const STORAGE_PREFIX = 'book_progress';
 
-export type BookProgressKind = 'reader_location' | 'audio_position';
+export type BookProgressKind = 'reader_location' | 'audio_position' | 'audio_voice';
 
 function getStorageKey(kind: BookProgressKind, bookId?: string): string | null {
     if (typeof bookId !== 'string') {

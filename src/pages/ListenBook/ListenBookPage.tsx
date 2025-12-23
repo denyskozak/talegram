@@ -12,6 +12,8 @@ import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookPro
 import {catalogApi} from "@/entities/book/api";
 import type {Book} from "@/entities/book/types";
 import {shareURL} from "@tma.js/sdk";
+import {fetchProposalById} from "@/entities/proposal/api";
+import type {BookProposal} from "@/entities/proposal/types";
 
 const SEEK_OFFSET_SECONDS = 30;
 
@@ -20,6 +22,7 @@ export default function ListenBookPage(): JSX.Element {
     const navigate = useNavigate();
     const {id, type} = useParams<{ id?: string, type?: 'books' | 'proposals' }>();
     const resourceType: "books" | "proposals" = type === "proposals" ? "proposals" : "books";
+    const isProposal = resourceType === "proposals";
     const [searchParams] = useSearchParams();
     const {launchParams} = useTMA();
     const telegramUserId = useMemo(
@@ -27,8 +30,57 @@ export default function ListenBookPage(): JSX.Element {
         [launchParams],
     );
     const [book, setBook] = useState<Book | null>(null);
+    const [proposal, setProposal] = useState<BookProposal | null>(null);
     const requestedAudioBookId = searchParams.get("audioBookId");
-    const availableAudioBooks = useMemo(() => book?.audioBooks ?? [], [book?.audioBooks]);
+    const availableAudioBooks = useMemo(() => {
+        if (isProposal) {
+            const proposalAudioBooks = proposal?.audioBooks?.map((audioBook) => ({
+                id: audioBook.id,
+                title: audioBook.title,
+            })) ?? [];
+
+            if (proposalAudioBooks.length > 0) {
+                return proposalAudioBooks;
+            }
+
+            if (proposal?.audiobookFilePath) {
+                return [{id: proposal.id, title: proposal.audiobookFileName ?? proposal.title}];
+            }
+
+            return [];
+        }
+
+        const bookAudioBooks = book?.audioBooks?.map((audioBook) => ({
+            id: audioBook.id,
+            title: audioBook.title,
+        })) ?? [];
+
+        if (bookAudioBooks.length > 0) {
+            return bookAudioBooks;
+        }
+
+        if (book?.audiobookFilePath) {
+            return [{id: book.id, title: book.audiobookFileName ?? book.title}];
+        }
+
+        return [];
+    }, [book, isProposal, proposal]);
+    const voicePreferenceKey = useMemo(
+        () => (id ? `${resourceType}_${id}` : null),
+        [id, resourceType],
+    );
+    const storedAudioBookId = useMemo(() => {
+        if (!voicePreferenceKey) {
+            return null;
+        }
+
+        const stored = getStoredBookProgress('audio_voice', voicePreferenceKey, '');
+        return stored.length > 0 ? stored : null;
+    }, [voicePreferenceKey]);
+    const availableAudioBookIds = useMemo(
+        () => availableAudioBooks.map((audioBook) => audioBook.id),
+        [availableAudioBooks],
+    );
     const sharedAudioPositionSeconds = useMemo(() => {
         const value = searchParams.get("time");
         const parsed = value ? Number.parseFloat(value) : NaN;
@@ -37,16 +89,16 @@ export default function ListenBookPage(): JSX.Element {
     }, [searchParams]);
 
     const defaultAudioBookId = useMemo(() => {
-        if (requestedAudioBookId) {
+        if (requestedAudioBookId && availableAudioBookIds.includes(requestedAudioBookId)) {
             return requestedAudioBookId;
         }
 
-        if (availableAudioBooks[0]?.id) {
-            return availableAudioBooks[0].id;
+        if (storedAudioBookId && availableAudioBookIds.includes(storedAudioBookId)) {
+            return storedAudioBookId;
         }
 
-        return null;
-    }, [availableAudioBooks, requestedAudioBookId]);
+        return availableAudioBookIds[0] ?? null;
+    }, [availableAudioBookIds, requestedAudioBookId, storedAudioBookId]);
     const [selectedAudioBookId, setSelectedAudioBookId] = useState<string | null>(defaultAudioBookId ?? null);
     const playbackResourceId = selectedAudioBookId ?? defaultAudioBookId ?? null;
     const progressStorageKey = playbackResourceId ?? "";
@@ -65,6 +117,21 @@ export default function ListenBookPage(): JSX.Element {
     const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
     const isPreview = searchParams.get("preview") === "1";
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
+    const listeningTitle = useMemo(
+        () => book?.title ?? proposal?.title ?? t("book.listen.title"),
+        [book?.title, proposal?.title, t],
+    );
+    const listeningAuthor = useMemo(() => {
+        if (book?.authors) {
+            return book.authors.join(", ");
+        }
+
+        return proposal?.author ?? null;
+    }, [book?.authors, proposal?.author]);
+    const listeningEntityId = useMemo(
+        () => book?.id ?? proposal?.id ?? id ?? null,
+        [book?.id, proposal?.id, id],
+    );
 
     const audioUrl = useMemo(() => {
         if (!playbackResourceId) {
@@ -93,21 +160,40 @@ export default function ListenBookPage(): JSX.Element {
 
     useEffect(() => {
         if (!id) {
+            setBook(null);
+            setProposal(null);
             return;
         }
 
-        catalogApi.getBook(id).then(setBook).catch((error) => {
-            console.error("Failed to load book for listening", error);
-        });
-    }, [id]);
+        setBook(null);
+        setProposal(null);
+
+        if (isProposal) {
+            fetchProposalById(id).then(setProposal).catch((error) => {
+                console.error("Failed to load proposal for listening", error);
+            });
+        } else {
+            catalogApi.getBook(id).then(setBook).catch((error) => {
+                console.error("Failed to load book for listening", error);
+            });
+        }
+    }, [id, isProposal]);
 
     useEffect(() => {
         setSelectedAudioBookId((current) => {
-            const isCurrentValid = Boolean(current) && availableAudioBooks.some((audioBook) => audioBook.id === current);
+            const isCurrentValid = Boolean(current) && availableAudioBookIds.includes(current);
 
             return isCurrentValid ? current : defaultAudioBookId ?? null;
         });
-    }, [availableAudioBooks, defaultAudioBookId]);
+    }, [availableAudioBookIds, defaultAudioBookId]);
+
+    useEffect(() => {
+        if (!voicePreferenceKey || !playbackResourceId) {
+            return;
+        }
+
+        setStoredBookProgress('audio_voice', voicePreferenceKey, playbackResourceId);
+    }, [playbackResourceId, voicePreferenceKey]);
 
     useEffect(() => {
         const audioElement = audioRef.current;
@@ -210,7 +296,7 @@ export default function ListenBookPage(): JSX.Element {
             audioElement.removeEventListener("pause", handlePause);
             audioElement.removeEventListener("ended", handlePause);
         };
-    }, []);
+    }, [audioUrl, playbackResourceId]);
 
     const handlePlaybackRateChange = useCallback((rate: number) => {
         setPlaybackRate(rate);
@@ -279,12 +365,12 @@ export default function ListenBookPage(): JSX.Element {
     }, []);
 
     const handleShareAudio = useCallback(() => {
-        if (!id || !book) {
+        if (!id || !listeningEntityId) {
             return;
         }
 
         const audioId = playbackResourceId ?? undefined;
-        const parts = [`listen_${book.id}_${resourceType}`];
+        const parts = [`listen_${listeningEntityId}_${resourceType}`];
 
         if (audioId) {
             parts.push(`audio_${audioId}`);
@@ -306,16 +392,19 @@ export default function ListenBookPage(): JSX.Element {
         });
 
         try {
-            shareURL(deepLink ?? "", book.title);
+            shareURL(deepLink ?? "", listeningTitle);
         } catch (error) {
             console.error("Failed to share audiobook", error);
         }
-    }, [book, currentTime, id, isPreview, playbackResourceId, resourceType, shareFromCurrent]);
+    }, [currentTime, id, isPreview, listeningEntityId, listeningTitle, playbackResourceId, resourceType, shareFromCurrent]);
 
     const handleAudioBookSelect = useCallback((value: string | null) => {
         setSelectedAudioBookId(value);
+        if (voicePreferenceKey) {
+            setStoredBookProgress('audio_voice', voicePreferenceKey, value ?? "");
+        }
         setIsVoiceModalOpen(false);
-    }, []);
+    }, [voicePreferenceKey]);
 
     return (
         <div
@@ -334,11 +423,11 @@ export default function ListenBookPage(): JSX.Element {
 
             <Card style={{padding: 24, borderRadius: 24, display: "flex", flexDirection: "column", gap: 16}}>
                 <Title level="1" weight="2">
-                    {book?.title ?? t("book.listen.title")}
+                    {listeningTitle}
                 </Title>
-                {book ? (
+                {listeningAuthor ? (
                     <Text style={{margin: 0, color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
-                        {book.authors.join(", ")}
+                        {listeningAuthor}
                     </Text>
                 ) : null}
                 {previewMessage ? (
@@ -407,7 +496,7 @@ export default function ListenBookPage(): JSX.Element {
                                 {isPlaying ? t("book.listen.pause") : t("book.listen.play")}
                             </Button>
                             <Text style={{margin: 0, color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
-                                {book?.title ?? t("book.listen.title")}
+                                {listeningTitle}
                             </Text>
                         </div>
                         <div style={{display: "flex", flexDirection: "column", gap: 4}}>
