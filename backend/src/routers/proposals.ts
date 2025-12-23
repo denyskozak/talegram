@@ -7,7 +7,7 @@ import { ProposalVote } from '../entities/ProposalVote.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 import { authorizedProcedure, createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
-import { fetchStoredFilesBase64, warmFileCache } from '../utils/storage-files.js';
+import { deleteStorageDirectories, fetchStoredFilesBase64, warmFileCache } from '../utils/storage-files.js';
 
 const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 1;
@@ -277,6 +277,14 @@ export const proposalsRouter = createRouter({
       return { proposal, positiveVotes, negativeVotes, userVote: input.isPositive ? 'positive' : 'negative' as const };
     });
 
+    if (result.proposal.status === ProposalStatus.REJECTED) {
+      await deleteStorageDirectories([
+        result.proposal.filePath,
+        result.proposal.coverFilePath,
+        result.proposal.audiobookFilePath,
+      ]);
+    }
+
     return {
       status: result.proposal.status,
       allowedVotersCount,
@@ -286,4 +294,3 @@ export const proposalsRouter = createRouter({
     };
   }),
 });
-

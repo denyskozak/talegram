@@ -15,6 +15,7 @@ type BookFormData = {
     votes: number;
   };
   tags: string[];
+  similarBooks: string[];
   publishedAt?: string;
   reviewsCount: number;
 };
@@ -39,6 +40,7 @@ type DraftState = {
   ratingAverage: string;
   ratingVotes: string;
   tags: string;
+  similarBooks: string;
   publishedAt: string;
   reviewsCount: string;
 };
@@ -55,6 +57,7 @@ function toDraft(values: BookFormData): DraftState {
     ratingAverage: values.rating.average.toString(10),
     ratingVotes: values.rating.votes.toString(10),
     tags: values.tags.join(', '),
+    similarBooks: values.similarBooks.join(', '),
     publishedAt: values.publishedAt ? values.publishedAt.slice(0, 10) : '',
     reviewsCount: values.reviewsCount.toString(10),
   };
@@ -122,6 +125,7 @@ export function BookForm({
     const ratingAverage = parseNumber(draft.ratingAverage, initialValues.rating.average, [0, 5]);
     const ratingVotes = Math.max(0, Math.round(parseNumber(draft.ratingVotes, initialValues.rating.votes)));
     const reviewsCount = Math.max(0, Math.round(parseNumber(draft.reviewsCount, initialValues.reviewsCount)));
+    const similarBooks = normalizeList(draft.similarBooks);
 
     if (!id) {
       setSubmitError('ID is required.');
@@ -170,6 +174,7 @@ export function BookForm({
         votes: ratingVotes,
       },
       tags,
+      similarBooks,
       publishedAt,
       reviewsCount,
     };
@@ -290,6 +295,15 @@ export function BookForm({
             value={draft.tags}
             onChange={(event) => setDraft((state) => ({ ...state, tags: event.target.value }))}
             placeholder="Separated by comma"
+          />
+        </label>
+        <label>
+          <span>Similar book IDs</span>
+          <input
+            type="text"
+            value={draft.similarBooks}
+            onChange={(event) => setDraft((state) => ({ ...state, similarBooks: event.target.value }))}
+            placeholder="Comma separated book IDs"
           />
         </label>
         <label>

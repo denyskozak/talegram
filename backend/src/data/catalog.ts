@@ -149,6 +149,7 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     },
       currency: entity.currency,
     tags: ensureArray(entity.tags),
+    similarBooks: ensureArray(entity.similarBooks),
     publishedAt: getPublishedAt(entity),
     reviewsCount: entity.reviewsCount ?? 0,
     filePath: entity.filePath ?? null,

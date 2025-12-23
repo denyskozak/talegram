@@ -18,6 +18,7 @@ function toFormData(book: Book): BookFormData {
       votes: book.rating.votes,
     },
     tags: [...book.tags],
+    similarBooks: [...(book.similarBooks ?? [])],
     publishedAt: book.publishedAt,
     reviewsCount: book.reviewsCount,
   };
@@ -87,6 +88,7 @@ export function BookEditPage(): JSX.Element {
           price: values.price,
           rating: values.rating,
           tags: values.tags,
+          similarBooks: values.similarBooks,
           publishedAt: values.publishedAt,
           reviewsCount: values.reviewsCount,
         },

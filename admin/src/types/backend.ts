@@ -24,6 +24,7 @@ export type Book = {
     votes: number;
   };
   tags: string[];
+  similarBooks: string[];
   publishedAt?: string;
   reviewsCount: number;
   filePath?: string | null;

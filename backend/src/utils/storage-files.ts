@@ -44,6 +44,53 @@ function resolveFilePath(storageId?: string | null): string | null {
   return path.isAbsolute(normalized) ? normalized : path.join(STORAGE_ROOT, normalized);
 }
 
+export function resolveStoredFilePath(storageId?: string | null): string | null {
+  return resolveFilePath(storageId);
+}
+
+export function getStorageRoot(): string {
+  return STORAGE_ROOT;
+}
+
+function isWithinStorageRoot(targetPath: string): boolean {
+  const resolvedRoot = path.resolve(STORAGE_ROOT);
+  const resolvedTarget = path.resolve(targetPath);
+  return resolvedTarget === resolvedRoot || resolvedTarget.startsWith(`${resolvedRoot}${path.sep}`);
+}
+
+function getStorageDirectories(storageIds: Array<string | null | undefined>): Set<string> {
+  const directories = new Set<string>();
+
+  for (const storageId of storageIds) {
+    const filePath = resolveFilePath(storageId);
+    if (!filePath) {
+      continue;
+    }
+    const directory = path.dirname(filePath);
+    if (isWithinStorageRoot(directory)) {
+      directories.add(directory);
+    } else {
+      console.warn('Skipping removal for path outside storage root', { directory });
+    }
+  }
+
+  return directories;
+}
+
+export async function deleteStorageDirectories(storageIds: Array<string | null | undefined>): Promise<void> {
+  const directories = Array.from(getStorageDirectories(storageIds));
+
+  await Promise.all(
+    directories.map(async (directory) => {
+      try {
+        await fs.rm(directory, { recursive: true, force: true });
+      } catch (error) {
+        console.warn('Failed to delete storage directory', { directory, error });
+      }
+    }),
+  );
+}
+
 export async function warmFileCache(fileIds: string[]): Promise<void> {
   await Promise.all(
     fileIds
