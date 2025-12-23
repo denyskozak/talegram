@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {useTranslation} from "react-i18next";
 import {useNavigate, useParams, useSearchParams} from "react-router-dom";
 
-import {Card, Text, Title} from "@telegram-apps/telegram-ui";
+import {Card, Modal, Text, Title} from "@telegram-apps/telegram-ui";
 
 import {useTMA} from "@/app/providers/TMAProvider";
 import {buildBookFileDownloadUrl, buildBookPreviewDownloadUrl} from "@/shared/api/storage";
@@ -26,8 +26,9 @@ export default function ListenBookPage(): JSX.Element {
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
-    const requestedAudioBookId = searchParams.get("audioBookId");
     const [book, setBook] = useState<Book | null>(null);
+    const requestedAudioBookId = searchParams.get("audioBookId");
+    const availableAudioBooks = useMemo(() => book?.audioBooks ?? [], [book?.audioBooks]);
     const sharedAudioPositionSeconds = useMemo(() => {
         const value = searchParams.get("time");
         const parsed = value ? Number.parseFloat(value) : NaN;
@@ -35,23 +36,19 @@ export default function ListenBookPage(): JSX.Element {
         return Number.isFinite(parsed) ? parsed : undefined;
     }, [searchParams]);
 
-    const preferredAudioBookId = useMemo(() => {
+    const defaultAudioBookId = useMemo(() => {
         if (requestedAudioBookId) {
             return requestedAudioBookId;
         }
 
-        if (book?.audioBooks?.[0]?.id) {
-            return book.audioBooks[0].id;
-        }
-
-        if (book?.audiobookFilePath) {
-            return id ?? null;
+        if (availableAudioBooks[0]?.id) {
+            return availableAudioBooks[0].id;
         }
 
         return null;
-    }, [book?.audioBooks, book?.audiobookFilePath, id, requestedAudioBookId]);
-
-    const playbackResourceId = preferredAudioBookId ?? id ?? null;
+    }, [availableAudioBooks, requestedAudioBookId]);
+    const [selectedAudioBookId, setSelectedAudioBookId] = useState<string | null>(defaultAudioBookId ?? null);
+    const playbackResourceId = selectedAudioBookId ?? defaultAudioBookId ?? null;
     const progressStorageKey = playbackResourceId ?? "";
     const savedAudioPositionSeconds = useMemo(
         () => Number.parseFloat(getStoredBookProgress('audio_position', progressStorageKey, '0')),
@@ -65,6 +62,7 @@ export default function ListenBookPage(): JSX.Element {
     const [playbackRate, setPlaybackRate] = useState(1);
     const [isPlaying, setIsPlaying] = useState(false);
     const [shareFromCurrent, setShareFromCurrent] = useState(true);
+    const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
     const isPreview = searchParams.get("preview") === "1";
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
 
@@ -83,6 +81,16 @@ export default function ListenBookPage(): JSX.Element {
         }
     }, [isPreview, playbackResourceId, resourceType, telegramUserId]);
 
+    const audioBookOptions = useMemo(
+        () => {
+            return availableAudioBooks.map((audioBook, index) => ({
+                value: audioBook.id,
+                label: audioBook.title?.trim() ?? t("book.listen.voiceOption", {index: index + 1}),
+            }));
+        },
+        [availableAudioBooks, t],
+    );
+
     useEffect(() => {
         if (!id) {
             return;
@@ -92,6 +100,14 @@ export default function ListenBookPage(): JSX.Element {
             console.error("Failed to load book for listening", error);
         });
     }, [id]);
+
+    useEffect(() => {
+        setSelectedAudioBookId((current) => {
+            const isCurrentValid = Boolean(current) && availableAudioBooks.some((audioBook) => audioBook.id === current);
+
+            return isCurrentValid ? current : defaultAudioBookId ?? null;
+        });
+    }, [availableAudioBooks, defaultAudioBookId]);
 
     useEffect(() => {
         const audioElement = audioRef.current;
@@ -267,7 +283,7 @@ export default function ListenBookPage(): JSX.Element {
             return;
         }
 
-        const audioId = preferredAudioBookId ?? playbackResourceId ?? id;
+        const audioId = playbackResourceId ?? undefined;
         const parts = [`listen_${book.id}_${resourceType}`];
 
         if (audioId) {
@@ -294,7 +310,12 @@ export default function ListenBookPage(): JSX.Element {
         } catch (error) {
             console.error("Failed to share audiobook", error);
         }
-    }, [book, currentTime, id, isPreview, playbackResourceId, preferredAudioBookId, resourceType, shareFromCurrent]);
+    }, [book, currentTime, id, isPreview, playbackResourceId, resourceType, shareFromCurrent]);
+
+    const handleAudioBookSelect = useCallback((value: string | null) => {
+        setSelectedAudioBookId(value);
+        setIsVoiceModalOpen(false);
+    }, []);
 
     return (
         <div
@@ -324,6 +345,43 @@ export default function ListenBookPage(): JSX.Element {
                     <Text style={{margin: 0, color: "var(--tg-theme-hint-color, #7f7f81)"}}>
                         {previewMessage}
                     </Text>
+                ) : null}
+                {audioBookOptions.length > 0 ? (
+                    <>
+                        <div style={{display: "flex", flexDirection: "column", gap: 8}}>
+                            <Text style={{margin: 0, fontWeight: 600}}>{t("book.listen.voice")}</Text>
+                            <Button
+                                mode="outline"
+                                size="s"
+                                onClick={() => setIsVoiceModalOpen(true)}
+                            >
+                                {
+                                    audioBookOptions.find((option) => option.value === (selectedAudioBookId ?? defaultAudioBookId))
+                                        ?.label ?? t("book.listen.voice")
+                                }
+                            </Button>
+                        </div>
+                        <Modal
+                            header={<Modal.Header>{t("book.listen.voice")}</Modal.Header>}
+                            open={isVoiceModalOpen}
+                            onOpenChange={setIsVoiceModalOpen}
+                        >
+                            <div style={{height: "60vh", padding: 16, display: "flex", flexDirection: "column", gap: 12}}>
+                                {audioBookOptions.map((option) => (
+                                    <Button
+                                        key={option.value}
+                                        mode={option.value === playbackResourceId ? "filled" : "outline"}
+                                        onClick={() => handleAudioBookSelect(option.value)}
+                                    >
+                                        {option.label}
+                                    </Button>
+                                ))}
+                                <Button mode="outline" onClick={() => setIsVoiceModalOpen(false)}>
+                                    {t("reading-overlay.closeChapters")}
+                                </Button>
+                            </div>
+                        </Modal>
+                    </>
                 ) : null}
                 {audioUrl ? (
                     <>

@@ -176,7 +176,6 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
       id: audioBook.id,
       bookId: audioBook.bookId,
       title: audioBook.title ?? null,
-      filePath: audioBook.filePath,
       mimeType: audioBook.mimeType ?? null,
       fileName: audioBook.fileName ?? null,
       fileSize: audioBook.fileSize ?? null,
@@ -346,7 +345,11 @@ export async function listAllBooks(): Promise<CatalogBook[]> {
 export async function listAudiobooks(): Promise<CatalogBook[]> {
   const audioBookRepository = await getAudioBookRepository();
   const audioBooks = await audioBookRepository.find();
-  const bookIds = Array.from(new Set(audioBooks.map((audioBook) => audioBook.bookId)));
+  const shuffledAudioBooks = audioBooks
+    .map((audioBook) => ({ audioBook, sortKey: Math.random() }))
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .map(({ audioBook }) => audioBook);
+  const bookIds = Array.from(new Set(shuffledAudioBooks.map((audioBook) => audioBook.bookId)));
 
   if (bookIds.length === 0) {
     return [];
@@ -354,10 +357,12 @@ export async function listAudiobooks(): Promise<CatalogBook[]> {
 
   const repository = await getBookRepository();
   const entities = await repository.find({ where: { id: In(bookIds) } });
+  const entityMap = new Map(entities.map((entity) => [entity.id, entity]));
+  const orderedEntities = bookIds
+    .map((bookId) => entityMap.get(bookId))
+    .filter((entity): entity is BookEntity => Boolean(entity));
 
-  const sorted = sortEntities(entities, 'popular');
-
-  return Promise.all(sorted.map((entity) => mapEntityToBook(entity)));
+  return Promise.all(orderedEntities.map((entity) => mapEntityToBook(entity)));
 }
 
 export async function listCategoryTags(categoryId: ID, limit = 9): Promise<string[]> {
