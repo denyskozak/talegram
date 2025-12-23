@@ -727,7 +727,7 @@ export default function BookPage(): JSX.Element {
                                 </Button>
                                 <Button
                                     size="l"
-                                    mode="outline"
+                                    mode="filled"
                                     onClick={() => void handleDownload()}
                                     loading={isDownloading}
                                     disabled={isDownloading}
@@ -739,7 +739,7 @@ export default function BookPage(): JSX.Element {
                                         {t("book.actions.listen")}
                                     </Button>
                                 ) : null}
-                                <Button size="l" mode="filled" disabled={isActionLoading} onClick={handleShareRead}>
+                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleShareRead}>
                                     {t("book.actions.share-read")}
                                 </Button>
                             </div>
@@ -774,7 +774,7 @@ export default function BookPage(): JSX.Element {
                                 <Button size="l" mode="filled" disabled={isActionLoading} onClick={handlePreview}>
                                     {t("book.actions.preview")}
                                 </Button>
-                                <Button size="l" mode="filled" disabled={isActionLoading} onClick={handleShareRead}>
+                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleShareRead}>
                                     {t("book.actions.share-preview")}
                                 </Button>
                                 {hasAudiobook ? (
