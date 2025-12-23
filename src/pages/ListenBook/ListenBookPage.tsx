@@ -181,7 +181,7 @@ export default function ListenBookPage(): JSX.Element {
 
     useEffect(() => {
         setSelectedAudioBookId((current) => {
-            const isCurrentValid = Boolean(current) && availableAudioBookIds.includes(current);
+            const isCurrentValid = current && Boolean(current) && availableAudioBookIds.includes(current);
 
             return isCurrentValid ? current : defaultAudioBookId ?? null;
         });
