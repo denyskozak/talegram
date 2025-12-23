@@ -11,15 +11,18 @@ import {Button} from "@/shared/ui/Button";
 import {getStoredBookProgress, setStoredBookProgress} from "@/shared/lib/bookProgress";
 import {catalogApi} from "@/entities/book/api";
 import type {Book} from "@/entities/book/types";
-import {shareURL} from "@tma.js/sdk";
+import {backButton, shareURL} from "@tma.js/sdk";
 import {fetchProposalById} from "@/entities/proposal/api";
 import type {BookProposal} from "@/entities/proposal/types";
+import {useScrollToTop} from "@/shared/hooks/useScrollToTop.ts";
 
 const SEEK_OFFSET_SECONDS = 30;
 
 export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
     const navigate = useNavigate();
+    useScrollToTop();
+
     const {id, type} = useParams<{ id?: string, type?: 'books' | 'proposals' }>();
     const resourceType: "books" | "proposals" = type === "proposals" ? "proposals" : "books";
     const isProposal = resourceType === "proposals";
@@ -235,6 +238,27 @@ export default function ListenBookPage(): JSX.Element {
         setIsPlaying(false);
     }, [audioUrl]);
 
+
+    useEffect(() => {
+
+        function listener() {
+            if (backButton.onClick.isAvailable()) {
+
+                if (book) {
+                    navigate(`/book/${book.id}`);
+                    return;
+                }
+            }
+        }
+
+        // or
+        backButton.onClick(listener);
+        return () => {
+            backButton.offClick(listener);
+        }
+    }, [book]);
+
+
     const handleAudioProgressChange = useCallback(() => {
         const audioElement = audioRef.current;
         if (!audioElement) {
@@ -417,9 +441,9 @@ export default function ListenBookPage(): JSX.Element {
                 gap: 16,
             }}
         >
-            <Button type="button" mode="outline" size="s" onClick={() => navigate(-1)}>
-                {t("book.listen.back")}
-            </Button>
+            {/*<Button type="button" mode="outline" size="s" onClick={() => <Button type="button" mode="outline" size="s" onClick={() => navigate(-1)}>navigate(-1)}>*/}
+            {/*    {t("book.listen.back")}*/}
+            {/*</Button>*/}
 
             <Card style={{padding: 24, borderRadius: 24, display: "flex", flexDirection: "column", gap: 16}}>
                 <Title level="1" weight="2">
