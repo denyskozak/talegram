@@ -165,10 +165,9 @@ export default function MyAccount(): JSX.Element {
       loadMyBooks({
         telegramUserId: telegramUserId ?? null,
         errorMessage: t("account.myBooks.loadError"),
-        language: i18n.language,
         force,
       }),
-    [i18n.language, loadMyBooks, t, telegramUserId],
+    [loadMyBooks, t, telegramUserId],
   );
 
   const handleRetryMyBooks = useCallback(() => {

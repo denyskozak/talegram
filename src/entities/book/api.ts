@@ -55,15 +55,11 @@ export const catalogApi: CatalogApi = {
         nextCursor: response.nextCursor,
       }));
   },
-  listAudiobooks(language) {
-    return trpc.catalog.listAudiobooks
-      .query(language ? { language } : undefined)
-      .then((items: Book[]) => items as Book[]);
+  listAudiobooks() {
+    return trpc.catalog.listAudiobooks.query().then((items: Book[]) => items as Book[]);
   },
-  getBook(id, language) {
-    return trpc.catalog.getBook
-      .query(language ? { id, language } : { id })
-      .then((book: Book) => book as Book);
+  getBook(id) {
+    return trpc.catalog.getBook.query({ id }).then((book: Book) => book as Book);
   },
   listReviews(bookId, cursor, limit) {
     const payload: ListReviewsPayload = { bookId };

@@ -31,7 +31,6 @@ const listBooksInput = z.object({
 
 const getBookInput = z.object({
   id: z.string().trim().min(1),
-  language: z.string().trim().min(1).optional(),
 });
 
 const listReviewsInput = z.object({
@@ -68,7 +67,7 @@ export const catalogRouter = createRouter({
       return { ...result, items };
     }),
   getBook: procedure.input(getBookInput).query(async ({ input, ctx }) => {
-    const book = await getBook(input.id, input.language);
+    const book = await getBook(input.id);
     if (!book) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
@@ -82,9 +81,7 @@ export const catalogRouter = createRouter({
 
     return book;
   }),
-  listAudiobooks: procedure
-    .input(z.object({ language: z.string().trim().min(1).optional() }).optional())
-    .query(({ input }) => listAudiobooks(input ?? {})),
+  listAudiobooks: procedure.query(() => listAudiobooks()),
   listReviews: procedure
     .input(listReviewsInput)
     .query(({ input }) => listReviews(input.bookId, input)),
