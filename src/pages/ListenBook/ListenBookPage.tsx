@@ -519,9 +519,6 @@ export default function ListenBookPage(): JSX.Element {
                             <Button mode="filled" size="s" onClick={handleTogglePlay}>
                                 {isPlaying ? t("book.listen.pause") : t("book.listen.play")}
                             </Button>
-                            <Text style={{margin: 0, color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>
-                                {listeningTitle}
-                            </Text>
                         </div>
                         <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                             <input
