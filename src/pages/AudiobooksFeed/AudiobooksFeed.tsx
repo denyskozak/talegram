@@ -595,7 +595,15 @@ export default function AudiobooksFeed(): JSX.Element {
 
   if (isLoading) {
     return (
-      <div className="audiobook-loader">
+      <div
+        className="audiobook-loader"
+        style={{
+          height: "100vh",
+          display: "grid",
+          placeItems: "center",
+          gap: 12,
+        }}
+      >
         <Spinner size="l" />
         <Text>{t("audiobooks.loading")}</Text>
       </div>
