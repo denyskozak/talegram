@@ -631,9 +631,7 @@ export default function AudiobooksFeed(): JSX.Element {
       <Virtuoso
         className="audiobook-virtuoso"
         data={books}
-        itemContent={(index, book: unknown) => (
-          {
-            (() => {
+        itemContent={(index, book: unknown) => {
               const typedBook = book as Book;
               const audioBookId =
                 typedBook.audioBooks?.[0]?.id ?? (typedBook.audiobookFilePath ? typedBook.id : null);
@@ -649,9 +647,8 @@ export default function AudiobooksFeed(): JSX.Element {
                   unknownAuthorLabel={t("audiobooks.unknownAuthor")}
                 />
               );
-            })()
+            }
           }
-        )}
         ref={virtuosoRef}
         rangeChanged={(range) => setActiveIndex(range.start)}
         style={{ height: "100vh" }}
