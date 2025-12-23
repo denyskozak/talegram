@@ -349,7 +349,7 @@ export async function listAudiobooks(): Promise<CatalogBook[]> {
     .map((audioBook) => ({ audioBook, sortKey: Math.random() }))
     .sort((a, b) => a.sortKey - b.sortKey)
     .map(({ audioBook }) => audioBook);
-  const bookIds = Array.from(new Set(shuffledAudioBooks.map((audioBook) => audioBook.bookId)));
+  const bookIds = shuffledAudioBooks.map((audioBook) => audioBook.bookId);
 
   if (bookIds.length === 0) {
     return [];

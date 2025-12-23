@@ -41,7 +41,6 @@ export type Book = {
     id: string;
     bookId: string;
     title: string | null;
-    filePath: string;
     mimeType: string | null;
     fileName: string | null;
     fileSize: number | null;
