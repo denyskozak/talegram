@@ -33,12 +33,16 @@ const PREVIEW_DURATION_SECONDS = 50;
 function AudiobookSlide({
   book,
   isActive,
+  audioBookId,
+  audioBookTitle,
   audioUrl,
   unknownAuthorLabel,
   onScrollNext,
 }: {
   book: Book;
   isActive: boolean;
+  audioBookId: string | null;
+  audioBookTitle: string | null;
   audioUrl: string | null;
   unknownAuthorLabel: string;
   onScrollNext: () => void;
@@ -67,8 +71,8 @@ function AudiobookSlide({
     [launchParams],
   );
   const primaryAudioBook = book.audioBooks?.[0] ?? null;
-  const primaryAudioBookId = primaryAudioBook?.id ?? null;
-  const hasAudiobook = Boolean(primaryAudioBook || book.audiobookFilePath);
+  const playbackAudioBookId = audioBookId ?? primaryAudioBook?.id ?? null;
+  const hasAudiobook = Boolean(playbackAudioBookId);
   const hasFullAccess = isPurchased || book.price === 0;
   const formatTime = useCallback((value: number) => {
     const safeValue = Number.isFinite(value) && value > 0 ? value : 0;
@@ -310,13 +314,13 @@ function AudiobookSlide({
     }
 
     const params = new URLSearchParams();
-    if (primaryAudioBookId) {
-      params.set("audioBookId", primaryAudioBookId);
+    if (playbackAudioBookId) {
+      params.set("audioBookId", playbackAudioBookId);
     }
 
     const query = params.toString();
     navigate(`/listen/${encodeURIComponent(book.id)}/books${query ? `?${query}` : ""}`);
-  }, [book.id, hasAudiobook, hasFullAccess, navigate, primaryAudioBookId, showToast, t]);
+  }, [book.id, hasAudiobook, hasFullAccess, navigate, playbackAudioBookId, showToast, t]);
 
   const handleListenPreview = useCallback(() => {
     if (!hasAudiobook) {
@@ -325,12 +329,12 @@ function AudiobookSlide({
     }
 
     const params = new URLSearchParams({ preview: "1" });
-    if (primaryAudioBookId) {
-      params.set("audioBookId", primaryAudioBookId);
+    if (playbackAudioBookId) {
+      params.set("audioBookId", playbackAudioBookId);
     }
 
     navigate(`/listen/${encodeURIComponent(book.id)}/books?${params.toString()}`);
-  }, [book.id, hasAudiobook, navigate, primaryAudioBookId, showToast, t]);
+  }, [book.id, hasAudiobook, navigate, playbackAudioBookId, showToast, t]);
 
   return (
     <div className="audiobook-slide">
@@ -397,6 +401,14 @@ function AudiobookSlide({
                   {showFullDescription ? t("book.description.showLess") : t("book.description.showMore")}
                 </Button>
               ) : null}
+            </div>
+          ) : null}
+
+          {audioBookTitle ? (
+            <div className="audiobook-meta-voice">
+              <Text style={{ color: theme.subtitle, fontWeight: 600 }}>
+                {t("book.listen.voice")}: {audioBookTitle}
+              </Text>
             </div>
           ) : null}
 
@@ -620,13 +632,25 @@ export default function AudiobooksFeed(): JSX.Element {
         className="audiobook-virtuoso"
         data={books}
         itemContent={(index, book: unknown) => (
-          <AudiobookSlide
-            audioUrl={getAudioUrl((book as Book).audioBooks?.[0]?.id ?? null, (book as Book).id)}
-            book={book as Book}
-            isActive={index === activeIndex}
-            onScrollNext={handleScrollToNextSlide}
-            unknownAuthorLabel={t("audiobooks.unknownAuthor")}
-          />
+          {
+            (() => {
+              const typedBook = book as Book;
+              const audioBookId =
+                typedBook.audioBooks?.[0]?.id ?? (typedBook.audiobookFilePath ? typedBook.id : null);
+
+              return (
+                <AudiobookSlide
+                  audioBookId={audioBookId}
+                  audioBookTitle={typedBook.audioBooks?.[0]?.title ?? typedBook.audiobookFileName ?? typedBook.title}
+                  audioUrl={getAudioUrl(audioBookId, typedBook.id)}
+                  book={typedBook}
+                  isActive={index === activeIndex}
+                  onScrollNext={handleScrollToNextSlide}
+                  unknownAuthorLabel={t("audiobooks.unknownAuthor")}
+                />
+              );
+            })()
+          }
         )}
         ref={virtuosoRef}
         rangeChanged={(range) => setActiveIndex(range.start)}
@@ -711,6 +735,9 @@ export default function AudiobooksFeed(): JSX.Element {
             display: none;
             flex-direction: column;
             gap: 8px;
+          }
+          .audiobook-meta-voice {
+            display: flex;
           }
           .audiobook-meta-controls {
             display: flex;
