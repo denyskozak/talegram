@@ -55,8 +55,8 @@ export const catalogApi: CatalogApi = {
         nextCursor: response.nextCursor,
       }));
   },
-  listAudiobooks() {
-    return trpc.catalog.listAudiobooks.query().then((items: Book[]) => items as Book[]);
+  listAudiobooks(language: string) {
+    return trpc.catalog.listAudiobooks.query({ language }).then((items: Book[]) => items as Book[]);
   },
   getBook(id) {
     return trpc.catalog.getBook.query({ id }).then((book: Book) => book as Book);

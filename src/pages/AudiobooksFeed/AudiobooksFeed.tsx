@@ -49,8 +49,9 @@ function AudiobookSlide({
 }): JSX.Element {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { t } = useTranslation();
-  useScrollToTop();
+    const { t, i18n } = useTranslation();
+
+    useScrollToTop();
 
   const { launchParams } = useTMA();
   const theme = useTheme();
@@ -546,7 +547,7 @@ export default function AudiobooksFeed(): JSX.Element {
 
     const load = async () => {
       try {
-        const response = await catalogApi.listAudiobooks();
+        const response = await catalogApi.listAudiobooks(i18n.language);
         if (!cancelled) {
           setBooks(shuffleBooks(response));
         }

@@ -51,6 +51,9 @@ const createReviewInput = z.object({
   rating: z.number().int().min(1).max(5),
   text: z.string().trim().max(2048),
 });
+const getListAudiobooksInput = z.object({
+    language: z.string().trim().min(1)
+});
 
 export const catalogRouter = createRouter({
   listCategories: procedure
@@ -81,7 +84,7 @@ export const catalogRouter = createRouter({
 
     return book;
   }),
-  listAudiobooks: procedure.query(() => listAudiobooks()),
+  listAudiobooks: procedure.input(getListAudiobooksInput).query(({ input }) => listAudiobooks(input.language)),
   listReviews: procedure
     .input(listReviewsInput)
     .query(({ input }) => listReviews(input.bookId, input)),
