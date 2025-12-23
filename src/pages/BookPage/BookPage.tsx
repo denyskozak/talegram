@@ -671,11 +671,11 @@ export default function BookPage(): JSX.Element {
                             </div>
                         </div>
                         <Card style={{borderRadius: 24, margin: "12px auto", overflow: "hidden", width: getImageWidth()}}>
-                            <div style={{position: "relative", aspectRatio: "10 / 12"}}>
+                            <div style={{position: "relative", aspectRatio: "8 / 12"}}>
                                 <img
                                     src={coverSrc}
                                     alt={t("book.coverAlt", {title: book.title})}
-                                    style={{width: "100%", height: "100%", objectFit: "cover"}}
+                                    style={{width: "100%", height: "100%", objectFit: "contain"}}
                                 />
                             </div>
                         </Card>
