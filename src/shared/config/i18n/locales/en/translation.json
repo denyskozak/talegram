@@ -453,9 +453,10 @@
         },
         "audiobook": {
           "label": "Audiobook (optional)",
-          "cta": "Upload audio",
+          "cta": "Add audio version",
           "placeholder": "No audio selected",
-          "hint": "Attach MP3, WAV or M4A up to 3 GB."
+          "hint": "Attach MP3, WAV or M4A up to 3 GB.",
+          "remove": "Remove"
         },
         "file": {
           "label": "EPUB file",

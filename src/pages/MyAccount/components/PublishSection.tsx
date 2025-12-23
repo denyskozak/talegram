@@ -440,7 +440,7 @@ export function PublishSection({
                                                     onClick={() => onRemoveAudiobook(entry.id)}
                                                     disabled={isFormDisabled}
                                                 >
-                                                    {t("account.publish.form.hashtags.remove")}
+                                                    {t("account.publish.form.audiobook.remove")}
                                                 </Button>
                                             </div>
                                             <label style={{display: "flex", flexDirection: "column", gap: 4}}>
