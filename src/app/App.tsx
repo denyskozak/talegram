@@ -15,7 +15,7 @@ import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
 import {useFooterVisibility, useHeaderVisibility} from "@/shared/hooks/useFooterVisibility";
 import {useLaunchParams} from "@tma.js/sdk-react";
 import {StartRouteHandler} from "@/app/StartHandler.tsx";
-import { swipeBehavior } from '@tma.js/sdk';
+// import { swipeBehavior } from '@tma.js/sdk';
 
 function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
     const [shouldRender, setShouldRender] = useState(visible);
@@ -153,11 +153,11 @@ function AppContent(): JSX.Element {
     const isHeaderVisible = useHeaderVisibility();
 
     useEffect(() => {
-        console.log("swipeBehavior: ", swipeBehavior.isSupported());
-        if (swipeBehavior.isSupported() ) {
-            if (!swipeBehavior.isMounted()) swipeBehavior.mount();;
-            swipeBehavior.disableVertical();
-        }
+        // console.log("swipeBehavior: ", swipeBehavior.isSupported());
+        // if (swipeBehavior.isSupported() ) {
+        //     if (!swipeBehavior.isMounted()) swipeBehavior.mount();;
+        //     swipeBehavior.disableVertical();
+        // }
         const timeoutId = window.setTimeout(() => {
             setIsSplashVisible(false);
         }, 2000);
