@@ -5,6 +5,8 @@ export type ID = string;
 
 export type Book = Awaited<ReturnType<typeof trpc.catalog.getBook.query>>;
 
+export type AudioBook = NonNullable<Book["audioBooks"]>[number];
+
 export type Review = {
   id: ID;
   bookId: ID;

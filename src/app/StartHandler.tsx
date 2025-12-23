@@ -56,11 +56,15 @@ export function StartRouteHandler(): null {
 
         if (startParam.startsWith("listen_")) {
             const hasPreview = startParam.includes("preview_1");
-            const [, bookId, contentType, timeSeconds] =
-                startParam.match(/listen_([^_]+)_([^_]+)(?:_time_(\d+))?/) || [];
+            const [, bookId, contentType, audioBookId, timeSeconds] =
+                startParam.match(/listen_([^_]+)_([^_]+)(?:_audio_([^_]+))?(?:_time_(\d+))?/) || [];
 
             if (bookId && contentType) {
                 const query = new URLSearchParams();
+
+                if (audioBookId) {
+                    query.set("audioBookId", audioBookId);
+                }
 
                 if (hasPreview) {
                     query.set("preview", "1");

@@ -8,6 +8,7 @@ import { Author } from '../entities/Author.js';
 import { Book } from '../entities/Book.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
 import { deleteStorageDirectories } from '../utils/storage-files.js';
+import { AudioBook } from '../entities/AudioBook.js';
 
 function extractBearerToken(rawHeader: string | string[] | undefined): string | null {
   if (!rawHeader) {
@@ -223,13 +224,20 @@ export const adminRouter = createRouter({
   deleteBook: adminProcedure.input(deleteBookInput).mutation(async ({ input }) => {
     await initializeDataSource();
     const repository = appDataSource.getRepository(Book);
+    const audioBookRepository = appDataSource.getRepository(AudioBook);
 
     const entity = await repository.findOne({ where: { id: input.id } });
     if (!entity) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
-    const storageIds = [entity.filePath, entity.coverFilePath, entity.audiobookFilePath];
+    const audioBooks = await audioBookRepository.find({ where: { bookId: entity.id } });
+    const storageIds = [
+      entity.filePath,
+      entity.coverFilePath,
+      entity.audiobookFilePath,
+      ...audioBooks.map((audioBook) => audioBook.filePath),
+    ];
 
     await repository.remove(entity);
 

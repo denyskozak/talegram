@@ -10,6 +10,7 @@ import { BookProposal } from '../../entities/BookProposal.js';
 import { appDataSource, initializeDataSource } from '../../utils/data-source.js';
 import { normalizeTelegramUserId } from '../../utils/telegram.js';
 import { Author } from '../../entities/Author.js';
+import { ProposalAudioBook } from '../../entities/ProposalAudioBook.js';
 
 export const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100m
 export const MAX_AUDI_BOOK_SIZE_BYTES = 3 * 1024 * 1024 * 1024; // 3gb
@@ -40,6 +41,7 @@ export type CreateBookProposalParams = {
   file: CreateProposalFileInput;
   cover: CreateProposalFileInput;
   audiobook?: CreateProposalFileInput | null;
+  audiobooks?: { title?: string | null; file: CreateProposalFileInput | null }[] | null;
   submittedByTelegramUserId: string;
   language?: string | null;
 };
@@ -89,12 +91,21 @@ function normalizeHashtags(rawHashtags: string[]): string[] {
 export async function createBookProposal(
   params: CreateBookProposalParams,
 ): Promise<BookProposal> {
+  const normalizedAudiobooks = Array.isArray(params.audiobooks)
+    ? params.audiobooks
+        .map((entry) => ({
+          title: typeof entry?.title === 'string' ? entry.title.trim().slice(0, 128) : null,
+          file: entry?.file ?? null,
+        }))
+        .filter((entry) => entry.file !== null)
+    : [];
+
+  if (normalizedAudiobooks.length === 0 && params.audiobook) {
+    normalizedAudiobooks.push({ title: params.audiobook.name ?? null, file: params.audiobook });
+  }
+
   const fileSize = params.file.size ?? params.file.data.byteLength;
   const coverSize = params.cover.size ?? params.cover.data.byteLength;
-  const audiobookSize = params.audiobook
-    ? params.audiobook.size ?? params.audiobook.data.byteLength
-    : null;
-
   if (!fileSize || params.file.data.byteLength === 0) {
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Uploaded file is empty' });
   }
@@ -111,32 +122,45 @@ export async function createBookProposal(
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cover size exceeds the allowed limit' });
   }
 
-  if (params.audiobook) {
-    if (!audiobookSize || params.audiobook.data.byteLength === 0) {
+  normalizedAudiobooks.forEach((entry) => {
+    const size = entry.file?.size ?? entry.file?.data.byteLength ?? null;
+    if (!size || entry.file?.data.byteLength === 0) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Uploaded audiobook is empty' });
     }
 
-    if (audiobookSize > MAX_AUDI_BOOK_SIZE_BYTES) {
+    if (size > MAX_AUDI_BOOK_SIZE_BYTES) {
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Audiobook size exceeds the allowed limit' });
     }
-  }
+  });
 
   const proposalId = randomUUID();
   const proposalDir = path.join(STORAGE_ROOT, 'proposals', proposalId);
 
   const bookFilePath = path.join(proposalDir, `book-${sanitizeFileName(params.file.name)}`);
   const coverFilePath = path.join(proposalDir, `cover-${sanitizeFileName(params.cover.name)}`);
-  const audiobookFilePath = params.audiobook
-    ? path.join(proposalDir, `audiobook-${sanitizeFileName(params.audiobook.name)}`)
-    : null;
+  const proposalAudioBooks = normalizedAudiobooks.map((entry, index) => {
+    const sanitizedName = sanitizeFileName(entry.file?.name ?? `audiobook-${index + 1}`);
+    const filePath = path.join(proposalDir, 'audiobooks', `${index + 1}-${sanitizedName}`);
+    return {
+      title: entry.title ?? null,
+      filePath,
+      mimeType: entry.file?.mimeType ?? null,
+      fileName: entry.file?.name ?? null,
+      fileSize: entry.file?.size ?? null,
+      data: entry.file?.data ?? null,
+    };
+  });
+
+  const primaryAudio = proposalAudioBooks[0] ?? null;
+  const audiobookFilePath = primaryAudio?.filePath ?? null;
 
   try {
     await Promise.all([
       writeBufferToFile(bookFilePath, params.file.data),
       writeBufferToFile(coverFilePath, params.cover.data),
-      params.audiobook && audiobookFilePath
-        ? writeBufferToFile(audiobookFilePath, params.audiobook.data)
-        : Promise.resolve(),
+      ...proposalAudioBooks.map((audioBook) =>
+        audioBook.data && audioBook.filePath ? writeBufferToFile(audioBook.filePath, audioBook.data) : Promise.resolve(),
+      ),
     ]);
   } catch (error) {
     console.error('Failed to persist proposal files to storage', error);
@@ -181,9 +205,9 @@ export async function createBookProposal(
     hashtags: normalizeHashtags(params.hashtags),
     filePath: bookFilePath,
     audiobookFilePath,
-    audiobookMimeType: params.audiobook?.mimeType ?? null,
-    audiobookFileName: params.audiobook?.name ?? null,
-    audiobookFileSize: params.audiobook?.size ?? null,
+    audiobookMimeType: primaryAudio?.mimeType ?? params.audiobook?.mimeType ?? null,
+    audiobookFileName: primaryAudio?.fileName ?? params.audiobook?.name ?? null,
+    audiobookFileSize: primaryAudio?.fileSize ?? params.audiobook?.size ?? null,
     coverFilePath,
     coverMimeType: params.cover.mimeType ?? null,
     coverFileName: params.cover.name,
@@ -197,5 +221,28 @@ export async function createBookProposal(
       : null,
   });
 
-  return bookProposalRepository.save(proposal);
+  const savedProposal = await bookProposalRepository.save(proposal);
+
+  if (proposalAudioBooks.length > 0) {
+    const proposalAudioBookRepository = appDataSource.getRepository(ProposalAudioBook);
+    const toPersist = proposalAudioBooks.map((audioBook) =>
+      proposalAudioBookRepository.create({
+        proposalId: proposalId,
+        title: audioBook.title,
+        filePath: audioBook.filePath,
+        mimeType: audioBook.mimeType,
+        fileName: audioBook.fileName,
+        fileSize: audioBook.fileSize,
+      }),
+    );
+
+    await proposalAudioBookRepository.save(toPersist);
+  }
+
+  const savedWithAudio = await bookProposalRepository.findOne({
+    where: { id: proposalId },
+    relations: { audioBooks: true },
+  });
+
+  return savedWithAudio ?? savedProposal;
 }

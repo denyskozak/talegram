@@ -57,7 +57,7 @@ export function createRequestHandler(trpcHandler: RequestHandler) {
 
             const rawFileKind = previewMatch[3];
             const fileKind = rawFileKind === 'audiobook' ? 'audiobook' : 'book';
-            await handleBookPreviewRequest(req, res, { bookId: decodedId, fileKind });
+            await handleBookPreviewRequest(req, res, { id: decodedId, fileKind });
             return;
         }
 
@@ -88,13 +88,13 @@ export function createRequestHandler(trpcHandler: RequestHandler) {
 
             if (resource === 'books') {
                 await handleBookFileDownloadRequest(req, res, {
-                    bookId: decodedId,
+                    id: decodedId,
                     fileKind,
                     telegramUserId,
                 });
             } else {
                 await handleProposalFileDownloadRequest(req, res, {
-                    proposalId: decodedId,
+                    id: decodedId,
                     fileKind,
                     telegramUserId,
                 });
