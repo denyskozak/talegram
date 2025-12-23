@@ -658,6 +658,7 @@ export default function AudiobooksFeed(): JSX.Element {
             left: 50%;
             transform: translateX(-50%);
             width: 60%;
+            max-width: 400px;
             height: 40%;
             object-fit: fit;
             border-radius: 20px;
