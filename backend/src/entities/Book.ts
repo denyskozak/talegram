@@ -4,10 +4,12 @@ import {
     Column,
     CreateDateColumn,
     Entity,
+    OneToMany,
     PrimaryColumn,
     UpdateDateColumn,
     type ValueTransformer,
 } from 'typeorm';
+import { AudioBook } from './AudioBook.js';
 
 const stringArrayTransformer: ValueTransformer = {
     to(value: string[] | null): string {
@@ -151,6 +153,9 @@ export class Book {
 
     @UpdateDateColumn({name: 'updated_at', type: 'datetime'})
     updatedAt!: Date;
+
+    @OneToMany(() => AudioBook, (audioBook: AudioBook) => audioBook.book)
+    audioBooks?: AudioBook[];
 
     @BeforeInsert()
     ensureId(): void {

@@ -37,6 +37,15 @@ export type Book = {
   globalCategory?: string | null;
   authorTelegramUserId?: string | null;
   language?: string | null;
+  audioBooks?: {
+    id: string;
+    bookId: string;
+    title: string | null;
+    filePath: string;
+    mimeType: string | null;
+    fileName: string | null;
+    fileSize: number | null;
+  }[];
 };
 
 export type Review = {

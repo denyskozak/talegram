@@ -51,11 +51,13 @@ export default function MyAccount(): JSX.Element {
     formState,
     fileInputRef,
     coverInputRef,
-    audiobookInputRef,
     handleInputChange,
     handleFileSelect,
     handleCoverSelect,
     handleAudiobookSelect,
+    handleAudiobookTitleChange,
+    handleAddAudiobook,
+    handleRemoveAudiobook,
     handleHashtagAdd,
     handleHashtagRemove,
     handleHashtagKeyDown,
@@ -339,6 +341,14 @@ export default function MyAccount(): JSX.Element {
     }
 
     const submissionHashtags = collectSubmissionHashtags(formState);
+    const normalizedAudiobooks =
+      formState.audiobooks
+        .map((entry) => ({
+          id: entry.id,
+          title: entry.title.trim() || entry.fileName || entry.file?.name || "",
+          file: entry.file,
+        }))
+        .filter((entry) => Boolean(entry.file)) as { id: string; title: string; file: File }[];
 
     setIsSubmitting(true);
     try {
@@ -352,7 +362,8 @@ export default function MyAccount(): JSX.Element {
         hashtags: submissionHashtags,
         file: formState.file,
         coverFile: formState.coverFile,
-        audiobookFile: formState.audiobookFile,
+        audiobooks: normalizedAudiobooks,
+        audiobookFile: normalizedAudiobooks.length === 0 ? null : undefined,
         language: i18n.language,
         telegramUserId,
       });
@@ -440,7 +451,6 @@ export default function MyAccount(): JSX.Element {
             isSubmitting={isSubmitting}
             fileInputRef={fileInputRef}
             coverInputRef={coverInputRef}
-            audiobookInputRef={audiobookInputRef}
             canSubmit={canPublish}
             isAuthorsLoading={isAuthorsLoading}
             onSubmit={handleSubmit}
@@ -448,6 +458,9 @@ export default function MyAccount(): JSX.Element {
             onFileSelect={handleFileSelect}
             onCoverSelect={handleCoverSelect}
             onAudiobookSelect={handleAudiobookSelect}
+            onAudiobookTitleChange={handleAudiobookTitleChange}
+            onAddAudiobook={handleAddAudiobook}
+            onRemoveAudiobook={handleRemoveAudiobook}
             onHashtagAdd={handleHashtagAdd}
             onHashtagRemove={handleHashtagRemove}
             onHashtagKeyDown={handleHashtagKeyDown}

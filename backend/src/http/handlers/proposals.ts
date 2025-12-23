@@ -12,6 +12,7 @@ import {
     parseMultipartForm,
 } from '../parsers.js';
 import type { TelegramAuthData } from '../../utils/auth.js';
+import type { ParsedFormFile } from '../parsers.js';
 
 export async function handleCreateProposalRequest(
     req: http.IncomingMessage,
@@ -40,7 +41,8 @@ export async function handleCreateProposalRequest(
         const language = normalizeLanguage(fields['language']);
         const file = files['file'];
         const cover = files['cover'];
-        const audiobook = files['audiobook'];
+        const audiobooks = normalizeAudiobooks(fields['audiobooks'], files);
+        const legacyAudiobook = files['audiobook'];
 
         if (!title || !author || !description || !globalCategory || !category || !telegramUserId) {
             res.statusCode = 400;
@@ -103,14 +105,27 @@ export async function handleCreateProposalRequest(
                 size: cover.data.byteLength,
                 data: cover.data,
             },
-            audiobook: audiobook
-                ? {
-                      name: audiobook.filename,
-                      mimeType: audiobook.mimeType,
-                      size: audiobook.data.byteLength,
-                      data: audiobook.data,
-                  }
-                : null,
+            audiobooks: audiobooks.length > 0
+                ? audiobooks.map((item) => ({
+                      title: item.title,
+                      file: {
+                          name: item.file.filename,
+                          mimeType: item.file.mimeType,
+                          size: item.file.data.byteLength,
+                          data: item.file.data,
+                      },
+                  }))
+                : legacyAudiobook
+                    ? [{
+                          title: fields['audiobookTitle'] ?? legacyAudiobook.filename,
+                          file: {
+                              name: legacyAudiobook.filename,
+                              mimeType: legacyAudiobook.mimeType,
+                              size: legacyAudiobook.data.byteLength,
+                              data: legacyAudiobook.data,
+                          },
+                      }]
+                    : null,
         });
 
         res.statusCode = 201;
@@ -134,4 +149,49 @@ function normalizeLanguage(rawValue: string | undefined): string | null {
     }
 
     return trimmed.slice(0, 16);
+}
+
+type NormalizedAudiobookMeta = { id: string; title: string | null; file: ParsedFormFile };
+
+function normalizeAudiobooks(rawValue: string | undefined, files: Record<string, ParsedFormFile>): NormalizedAudiobookMeta[] {
+    if (typeof rawValue !== 'string') {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(rawValue);
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+
+        const result: NormalizedAudiobookMeta[] = [];
+
+        for (const entry of parsed) {
+            if (!entry || typeof entry.id !== 'string') {
+                continue;
+            }
+
+            const normalizedId = entry.id.trim();
+            if (!normalizedId) {
+                continue;
+            }
+
+            const fileKey = `audiobook_${normalizedId}`;
+            const file = files[fileKey];
+            if (!file) {
+                continue;
+            }
+
+            result.push({
+                id: normalizedId,
+                title: typeof entry.title === 'string' ? entry.title.trim().slice(0, 128) : null,
+                file,
+            });
+        }
+
+        return result;
+    } catch (error) {
+        console.warn('Failed to parse audiobooks payload', error);
+        return [];
+    }
 }

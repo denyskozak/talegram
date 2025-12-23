@@ -3,6 +3,8 @@ import { promises as fs } from 'node:fs';
 
 import { Book } from '../../entities/Book.js';
 import { BookProposal } from '../../entities/BookProposal.js';
+import { AudioBook } from '../../entities/AudioBook.js';
+import { ProposalAudioBook } from '../../entities/ProposalAudioBook.js';
 import { initializeDataSource, appDataSource } from '../../utils/data-source.js';
 
 export class FileNotFoundError extends Error {
@@ -84,26 +86,85 @@ export async function resolveDecryptedFile(fileId: string): Promise<ResolvedFile
   await initializeDataSource();
 
   const bookRepository = appDataSource.getRepository(Book);
+  const proposalRepository = appDataSource.getRepository(BookProposal);
+  const audioBookRepository = appDataSource.getRepository(AudioBook);
+  const proposalAudioBookRepository = appDataSource.getRepository(ProposalAudioBook);
 
   const book = await bookRepository.findOne({
     where: [
       { filePath: normalizedFileId },
       { coverFilePath: normalizedFileId },
+      { audiobookFilePath: normalizedFileId },
     ],
   });
 
   const proposal = book
     ? null
-    : await appDataSource.getRepository(BookProposal).findOne({
+    : await proposalRepository.findOne({
         where: [
           { filePath: normalizedFileId },
           { coverFilePath: normalizedFileId },
+          { audiobookFilePath: normalizedFileId },
         ],
       });
 
   const source = book ?? proposal;
 
   if (!source) {
+    const audioBook = await audioBookRepository.findOne({ where: { filePath: normalizedFileId } });
+    if (audioBook) {
+      const audioBookOwner = await bookRepository.findOne({ where: { id: audioBook.bookId } });
+      if (!audioBookOwner) {
+        throw new FileNotFoundError();
+      }
+
+      const resolvedPath = audioBook.filePath;
+      let blobBytes: Buffer;
+      try {
+        blobBytes = await fs.readFile(resolvedPath);
+      } catch (error) {
+        throw new StorageFileFetchError();
+      }
+
+      return {
+        sourceType: 'book',
+        book: audioBookOwner,
+        proposal: null,
+        fileId: normalizedFileId,
+        fileName: audioBook.fileName ?? null,
+        mimeType: audioBook.mimeType ?? null,
+        buffer: blobBytes,
+        isCoverFile: false,
+      };
+    }
+
+    const proposalAudioBook = await proposalAudioBookRepository.findOne({ where: { filePath: normalizedFileId } });
+    if (proposalAudioBook) {
+      const audioBookProposal = await proposalRepository.findOne({ where: { id: proposalAudioBook.proposalId } });
+      if (!audioBookProposal) {
+        throw new FileNotFoundError();
+      }
+
+      const resolvedPath = proposalAudioBook.filePath;
+      let blobBytes: Buffer;
+      try {
+        blobBytes = await fs.readFile(resolvedPath);
+      } catch (error) {
+        throw new StorageFileFetchError();
+      }
+
+      return {
+        sourceType: 'proposal',
+        book: null,
+        proposal: audioBookProposal,
+        fileId: normalizedFileId,
+        fileName: proposalAudioBook.fileName ?? null,
+        mimeType: proposalAudioBook.mimeType ?? null,
+        buffer: blobBytes,
+        isCoverFile: false,
+      };
+    }
+
     throw new FileNotFoundError();
   }
 

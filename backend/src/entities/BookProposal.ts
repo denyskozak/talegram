@@ -9,7 +9,8 @@ import {
   UpdateDateColumn,
   type ValueTransformer,
 } from 'typeorm';
-import { ProposalVote } from './ProposalVote.js';
+  import { ProposalVote } from './ProposalVote.js';
+import { ProposalAudioBook } from './ProposalAudioBook.js';
 
 export enum ProposalStatus {
   PENDING = 'PENDING',
@@ -135,6 +136,9 @@ export class BookProposal {
 
   @OneToMany(() => ProposalVote, (vote: ProposalVote) => vote.proposal)
   votes!: ProposalVote[];
+
+  @OneToMany(() => ProposalAudioBook, (audioBook: ProposalAudioBook) => audioBook.proposal)
+  audioBooks?: ProposalAudioBook[];
 
   @BeforeInsert()
   ensureId(): void {

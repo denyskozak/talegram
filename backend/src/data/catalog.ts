@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import type { Repository } from 'typeorm';
+import { In, type Repository } from 'typeorm';
 import type { Book as CatalogBook, Category, ID, Review } from './types.js';
 import { sortBooks, type BookSort } from '../utils/sortBooks.js';
 import { appDataSource, initializeDataSource } from '../utils/data-source.js';
 import { Book as BookEntity } from '../entities/Book.js';
 import { formatCategoryTitle } from '../utils/categories.js';
 import { BookProposal } from '../entities/BookProposal.js';
+import { AudioBook } from '../entities/AudioBook.js';
 
 const DEFAULT_PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 50;
@@ -76,6 +77,11 @@ async function getBookProposalRepository(): Promise<Repository<BookProposal>> {
   return appDataSource.getRepository(BookProposal);
 }
 
+async function getAudioBookRepository(): Promise<Repository<AudioBook>> {
+  await initializeDataSource();
+  return appDataSource.getRepository(AudioBook);
+}
+
 function matchesSearch(entity: BookEntity, search?: string): boolean {
   if (!search) {
     return true;
@@ -133,6 +139,8 @@ function normalizeLanguage(value: unknown): string | null {
 }
 
 async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
+  const audioBookRepository = await getAudioBookRepository();
+  const audioBooks = await audioBookRepository.find({ where: { bookId: entity.id } });
   const ratingAverage = entity.middleRate ?? entity.ratingAverage ?? 0;
   const ratingVotes = entity.ratingVotes ?? 0;
   return {
@@ -164,6 +172,15 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
     globalCategory: entity.globalCategory ?? null,
     authorTelegramUserId: entity.authorTelegramUserId  ?? null,
     language: entity.language ?? null,
+    audioBooks: audioBooks.map((audioBook) => ({
+      id: audioBook.id,
+      bookId: audioBook.bookId,
+      title: audioBook.title ?? null,
+      filePath: audioBook.filePath,
+      mimeType: audioBook.mimeType ?? null,
+      fileName: audioBook.fileName ?? null,
+      fileSize: audioBook.fileSize ?? null,
+    })),
   } satisfies CatalogBook;
 }
 
@@ -327,14 +344,18 @@ export async function listAllBooks(): Promise<CatalogBook[]> {
 }
 
 export async function listAudiobooks(): Promise<CatalogBook[]> {
+  const audioBookRepository = await getAudioBookRepository();
+  const audioBooks = await audioBookRepository.find();
+  const bookIds = Array.from(new Set(audioBooks.map((audioBook) => audioBook.bookId)));
+
+  if (bookIds.length === 0) {
+    return [];
+  }
+
   const repository = await getBookRepository();
-  const entities = await repository.find();
+  const entities = await repository.find({ where: { id: In(bookIds) } });
 
-  const withAudiobooks = entities.filter(
-    (entity) => typeof entity.audiobookFilePath === 'string' && entity.audiobookFilePath.trim().length > 0,
-  );
-
-  const sorted = sortEntities(withAudiobooks, 'popular');
+  const sorted = sortEntities(entities, 'popular');
 
   return Promise.all(sorted.map((entity) => mapEntityToBook(entity)));
 }

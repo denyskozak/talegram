@@ -66,7 +66,9 @@ function AudiobookSlide({
     () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
     [launchParams],
   );
-  const hasAudiobook = Boolean(book.audiobookFilePath);
+  const primaryAudioBook = book.audioBooks?.[0] ?? null;
+  const primaryAudioBookId = primaryAudioBook?.id ?? null;
+  const hasAudiobook = Boolean(primaryAudioBook || book.audiobookFilePath);
   const hasFullAccess = isPurchased || book.price === 0;
   const formatTime = useCallback((value: number) => {
     const safeValue = Number.isFinite(value) && value > 0 ? value : 0;
@@ -307,8 +309,14 @@ function AudiobookSlide({
       return;
     }
 
-    navigate(`/listen/${encodeURIComponent(book.id)}/books`);
-  }, [book.id, hasAudiobook, hasFullAccess, navigate, showToast, t]);
+    const params = new URLSearchParams();
+    if (primaryAudioBookId) {
+      params.set("audioBookId", primaryAudioBookId);
+    }
+
+    const query = params.toString();
+    navigate(`/listen/${encodeURIComponent(book.id)}/books${query ? `?${query}` : ""}`);
+  }, [book.id, hasAudiobook, hasFullAccess, navigate, primaryAudioBookId, showToast, t]);
 
   const handleListenPreview = useCallback(() => {
     if (!hasAudiobook) {
@@ -316,8 +324,13 @@ function AudiobookSlide({
       return;
     }
 
-    navigate(`/listen/${encodeURIComponent(book.id)}/books?preview=1`);
-  }, [book.id, hasAudiobook, navigate, showToast, t]);
+    const params = new URLSearchParams({ preview: "1" });
+    if (primaryAudioBookId) {
+      params.set("audioBookId", primaryAudioBookId);
+    }
+
+    navigate(`/listen/${encodeURIComponent(book.id)}/books?${params.toString()}`);
+  }, [book.id, hasAudiobook, navigate, primaryAudioBookId, showToast, t]);
 
   return (
     <div className="audiobook-slide">
@@ -547,9 +560,14 @@ export default function AudiobooksFeed(): JSX.Element {
   const handleRetry = useCallback(() => setRefreshToken((prev) => prev + 1), []);
 
   const getAudioUrl = useCallback(
-    (bookId: string) => {
+    (audioBookId: string | null, fallbackBookId?: string | null) => {
+      const resourceId = audioBookId ?? fallbackBookId ?? null;
+      if (!resourceId) {
+        return null;
+      }
+
       try {
-        return buildBookPreviewDownloadUrl(bookId, "audiobook", "books", { telegramUserId });
+        return buildBookPreviewDownloadUrl(resourceId, "audiobook", "books", { telegramUserId });
       } catch (err) {
         console.warn("Failed to build audiobook url", err);
         return null;
@@ -595,7 +613,7 @@ export default function AudiobooksFeed(): JSX.Element {
         data={books}
         itemContent={(index, book: unknown) => (
           <AudiobookSlide
-            audioUrl={getAudioUrl((book as Book).id)}
+            audioUrl={getAudioUrl((book as Book).audioBooks?.[0]?.id ?? null, (book as Book).id)}
             book={book as Book}
             isActive={index === activeIndex}
             onScrollNext={handleScrollToNextSlide}

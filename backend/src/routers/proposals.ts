@@ -8,6 +8,7 @@ import { CommunityMember } from '../entities/CommunityMember.js';
 import { authorizedProcedure, createRouter, procedure } from '../trpc/trpc.js';
 import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { deleteStorageDirectories, fetchStoredFilesBase64, warmFileCache } from '../utils/storage-files.js';
+import { AudioBook } from '../entities/AudioBook.js';
 
 const REQUIRED_APPROVALS = 1;
 const REQUIRED_REJECTIONS = 1;
@@ -30,6 +31,7 @@ export const proposalsRouter = createRouter({
     const proposals = await bookProposalRepository.find({
       where: { isDeleted: false },
       order: { createdAt: 'DESC' },
+      relations: { audioBooks: true },
     });
 
     return proposals;
@@ -49,7 +51,7 @@ export const proposalsRouter = createRouter({
     const proposals = await bookProposalRepository.find({
       where: { status: ProposalStatus.PENDING, isDeleted: false },
       order: { createdAt: 'DESC' },
-      relations: { votes: true},
+      relations: { votes: true, audioBooks: true},
     });
 
     const coverFileIds = Array.from(
@@ -113,7 +115,7 @@ export const proposalsRouter = createRouter({
 
     const proposal = await bookProposalRepository.findOne({
       where: { id: input.proposalId, isDeleted: false },
-      relations: { votes: true },
+      relations: { votes: true, audioBooks: true },
     });
     if (!proposal) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
@@ -170,8 +172,12 @@ export const proposalsRouter = createRouter({
       const proposalRepository = manager.getRepository(BookProposal);
       const voteRepository = manager.getRepository(ProposalVote);
       const bookRepository = manager.getRepository(Book);
+      const audioBookRepository = manager.getRepository(AudioBook);
 
-      const proposal = await proposalRepository.findOne({ where: { id: input.proposalId } });
+      const proposal = await proposalRepository.findOne({
+        where: { id: input.proposalId },
+        relations: { audioBooks: true },
+      });
       if (!proposal) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Proposal not found' });
       }
@@ -230,22 +236,25 @@ export const proposalsRouter = createRouter({
         // const categoryId = normalizeCategoryId(proposal.category);
         const tags = Array.isArray(proposal.hashtags) ? proposal.hashtags : [];
 
+        const proposalAudioBooks = proposal.audioBooks ?? [];
+        const primaryAudio = proposalAudioBooks[0] ?? null;
+
         const book = bookRepository.create({
           title: proposal.title,
           author: proposal.author,
           description: proposal.description,
           filePath,
           fileName: proposal.fileName,
-          audiobookFilePath: proposal.audiobookFilePath,
+          audiobookFilePath: primaryAudio?.filePath ?? proposal.audiobookFilePath,
           coverFilePath: proposal.coverFilePath,
           coverMimeType: proposal.coverMimeType,
           coverFileName: proposal.coverFileName,
           coverFileSize: proposal.coverFileSize,
           mimeType: proposal.mimeType,
           fileSize: proposal.fileSize,
-          audiobookMimeType: proposal.audiobookMimeType,
-          audiobookFileName: proposal.audiobookFileName,
-          audiobookFileSize: proposal.audiobookFileSize,
+          audiobookMimeType: primaryAudio?.mimeType ?? proposal.audiobookMimeType,
+          audiobookFileName: primaryAudio?.fileName ?? proposal.audiobookFileName,
+          audiobookFileSize: primaryAudio?.fileSize ?? proposal.audiobookFileSize,
           publishedAt: Date.now(),
           authorTelegramUserId: proposal.submittedByTelegramUserId ?? null,
           language: proposal.language ?? null,
@@ -260,7 +269,22 @@ export const proposalsRouter = createRouter({
           await warmFileCache([proposal.coverFilePath]);
         }
 
-        await bookRepository.save(book);
+        const savedBook = await bookRepository.save(book);
+
+        if (proposalAudioBooks.length > 0) {
+          const audioEntities = proposalAudioBooks.map((audioBook) =>
+            audioBookRepository.create({
+              bookId: savedBook.id,
+              title: audioBook.title ?? null,
+              filePath: audioBook.filePath,
+              mimeType: audioBook.mimeType ?? null,
+              fileName: audioBook.fileName ?? null,
+              fileSize: audioBook.fileSize ?? null,
+            }),
+          );
+
+          await audioBookRepository.save(audioEntities);
+        }
 
         proposal.status = ProposalStatus.APPROVED;
       }
@@ -282,6 +306,7 @@ export const proposalsRouter = createRouter({
         result.proposal.filePath,
         result.proposal.coverFilePath,
         result.proposal.audiobookFilePath,
+        ...(result.proposal.audioBooks ?? []).map((audioBook) => audioBook.filePath),
       ]);
     }
 

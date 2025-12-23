@@ -8,6 +8,8 @@ import { Book } from '../entities/Book.js';
 import { BookProposal } from '../entities/BookProposal.js';
 import { Purchase } from '../entities/Purchase.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
+import { AudioBook } from '../entities/AudioBook.js';
+import { ProposalAudioBook } from '../entities/ProposalAudioBook.js';
 import { appDataSource, initializeDataSource } from './data-source.js';
 import { buildAudioPreview, buildEpubPreview } from './preview.js';
 import { respondWithError } from '../http/responses.js';
@@ -177,12 +179,13 @@ function determineDownloadFileName(
   entity: { title?: string | null; coverFileName?: string | null; audiobookFileName?: string | null; fileName?: string | null },
   fileKind: BookFileKind,
   mimeType: string | null,
+  overrideFileName?: string | null,
 ): string {
   const explicitName =
     fileKind === 'cover'
       ? entity.coverFileName
       : fileKind === 'audiobook'
-      ? entity.audiobookFileName
+      ? overrideFileName ?? entity.audiobookFileName
       : entity.fileName;
   const normalizedName = typeof explicitName === 'string' ? explicitName.trim() : '';
 
@@ -274,25 +277,29 @@ async function streamFile(
   }
 }
 
-function resolveBookFilePath(book: Book, fileKind: BookFileKind): string | null {
+function resolveBookFilePath(book: Book, fileKind: BookFileKind, audioBook?: AudioBook | null): string | null {
   if (fileKind === 'cover') {
     return resolveFilePath(book.coverFilePath);
   }
 
   if (fileKind === 'audiobook') {
-    return resolveFilePath(book.audiobookFilePath);
+    return resolveFilePath(audioBook?.filePath ?? book.audiobookFilePath);
   }
 
   return resolveFilePath(book.filePath);
 }
 
-function resolveProposalFilePath(proposal: BookProposal, fileKind: BookFileKind): string | null {
+function resolveProposalFilePath(
+  proposal: BookProposal,
+  fileKind: BookFileKind,
+  audioBook?: ProposalAudioBook | null,
+): string | null {
   if (fileKind === 'cover') {
     return resolveFilePath(proposal.coverFilePath);
   }
 
   if (fileKind === 'audiobook') {
-    return resolveFilePath(proposal.audiobookFilePath);
+    return resolveFilePath(audioBook?.filePath ?? proposal.audiobookFilePath);
   }
 
   return resolveFilePath(proposal.filePath);
@@ -301,10 +308,10 @@ function resolveProposalFilePath(proposal: BookProposal, fileKind: BookFileKind)
 export async function handleBookPreviewRequest(
   _req: http.IncomingMessage,
   res: http.ServerResponse,
-  params: { bookId: string; fileKind: Exclude<BookFileKind, 'cover'> },
+  params: { id: string; fileKind: Exclude<BookFileKind, 'cover'> },
 ): Promise<void> {
-  const normalizedBookId = params.bookId.trim();
-  if (!normalizedBookId) {
+  const normalizedId = params.id.trim();
+  if (!normalizedId) {
     respondWithError(res, 400, 'Invalid book id');
     return;
   }
@@ -318,23 +325,35 @@ export async function handleBookPreviewRequest(
   }
 
   const bookRepository = appDataSource.getRepository(Book);
+  const audioBookRepository = appDataSource.getRepository(AudioBook);
 
   let book: Book | null = null;
+  let audioBook: AudioBook | null = null;
 
   try {
-    book = await bookRepository.findOne({ where: { id: normalizedBookId } });
+    if (params.fileKind === 'audiobook') {
+      audioBook = await audioBookRepository.findOne({ where: { id: normalizedId } });
+      if (audioBook) {
+        book = await bookRepository.findOne({ where: { id: audioBook.bookId } });
+      }
+      if (!audioBook && !book) {
+        book = await bookRepository.findOne({ where: { id: normalizedId } });
+      }
+    } else {
+      book = await bookRepository.findOne({ where: { id: normalizedId } });
+    }
   } catch (error) {
-    console.error('Failed to load book for preview request', { bookId: normalizedBookId, error });
+    console.error('Failed to load book for preview request', { id: normalizedId, error });
     respondWithError(res, 500, 'Failed to process preview download');
     return;
   }
 
-  if (!book) {
+  if (!book || (params.fileKind === 'audiobook' && !audioBook && !book.audiobookFilePath)) {
     respondWithError(res, 404, 'Book not found');
     return;
   }
 
-  const filePath = resolveBookFilePath(book, params.fileKind);
+  const filePath = resolveBookFilePath(book, params.fileKind, audioBook);
   if (!filePath) {
     respondWithError(res, 404, 'Book file not available for preview');
     return;
@@ -342,13 +361,15 @@ export async function handleBookPreviewRequest(
 
   try {
     const fileBuffer = await fs.readFile(filePath);
-    const mimeType = params.fileKind === 'audiobook' ? book.audiobookMimeType ?? null : book.mimeType ?? null;
+    const mimeType = params.fileKind === 'audiobook'
+      ? audioBook?.mimeType ?? book.audiobookMimeType ?? null
+      : book.mimeType ?? null;
 
     const previewBuffer =
       params.fileKind === 'audiobook' ? buildAudioPreview(fileBuffer) : await buildEpubPreview(fileBuffer);
 
     const resolvedMimeType = mimeType ?? (params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
-    const fileName = determineDownloadFileName(book, params.fileKind, mimeType);
+    const fileName = determineDownloadFileName(book, params.fileKind, mimeType, audioBook?.fileName ?? null);
 
     res.statusCode = 200;
     res.setHeader('Content-Type', resolvedMimeType);
@@ -357,7 +378,7 @@ export async function handleBookPreviewRequest(
     applyDownloadCacheHeaders(res);
     res.end(previewBuffer);
   } catch (error) {
-    console.error('Failed to prepare preview file', { bookId: normalizedBookId, error });
+    console.error('Failed to prepare preview file', { id: normalizedId, error });
     respondWithError(res, 500, 'Failed to prepare preview');
   }
 }
@@ -365,10 +386,10 @@ export async function handleBookPreviewRequest(
 export async function handleBookFileDownloadRequest(
   req: http.IncomingMessage,
   res: http.ServerResponse,
-  params: { bookId: string; fileKind: BookFileKind; telegramUserId: string | null },
+  params: { id: string; fileKind: BookFileKind; telegramUserId: string | null },
 ): Promise<void> {
-  const normalizedBookId = params.bookId.trim();
-  if (!normalizedBookId) {
+  const normalizedId = params.id.trim();
+  if (!normalizedId) {
     respondWithError(res, 400, 'Invalid book id');
     return;
   }
@@ -382,17 +403,29 @@ export async function handleBookFileDownloadRequest(
   }
 
   const bookRepository = appDataSource.getRepository(Book);
+  const audioBookRepository = appDataSource.getRepository(AudioBook);
   let book: Book | null = null;
+  let audioBook: AudioBook | null = null;
 
   try {
-    book = await bookRepository.findOne({ where: { id: normalizedBookId } });
+    if (params.fileKind === 'audiobook') {
+      audioBook = await audioBookRepository.findOne({ where: { id: normalizedId } });
+      if (audioBook) {
+        book = await bookRepository.findOne({ where: { id: audioBook.bookId } });
+      }
+      if (!audioBook && !book) {
+        book = await bookRepository.findOne({ where: { id: normalizedId } });
+      }
+    } else {
+      book = await bookRepository.findOne({ where: { id: normalizedId } });
+    }
   } catch (error) {
-    console.error('Failed to load book for download request', { bookId: normalizedBookId, error });
+    console.error('Failed to load book for download request', { id: normalizedId, error });
     respondWithError(res, 500, 'Failed to process file download');
     return;
   }
 
-  if (!book) {
+  if (!book || (params.fileKind === 'audiobook' && !audioBook && !book.audiobookFilePath)) {
     respondWithError(res, 404, 'Book not found');
     return;
   }
@@ -415,27 +448,32 @@ export async function handleBookFileDownloadRequest(
           return;
         }
       } catch (error) {
-        console.error('Failed to verify purchase before download', { bookId: normalizedBookId, telegramUserId: params.telegramUserId, error });
+        console.error('Failed to verify purchase before download', { bookId: book.id, telegramUserId: params.telegramUserId, error });
         respondWithError(res, 500, 'Failed to process file download');
         return;
       }
     }
   }
 
-  const filePath = resolveBookFilePath(book, params.fileKind);
-  if (!filePath) {
-    respondWithError(res, 404, 'File not found');
-    return;
-  }
+    const filePath = resolveBookFilePath(book, params.fileKind, audioBook);
+    if (!filePath) {
+      respondWithError(res, 404, 'File not found');
+      return;
+    }
 
   const mimeType =
     params.fileKind === 'cover'
       ? book.coverMimeType ?? null
       : params.fileKind === 'audiobook'
-      ? book.audiobookMimeType ?? null
+      ? audioBook?.mimeType ?? book.audiobookMimeType ?? null
       : book.mimeType ?? null;
 
-  const fileName = determineDownloadFileName(book, params.fileKind, mimeType);
+  const fileName = determineDownloadFileName(
+    book,
+    params.fileKind,
+    mimeType,
+    audioBook?.fileName ?? audioBook?.title ?? null,
+  );
   const resolvedMimeType = mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 
   if (params.fileKind === 'cover') {
@@ -449,10 +487,10 @@ export async function handleBookFileDownloadRequest(
 export async function handleProposalFileDownloadRequest(
   req: http.IncomingMessage,
   res: http.ServerResponse,
-  params: { proposalId: string; fileKind: BookFileKind; telegramUserId: string | null },
+  params: { id: string; fileKind: BookFileKind; telegramUserId: string | null },
 ): Promise<void> {
-  const normalizedProposalId = params.proposalId.trim();
-  if (!normalizedProposalId) {
+  const normalizedId = params.id.trim();
+  if (!normalizedId) {
     respondWithError(res, 400, 'Invalid proposal id');
     return;
   }
@@ -467,17 +505,26 @@ export async function handleProposalFileDownloadRequest(
 
   const proposalRepository = appDataSource.getRepository(BookProposal);
   const communityMemberRepository = appDataSource.getRepository(CommunityMember);
+  const proposalAudioBookRepository = appDataSource.getRepository(ProposalAudioBook);
   let proposal: BookProposal | null = null;
+  let audioBook: ProposalAudioBook | null = null;
 
   try {
-    proposal = await proposalRepository.findOne({ where: { id: normalizedProposalId } });
+    if (params.fileKind === 'audiobook') {
+      audioBook = await proposalAudioBookRepository.findOne({ where: { id: normalizedId } });
+      if (audioBook) {
+        proposal = await proposalRepository.findOne({ where: { id: audioBook.proposalId } });
+      }
+    } else {
+      proposal = await proposalRepository.findOne({ where: { id: normalizedId } });
+    }
   } catch (error) {
-    console.error('Failed to load proposal for download request', { proposalId: normalizedProposalId, error });
+    console.error('Failed to load proposal for download request', { proposalId: normalizedId, error });
     respondWithError(res, 500, 'Failed to process file download');
     return;
   }
 
-  if (!proposal) {
+  if (!proposal || (params.fileKind === 'audiobook' && !audioBook)) {
     respondWithError(res, 404, 'Proposal not found');
     return;
   }
@@ -496,7 +543,7 @@ export async function handleProposalFileDownloadRequest(
       }
     } catch (error) {
       console.error('Failed to verify community membership before proposal download', {
-        proposalId: normalizedProposalId,
+        proposalId: normalizedId,
         telegramUserId: params.telegramUserId,
         error,
       });
@@ -505,7 +552,7 @@ export async function handleProposalFileDownloadRequest(
     }
   }
 
-  const filePath = resolveProposalFilePath(proposal, params.fileKind);
+  const filePath = resolveProposalFilePath(proposal, params.fileKind, audioBook);
   if (!filePath) {
     respondWithError(res, 404, 'File not found');
     return;
@@ -515,9 +562,14 @@ export async function handleProposalFileDownloadRequest(
     params.fileKind === 'cover'
       ? proposal.coverMimeType ?? null
       : params.fileKind === 'audiobook'
-      ? proposal.audiobookMimeType ?? null
+      ? audioBook?.mimeType ?? proposal.audiobookMimeType ?? null
       : proposal.mimeType ?? null;
-  const fileName = determineDownloadFileName(proposal, params.fileKind, mimeType);
+  const fileName = determineDownloadFileName(
+    proposal,
+    params.fileKind,
+    mimeType,
+    audioBook?.fileName ?? audioBook?.title ?? null,
+  );
   const resolvedMimeType = mimeType ?? (params.fileKind === 'cover' ? 'image/jpeg' : params.fileKind === 'audiobook' ? 'audio/mpeg' : 'application/octet-stream');
 
   if (params.fileKind === 'cover') {
@@ -576,7 +628,9 @@ export async function handleStoredFileDownloadRequest(
   }
 
   const bookRepository = appDataSource.getRepository(Book);
+  const audioBookRepository = appDataSource.getRepository(AudioBook);
   let book: Book | null = null;
+  let audioBook: AudioBook | null = null;
 
   try {
     book = await bookRepository.findOne({
@@ -590,14 +644,27 @@ export async function handleStoredFileDownloadRequest(
     console.error('Failed to load book for legacy download request', { fileId: normalizedFileId, error });
   }
 
+  try {
+    audioBook = await audioBookRepository.findOne({ where: { filePath: normalizedFileId } });
+  } catch (error) {
+    console.error('Failed to load audiobook for legacy download request', { fileId: normalizedFileId, error });
+  }
+
+  if (audioBook) {
+    await handleBookFileDownloadRequest(req, res, { id: audioBook.id, fileKind: 'audiobook', telegramUserId: params.telegramUserId });
+    return;
+  }
+
   if (book) {
     const fileKind = determineSourceFileKind(book, normalizedFileId);
-    await handleBookFileDownloadRequest(req, res, { bookId: book.id, fileKind, telegramUserId: params.telegramUserId });
+    await handleBookFileDownloadRequest(req, res, { id: book.id, fileKind, telegramUserId: params.telegramUserId });
     return;
   }
 
   const proposalRepository = appDataSource.getRepository(BookProposal);
+  const proposalAudioBookRepository = appDataSource.getRepository(ProposalAudioBook);
   let proposal: BookProposal | null = null;
+  let proposalAudioBook: ProposalAudioBook | null = null;
 
   try {
     proposal = await proposalRepository.findOne({
@@ -611,10 +678,25 @@ export async function handleStoredFileDownloadRequest(
     console.error('Failed to load proposal for legacy download request', { fileId: normalizedFileId, error });
   }
 
+  try {
+    proposalAudioBook = await proposalAudioBookRepository.findOne({ where: { filePath: normalizedFileId } });
+  } catch (error) {
+    console.error('Failed to load proposal audiobook for legacy download request', { fileId: normalizedFileId, error });
+  }
+
+  if (proposalAudioBook) {
+    await handleProposalFileDownloadRequest(req, res, {
+      id: proposalAudioBook.id,
+      fileKind: 'audiobook',
+      telegramUserId: params.telegramUserId,
+    });
+    return;
+  }
+
   if (proposal) {
     const fileKind = determineSourceFileKind(proposal, normalizedFileId);
     await handleProposalFileDownloadRequest(req, res, {
-      proposalId: proposal.id,
+      id: proposal.id,
       fileKind,
       telegramUserId: params.telegramUserId,
     });

@@ -102,6 +102,8 @@ export default function ProposalDetails(): JSX.Element {
     const statusLabel = proposal
         ? t(`proposalDetails.status.${proposal.status}`)
         : "";
+    const primaryAudioBook = proposal?.audioBooks?.[0] ?? null;
+    const hasAudiobook = Boolean(primaryAudioBook || proposal?.audiobookFilePath);
     const coverImageURL = useMemo(() => {
         if (!proposal?.coverImageData) {
             return null;
@@ -195,8 +197,20 @@ export default function ProposalDetails(): JSX.Element {
             return;
         }
 
-        navigate(`/listen/${encodeURIComponent(proposal.id)}/proposals`);
-    }, [isCommunityMember, navigate, proposal, showToast, t, telegramUserId]);
+        if (!hasAudiobook) {
+            showToast(t("account.proposalDetails.noAudiobook"));
+            return;
+        }
+
+        const params = new URLSearchParams();
+        if (primaryAudioBook?.id) {
+            params.set("audioBookId", primaryAudioBook.id);
+        }
+
+        const query = params.toString();
+
+        navigate(`/listen/${encodeURIComponent(proposal.id)}/proposals${query ? `?${query}` : ""}`);
+    }, [hasAudiobook, isCommunityMember, navigate, primaryAudioBook?.id, proposal, showToast, t, telegramUserId]);
 
     const handleVote = useCallback(
         async (direction: VoteDirection) => {
@@ -449,7 +463,7 @@ export default function ProposalDetails(): JSX.Element {
                                         {t("account.proposalDetails.read")}
                                     </Button>
                                 ) : null}
-                                {canVote && proposal.audiobookFilePath ? (
+                                {canVote && hasAudiobook ? (
                                     <Button
                                         type="button"
                                         mode="outline"
@@ -469,7 +483,7 @@ export default function ProposalDetails(): JSX.Element {
                             <div style={{display: "flex", flexDirection: "column", gap: 4}}>
                                 <Text weight="2">{t("account.proposalDetails.audiobook")}</Text>
                                 <Text style={{color: theme.subtitle}}>
-                                    {proposal.audiobookFilePath
+                                    {hasAudiobook
                                         ? t("account.proposalDetails.audiobookAvailable")
                                         : t("account.proposalDetails.noAudiobook")}
                                 </Text>

@@ -18,6 +18,7 @@ export type SubmitProposalPayload = {
   file: File;
   coverFile: File;
   audiobookFile?: File | null;
+  audiobooks?: { id: string; title: string; file: File }[];
   language?: string | null;
   telegramUserId?: string | null;
 };
@@ -42,7 +43,18 @@ export async function submitBookProposal(
   if (payload.telegramUserId) {
     formData.append("telegramUserId", payload.telegramUserId);
   }
-  if (payload.audiobookFile) {
+  if (payload.audiobooks && payload.audiobooks.length > 0) {
+    const manifest = payload.audiobooks.map(({ id, title, file }) => ({
+      id,
+      title,
+      fileName: file.name,
+    }));
+
+    formData.append("audiobooks", JSON.stringify(manifest));
+    payload.audiobooks.forEach((entry) => {
+      formData.append(`audiobook_${entry.id}`, entry.file, entry.file.name);
+    });
+  } else if (payload.audiobookFile) {
     formData.append("audiobook", payload.audiobookFile, payload.audiobookFile.name);
   }
 

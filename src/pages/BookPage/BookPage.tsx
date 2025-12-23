@@ -82,7 +82,9 @@ export default function BookPage(): JSX.Element {
 
     const isFreeBook = Boolean(book && book.price === 0);
     const hasFullAccess = isPurchased || isFreeBook;
-    const hasAudiobook = Boolean(book?.audiobookFilePath);
+    const audioBooks = book?.audioBooks ?? [];
+    const primaryAudioBook = audioBooks[0] ?? null;
+    const hasAudiobook = Boolean(primaryAudioBook || book?.audiobookFilePath);
 
 
     const refreshPurchaseStatus = useCallback(async () => {
@@ -257,7 +259,9 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        if (!book.audiobookFilePath) {
+        const audioBookId = book.audioBooks?.[0]?.id ?? null;
+
+        if (!audioBookId && !book.audiobookFilePath) {
             showToast(t("book.audiobook.locked"));
             return;
         }
@@ -267,7 +271,14 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        navigate(`/listen/${encodeURIComponent(book.id)}/books`);
+        const params = new URLSearchParams();
+        if (audioBookId) {
+            params.set("audioBookId", audioBookId);
+        }
+
+        const query = params.toString();
+
+        navigate(`/listen/${encodeURIComponent(book.id)}/books${query ? `?${query}` : ""}`);
     }, [book, hasFullAccess, navigate, showToast, t]);
 
     const handleListenPreview = useCallback(() => {
@@ -275,12 +286,18 @@ export default function BookPage(): JSX.Element {
             return;
         }
 
-        if (!book.audiobookFilePath) {
+        const audioBookId = book.audioBooks?.[0]?.id ?? null;
+        if (!audioBookId && !book.audiobookFilePath) {
             showToast(t("book.audiobook.unavailable"));
             return;
         }
 
-        navigate(`/listen/${encodeURIComponent(book.id)}/books?preview=1`);
+        const params = new URLSearchParams({ preview: "1" });
+        if (audioBookId) {
+            params.set("audioBookId", audioBookId);
+        }
+
+        navigate(`/listen/${encodeURIComponent(book.id)}/books?${params.toString()}`);
     }, [book, navigate, showToast, t]);
 
     const handleReviewCreated = useCallback((review: Review) => {

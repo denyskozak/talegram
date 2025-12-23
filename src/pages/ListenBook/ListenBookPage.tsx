@@ -19,12 +19,14 @@ export default function ListenBookPage(): JSX.Element {
     const {t} = useTranslation();
     const navigate = useNavigate();
     const {id, type} = useParams<{ id?: string, type?: 'books' | 'proposals' }>();
+    const resourceType: "books" | "proposals" = type === "proposals" ? "proposals" : "books";
     const [searchParams] = useSearchParams();
     const {launchParams} = useTMA();
     const telegramUserId = useMemo(
         () => getTelegramUserId(launchParams?.tgWebAppData?.user?.id),
         [launchParams],
     );
+    const requestedAudioBookId = searchParams.get("audioBookId");
     const [book, setBook] = useState<Book | null>(null);
     const sharedAudioPositionSeconds = useMemo(() => {
         const value = searchParams.get("time");
@@ -33,9 +35,27 @@ export default function ListenBookPage(): JSX.Element {
         return Number.isFinite(parsed) ? parsed : undefined;
     }, [searchParams]);
 
+    const preferredAudioBookId = useMemo(() => {
+        if (requestedAudioBookId) {
+            return requestedAudioBookId;
+        }
+
+        if (book?.audioBooks?.[0]?.id) {
+            return book.audioBooks[0].id;
+        }
+
+        if (book?.audiobookFilePath) {
+            return id ?? null;
+        }
+
+        return null;
+    }, [book?.audioBooks, book?.audiobookFilePath, id, requestedAudioBookId]);
+
+    const playbackResourceId = preferredAudioBookId ?? id ?? null;
+    const progressStorageKey = playbackResourceId ?? "";
     const savedAudioPositionSeconds = useMemo(
-        () => Number.parseFloat(getStoredBookProgress('audio_position', id, '0')),
-        [id],
+        () => Number.parseFloat(getStoredBookProgress('audio_position', progressStorageKey, '0')),
+        [progressStorageKey],
     );
 
     const initialAudioPositionSeconds = sharedAudioPositionSeconds ?? savedAudioPositionSeconds;
@@ -49,19 +69,19 @@ export default function ListenBookPage(): JSX.Element {
     const previewMessage = isPreview ? t("book.toast.previewAudio") : null;
 
     const audioUrl = useMemo(() => {
-        if (!id) {
+        if (!playbackResourceId) {
             return null;
         }
 
         try {
             return isPreview
-                ? buildBookPreviewDownloadUrl(id, "audiobook", type, {telegramUserId})
-                : buildBookFileDownloadUrl(id, "audiobook", type, {telegramUserId});
+                ? buildBookPreviewDownloadUrl(playbackResourceId, "audiobook", resourceType, {telegramUserId})
+                : buildBookFileDownloadUrl(playbackResourceId, "audiobook", resourceType, {telegramUserId});
         } catch (error) {
             console.error("Failed to build audiobook download url", error);
             return null;
         }
-    }, [id, isPreview, telegramUserId]);
+    }, [isPreview, playbackResourceId, resourceType, telegramUserId]);
 
     useEffect(() => {
         if (!id) {
@@ -121,14 +141,18 @@ export default function ListenBookPage(): JSX.Element {
 
         const position = Math.floor(audioElement.currentTime);
         setCurrentTime(position);
-        setStoredBookProgress('audio_position', id, position.toString());
-    }, [id]);
+        if (playbackResourceId) {
+            setStoredBookProgress('audio_position', playbackResourceId, position.toString());
+        }
+    }, [playbackResourceId]);
 
     const handleAudioEnded = useCallback(() => {
         setCurrentTime(0);
         setIsPlaying(false);
-        setStoredBookProgress('audio_position', id, '0');
-    }, [id]);
+        if (playbackResourceId) {
+            setStoredBookProgress('audio_position', playbackResourceId, '0');
+        }
+    }, [playbackResourceId]);
 
     const handleAudioLoadedMetadata = useCallback(() => {
         const audioElement = audioRef.current;
@@ -239,11 +263,17 @@ export default function ListenBookPage(): JSX.Element {
     }, []);
 
     const handleShareAudio = useCallback(() => {
-        if (!id || !type || !book) {
+        if (!id || !book) {
             return;
         }
 
-        const parts = [`listen_${id}_${type}`];
+        const audioId = preferredAudioBookId ?? playbackResourceId ?? id;
+        const parts = [`listen_${book.id}_${resourceType}`];
+
+        if (audioId) {
+            parts.push(`audio_${audioId}`);
+        }
+
         const currentSeconds = Math.floor(audioRef.current?.currentTime ?? currentTime ?? 0);
 
         if (shareFromCurrent && Number.isFinite(currentSeconds) && currentSeconds > 0) {
@@ -264,7 +294,7 @@ export default function ListenBookPage(): JSX.Element {
         } catch (error) {
             console.error("Failed to share audiobook", error);
         }
-    }, [book, currentTime, id, isPreview, shareFromCurrent, type]);
+    }, [book, currentTime, id, isPreview, playbackResourceId, preferredAudioBookId, resourceType, shareFromCurrent]);
 
     return (
         <div
@@ -298,7 +328,7 @@ export default function ListenBookPage(): JSX.Element {
                 {audioUrl ? (
                     <>
                     <audio
-                        key={id}
+                        key={playbackResourceId || id}
                         ref={audioRef}
                         autoPlay
                         preload="metadata"

@@ -60,14 +60,16 @@ export type PublishSectionProps = {
     isAuthorsLoading: boolean;
     fileInputRef: RefObject<HTMLInputElement>;
     coverInputRef: RefObject<HTMLInputElement>;
-    audiobookInputRef: RefObject<HTMLInputElement>;
     onSubmit: (event: FormEvent<HTMLFormElement>) => void;
     onInputChange: (
         event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     ) => void;
     onFileSelect: (event: ChangeEvent<HTMLInputElement>) => void;
     onCoverSelect: (event: ChangeEvent<HTMLInputElement>) => void;
-    onAudiobookSelect: (event: ChangeEvent<HTMLInputElement>) => void;
+    onAudiobookSelect: (id: string, event: ChangeEvent<HTMLInputElement>) => void;
+    onAudiobookTitleChange: (id: string, value: string) => void;
+    onAddAudiobook: () => void;
+    onRemoveAudiobook: (id: string) => void;
     onHashtagAdd: (value: string) => void;
     onHashtagRemove: (tag: string) => void;
     onHashtagKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
@@ -82,12 +84,14 @@ export function PublishSection({
                                    isAuthorsLoading,
                                    fileInputRef,
                                    coverInputRef,
-                                   audiobookInputRef,
                                    onSubmit,
                                    onInputChange,
                                    onFileSelect,
                                    onCoverSelect,
                                    onAudiobookSelect,
+                                   onAudiobookTitleChange,
+                                   onAddAudiobook,
+                                   onRemoveAudiobook,
                                    onHashtagAdd,
                                    onHashtagRemove,
                                    onHashtagKeyDown,
@@ -384,22 +388,13 @@ export function PublishSection({
                         </div>
                     </div>
                     <div style={{display: "flex", flexDirection: "column", gap: 8}}>
-                        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                            <Text weight="2">{t("account.publish.form.audiobook.label")}</Text>
-                            <Text style={{color: theme.hint, fontSize: 12}}>
-                                {t("account.publish.form.audiobook.hint")}
-                            </Text>
-                        </div>
-                        <input
-                            ref={audiobookInputRef}
-                            type="file"
-                            accept="audio/*"
-                            size={MAX_FILE_SIZE_BYTES}
-                            onChange={onAudiobookSelect}
-                            disabled={isFormDisabled}
-                            style={{display: "none"}}
-                        />
-                        <div style={{display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap"}}>
+                        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap"}}>
+                            <div style={{display: "flex", flexDirection: "column", gap: 4}}>
+                                <Text weight="2">{t("account.publish.form.audiobook.label")}</Text>
+                                <Text style={{color: theme.hint, fontSize: 12}}>
+                                    {t("account.publish.form.audiobook.hint")}
+                                </Text>
+                            </div>
                             <Button
                                 type="button"
                                 mode="outline"
@@ -408,16 +403,97 @@ export function PublishSection({
                                     if (isFormDisabled) {
                                         return;
                                     }
-                                    audiobookInputRef.current?.click();
+                                    onAddAudiobook();
                                 }}
                                 disabled={isFormDisabled}
                             >
                                 {t("account.publish.form.audiobook.cta")}
                             </Button>
-                            <Text style={{color: theme.subtitle}}>
-                                {formState.audiobookFileName || t("account.publish.form.audiobook.placeholder")}
-                            </Text>
                         </div>
+                        {formState.audiobooks.length === 0 ? (
+                            <Text style={{color: theme.subtitle}}>
+                                {t("account.publish.form.audiobook.placeholder")}
+                            </Text>
+                        ) : (
+                            <div style={{display: "flex", flexDirection: "column", gap: 12}}>
+                                {formState.audiobooks.map((entry, index) => {
+                                    const inputId = `audiobook-file-${entry.id}`;
+                                    return (
+                                        <div
+                                            key={entry.id}
+                                            style={{
+                                                border: `1px solid ${theme.separator}`,
+                                                borderRadius: 12,
+                                                padding: 12,
+                                                display: "flex",
+                                                flexDirection: "column",
+                                                gap: 8,
+                                                background: theme.section,
+                                            }}
+                                        >
+                                            <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8}}>
+                                                <Text weight="2">{t("account.publish.form.audiobook.label")} #{index + 1}</Text>
+                                                <Button
+                                                    type="button"
+                                                    size="s"
+                                                    mode="outline"
+                                                    onClick={() => onRemoveAudiobook(entry.id)}
+                                                    disabled={isFormDisabled}
+                                                >
+                                                    {t("account.publish.form.hashtags.remove")}
+                                                </Button>
+                                            </div>
+                                            <label style={{display: "flex", flexDirection: "column", gap: 4}}>
+                                                <Text weight="2">{t("account.publish.form.name.label")}</Text>
+                                                <input
+                                                    name={`audiobook-title-${entry.id}`}
+                                                    value={entry.title}
+                                                    onChange={(event) => onAudiobookTitleChange(entry.id, event.target.value)}
+                                                    placeholder={t("account.publish.form.audiobook.placeholder")}
+                                                    disabled={isFormDisabled}
+                                                    style={{
+                                                        padding: "10px 12px",
+                                                        borderRadius: 10,
+                                                        border: `1px solid ${theme.separator}`,
+                                                        background: "transparent",
+                                                        color: theme.text,
+                                                    }}
+                                                />
+                                            </label>
+                                            <input
+                                                id={inputId}
+                                                type="file"
+                                                accept="audio/*"
+                                                size={MAX_FILE_SIZE_BYTES}
+                                                onChange={(event) => onAudiobookSelect(entry.id, event)}
+                                                disabled={isFormDisabled}
+                                                style={{display: "none"}}
+                                            />
+                                            <div style={{display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap"}}>
+                                                <Button
+                                                    type="button"
+                                                    mode="outline"
+                                                    size="s"
+                                                    onClick={() => {
+                                                        if (isFormDisabled) {
+                                                            return;
+                                                        }
+                                                        const target = document.getElementById(inputId) as HTMLInputElement | null;
+                                                        target?.click();
+                                                    }}
+                                                    disabled={isFormDisabled}
+                                                >
+                                                    {entry.file ? t("account.publish.form.audiobook.label") : t("account.publish.form.audiobook.cta")}
+                                                </Button>
+                                                <Text style={{color: theme.subtitle}}>
+                                                    {entry.fileName || t("account.publish.form.audiobook.placeholder")}
+                                                </Text>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                     </div>
                     <div style={{display: "flex", flexDirection: "column", gap: 8}}>
                         <Text weight="2">{t("account.publish.form.file.label")}</Text>
