@@ -346,8 +346,9 @@ export async function listAudiobooks(language: string): Promise<CatalogBook[]> {
     const bookRepository = await getBookRepository();
     const bookEntities = await bookRepository.find({where: {language}});
     const bookIds = bookEntities.map((book) => book.id);
+    const bookCatalogueEntity = await Promise.all(bookEntities.map(mapEntityToBook));
 
-    const booksById = bookEntities.reduce<Map<string, Book>>((store, book) => {
+    const booksById = bookCatalogueEntity.reduce<Map<string, CatalogBook>>((store, book) => {
         store.set(book.id, book);
         return store;
     }, new Map());
@@ -370,7 +371,7 @@ export async function listAudiobooks(language: string): Promise<CatalogBook[]> {
     }
 
     return Promise.all(shuffledAudioBooks.map((audioBook) => ({
-        ...mapEntityToBook(booksById.get(audioBook.bookId)!),
+        ...booksById.get(audioBook.bookId)!,
         audioBooks: [audioBook]
     })));
 }
