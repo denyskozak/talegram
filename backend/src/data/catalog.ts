@@ -358,14 +358,14 @@ export async function listAudiobooks(): Promise<CatalogBook[]> {
   const repository = await getBookRepository();
   const entities = await repository.find({ where: { id: In(bookIds) } });
   const entityMap = new Map(entities.map((entity) => [entity.id, entity]));
-  const orderedEntities: Book[] = shuffledAudioBooks
+  const orderedEntities = shuffledAudioBooks
     .filter((audioBook) => entityMap.has(audioBook.bookId))
-      .map((audioBook): Book => {
-          const book = entityMap.get(audioBook.bookId)!;
-          return {...book, audioBooks: [audioBook]} as Book;
-      });
 
-  return Promise.all(orderedEntities.map((entity) => mapEntityToBook(entity)));
+
+  return Promise.all(orderedEntities.map((entity) => ({
+      ...mapEntityToBook(entityMap.get(entity.bookId)!),
+      audioBooks: [entity]
+  })));
 }
 
 export async function listCategoryTags(categoryId: ID, limit = 9): Promise<string[]> {
