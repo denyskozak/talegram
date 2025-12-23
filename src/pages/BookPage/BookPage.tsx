@@ -735,11 +735,11 @@ export default function BookPage(): JSX.Element {
                                     {t("book.actions.download")}
                                 </Button>
                                 {hasAudiobook ? (
-                                    <Button size="l" mode="outline" onClick={handleListen}>
+                                    <Button size="l" mode="filled" onClick={handleListen}>
                                         {t("book.actions.listen")}
                                     </Button>
                                 ) : null}
-                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleShareRead}>
+                                <Button size="l" mode="filled" disabled={isActionLoading} onClick={handleShareRead}>
                                     {t("book.actions.share-read")}
                                 </Button>
                             </div>
@@ -755,6 +755,7 @@ export default function BookPage(): JSX.Element {
                             <div style={{display: "flex", gap: 12, flexWrap: "wrap"}}>
                                 <Button
                                     size="l"
+                                    mode="filled"
                                     loading={isActionLoading && activeAction === "buy"}
                                     disabled={isActionLoading}
                                     onClick={() => handleStartPurchase("buy")}
@@ -770,14 +771,14 @@ export default function BookPage(): JSX.Element {
                                 {/*>*/}
                                 {/*    {t("book.actions.subscribe")}*/}
                                 {/*</Button>*/}
-                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handlePreview}>
+                                <Button size="l" mode="filled" disabled={isActionLoading} onClick={handlePreview}>
                                     {t("book.actions.preview")}
                                 </Button>
-                                <Button size="l" mode="outline" disabled={isActionLoading} onClick={handleShareRead}>
+                                <Button size="l" mode="filled" disabled={isActionLoading} onClick={handleShareRead}>
                                     {t("book.actions.share-preview")}
                                 </Button>
                                 {hasAudiobook ? (
-                                    <Button size="l" mode="outline" disabled={isActionLoading}
+                                    <Button size="l" mode="filled" disabled={isActionLoading}
                                             onClick={handleListenPreview}>
                                         {t("book.actions.previewAudio")}
                                     </Button>

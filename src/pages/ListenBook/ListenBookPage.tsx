@@ -296,7 +296,7 @@ export default function ListenBookPage(): JSX.Element {
             audioElement.removeEventListener("pause", handlePause);
             audioElement.removeEventListener("ended", handlePause);
         };
-    }, [audioUrl, playbackResourceId]);
+    }, [audioUrl, playbackResourceId, setIsPlaying]);
 
     const handlePlaybackRateChange = useCallback((rate: number) => {
         setPlaybackRate(rate);
