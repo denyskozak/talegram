@@ -19,7 +19,7 @@ import {useScrollToTop} from "@/shared/hooks/useScrollToTop.ts";
 const SEEK_OFFSET_SECONDS = 30;
 
 export default function ListenBookPage(): JSX.Element {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     const navigate = useNavigate();
     useScrollToTop();
 
@@ -176,11 +176,11 @@ export default function ListenBookPage(): JSX.Element {
                 console.error("Failed to load proposal for listening", error);
             });
         } else {
-            catalogApi.getBook(id).then(setBook).catch((error) => {
+            catalogApi.getBook(id, i18n.language).then(setBook).catch((error) => {
                 console.error("Failed to load book for listening", error);
             });
         }
-    }, [id, isProposal]);
+    }, [i18n.language, id, isProposal]);
 
     useEffect(() => {
         setSelectedAudioBookId((current) => {

@@ -34,7 +34,7 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
     }));
 
     try {
-      const item = await catalogApi.getBook(id);
+      const item = await catalogApi.getBook(id, language);
       let similarBooks: Book[] = [];
 
       if (item?.similarBooks && item.similarBooks.length > 0) {
@@ -45,7 +45,7 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
             }
 
             try {
-              return await catalogApi.getBook(similarId);
+              return await catalogApi.getBook(similarId, language);
             } catch (error) {
               console.warn('Failed to load similar book', { id: similarId, error });
               return null;

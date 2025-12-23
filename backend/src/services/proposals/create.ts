@@ -88,9 +88,23 @@ function normalizeHashtags(rawHashtags: string[]): string[] {
   return normalized;
 }
 
+function normalizeLanguage(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLocaleLowerCase();
+  if (normalized.length === 0) {
+    return null;
+  }
+
+  return normalized.slice(0, 16);
+}
+
 export async function createBookProposal(
   params: CreateBookProposalParams,
 ): Promise<BookProposal> {
+  const normalizedLanguage = normalizeLanguage(params.language);
   const normalizedAudiobooks = Array.isArray(params.audiobooks)
     ? params.audiobooks
         .map((entry) => ({
@@ -147,6 +161,7 @@ export async function createBookProposal(
       mimeType: entry.file?.mimeType ?? null,
       fileName: entry.file?.name ?? null,
       fileSize: entry.file?.size ?? null,
+      language: normalizedLanguage,
       data: entry.file?.data ?? null,
     };
   });
@@ -216,9 +231,7 @@ export async function createBookProposal(
     fileSize: params.file.size ?? null,
     mimeType: params.file.mimeType ?? null,
     submittedByTelegramUserId: normalizedUploaderUserId,
-    language: typeof params.language === 'string' && params.language.trim().length > 0
-      ? params.language.trim()
-      : null,
+    language: normalizedLanguage,
   });
 
   const savedProposal = await bookProposalRepository.save(proposal);
@@ -233,6 +246,7 @@ export async function createBookProposal(
         mimeType: audioBook.mimeType,
         fileName: audioBook.fileName,
         fileSize: audioBook.fileSize,
+        language: audioBook.language ?? normalizedLanguage,
       }),
     );
 

@@ -38,6 +38,9 @@ export class AudioBook {
   @Column({ name: 'file_size', type: 'integer', nullable: true })
   fileSize!: number | null;
 
+  @Column({ name: 'language', type: 'text', nullable: true })
+  language!: string | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'datetime' })
   createdAt!: Date;
 
