@@ -49,7 +49,7 @@ function AudiobookSlide({
 }): JSX.Element {
   const navigate = useNavigate();
   const { showToast } = useToast();
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
 
     useScrollToTop();
 
