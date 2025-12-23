@@ -44,6 +44,7 @@ export type Book = {
     mimeType: string | null;
     fileName: string | null;
     fileSize: number | null;
+    language?: string | null;
   }[];
 };
 

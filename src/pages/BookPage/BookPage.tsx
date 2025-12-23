@@ -418,7 +418,7 @@ export default function BookPage(): JSX.Element {
             invoiceStatusRef.current = 'paid';
             showToast(t("book.toast.accessGranted"));
             try {
-                const updatedBook = await catalogApi.getBook(book.id);
+                const updatedBook = await catalogApi.getBook(book.id, i18n.language);
                 if (updatedBook) {
                     updateBook(book.id, () => updatedBook);
                 }

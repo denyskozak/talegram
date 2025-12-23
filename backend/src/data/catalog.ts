@@ -138,9 +138,12 @@ function normalizeLanguage(value: unknown): string | null {
   return normalized.length > 0 ? normalized : null;
 }
 
-async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
+async function mapEntityToBook(entity: BookEntity, language?: string | null): Promise<CatalogBook> {
   const audioBookRepository = await getAudioBookRepository();
-  const audioBooks = await audioBookRepository.find({ where: { bookId: entity.id } });
+  const normalizedLanguage = normalizeLanguage(language);
+  const audioBooks = await audioBookRepository.find({
+    where: normalizedLanguage ? { bookId: entity.id, language: normalizedLanguage } : { bookId: entity.id },
+  });
   const ratingAverage = entity.middleRate ?? entity.ratingAverage ?? 0;
   const ratingVotes = entity.ratingVotes ?? 0;
   return {
@@ -179,6 +182,7 @@ async function mapEntityToBook(entity: BookEntity): Promise<CatalogBook> {
       mimeType: audioBook.mimeType ?? null,
       fileName: audioBook.fileName ?? null,
       fileSize: audioBook.fileSize ?? null,
+      language: audioBook.language ?? null,
     })),
   } satisfies CatalogBook;
 }
@@ -320,20 +324,25 @@ export async function listBooks(params: {
   const start = cursorToIndex(params.cursor);
   const end = start + limit;
   const slice = sorted.slice(start, end);
-  const items = await Promise.all(slice.map((entity) => mapEntityToBook(entity)));
+  const items = await Promise.all(slice.map((entity) => mapEntityToBook(entity, normalizedLanguage)));
   const nextCursor = end < sorted.length ? indexToCursor(end) : undefined;
 
   return { items, nextCursor };
 }
 
-export async function getBook(bookId: ID): Promise<CatalogBook | null> {
+export async function getBook(bookId: ID, language?: string): Promise<CatalogBook | null> {
   const repository = await getBookRepository();
   const entity = await repository.findOne({ where: { id: bookId } });
   if (!entity) {
     return null;
   }
 
-  return mapEntityToBook(entity);
+  const normalizedLanguage = normalizeLanguage(language);
+  if (normalizedLanguage && normalizeLanguage(entity.language) !== normalizedLanguage) {
+    return null;
+  }
+
+  return mapEntityToBook(entity, normalizedLanguage);
 }
 
 export async function listAllBooks(): Promise<CatalogBook[]> {
@@ -342,9 +351,12 @@ export async function listAllBooks(): Promise<CatalogBook[]> {
   return Promise.all(entities.map((entity) => mapEntityToBook(entity)));
 }
 
-export async function listAudiobooks(): Promise<CatalogBook[]> {
+export async function listAudiobooks(params: { language?: string } = {}): Promise<CatalogBook[]> {
   const audioBookRepository = await getAudioBookRepository();
-  const audioBooks = await audioBookRepository.find();
+  const normalizedLanguage = normalizeLanguage(params.language);
+  const audioBooks = await audioBookRepository.find({
+    where: normalizedLanguage ? { language: normalizedLanguage } : {},
+  });
   const shuffledAudioBooks = audioBooks
     .map((audioBook) => ({ audioBook, sortKey: Math.random() }))
     .sort((a, b) => a.sortKey - b.sortKey)
@@ -356,16 +368,35 @@ export async function listAudiobooks(): Promise<CatalogBook[]> {
   }
 
   const repository = await getBookRepository();
-  const entities = await repository.find({ where: { id: In(bookIds) } });
+  const queryBuilder = repository.createQueryBuilder('book').where('book.id IN (:...bookIds)', { bookIds });
+  if (normalizedLanguage) {
+    queryBuilder.andWhere('LOWER(book.language) = :language', { language: normalizedLanguage });
+  }
+  const entities = await queryBuilder.getMany();
   const entityMap = new Map(entities.map((entity) => [entity.id, entity]));
-  const orderedEntities = shuffledAudioBooks
-    .filter((audioBook) => entityMap.has(audioBook.bookId))
+  const orderedAudioBooks = shuffledAudioBooks.filter((audioBook) => entityMap.has(audioBook.bookId));
 
+  const items: CatalogBook[] = [];
+  for (const audioBook of orderedAudioBooks) {
+    const bookEntity = entityMap.get(audioBook.bookId);
+    if (!bookEntity) {
+      continue;
+    }
 
-  return Promise.all(orderedEntities.map((entity) => ({
-      ...mapEntityToBook(entityMap.get(entity.bookId)!),
-      audioBooks: [entity]
-  })));
+    const mapped = await mapEntityToBook(bookEntity, normalizedLanguage);
+    const matchingAudioBooks = (mapped.audioBooks ?? []).filter((item) => item.id === audioBook.id);
+
+    if (normalizedLanguage && matchingAudioBooks.length === 0) {
+      continue;
+    }
+
+    items.push({
+      ...mapped,
+      audioBooks: matchingAudioBooks.length > 0 ? matchingAudioBooks : mapped.audioBooks ?? [],
+    });
+  }
+
+  return items;
 }
 
 export async function listCategoryTags(categoryId: ID, limit = 9): Promise<string[]> {

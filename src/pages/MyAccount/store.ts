@@ -11,10 +11,12 @@ export type MyAccountStore = {
   myBooksError: string | null;
   myBooksInitialized: boolean;
   lastLoadedUserId: string | null;
+  lastLoadedLanguage: string | null;
   likedBookIds: Set<string>;
   loadMyBooks: (params: {
     telegramUserId: string | null;
     errorMessage: string;
+    language?: string;
     force?: boolean;
   }) => Promise<void>;
   toggleLike: (bookId: string, telegramUserId: string | null) => void;
@@ -27,10 +29,16 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
   myBooksError: null,
   myBooksInitialized: false,
   lastLoadedUserId: null,
+  lastLoadedLanguage: null,
   likedBookIds: new Set<string>(),
-  loadMyBooks: async ({ telegramUserId, errorMessage, force = false }) => {
-    const { myBooksInitialized, lastLoadedUserId } = get();
-    if (myBooksInitialized && lastLoadedUserId === telegramUserId && !force) {
+  loadMyBooks: async ({ telegramUserId, errorMessage, language, force = false }) => {
+    const { myBooksInitialized, lastLoadedUserId, lastLoadedLanguage } = get();
+    if (
+      myBooksInitialized &&
+      lastLoadedUserId === telegramUserId &&
+      lastLoadedLanguage === (language ?? null) &&
+      !force
+    ) {
       return;
     }
 
@@ -42,6 +50,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
         isMyBooksLoading: false,
         myBooksInitialized: true,
         lastLoadedUserId: null,
+        lastLoadedLanguage: null,
         likedBookIds: new Set<string>(),
       });
       return;
@@ -53,7 +62,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
       const items = await Promise.all(
         response.items.map(async (item) => {
           try {
-            const book = await catalogApi.getBook(item.bookId);
+            const book = await catalogApi.getBook(item.bookId, language);
             if (!book) {
               return null;
             }
@@ -80,6 +89,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
         likedBookIds: likedSet,
         myBooksInitialized: true,
         lastLoadedUserId: telegramUserId,
+        lastLoadedLanguage: language ?? null,
       });
     } catch (error) {
       console.error("Failed to load purchased books", error);
@@ -108,6 +118,7 @@ export const useMyAccountStore = create<MyAccountStore>((set, get) => ({
       myBooksError: null,
       myBooksInitialized: false,
       lastLoadedUserId: null,
+      lastLoadedLanguage: null,
       likedBookIds: new Set<string>(),
     }),
 }));

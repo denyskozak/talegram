@@ -280,6 +280,7 @@ export const proposalsRouter = createRouter({
               mimeType: audioBook.mimeType ?? null,
               fileName: audioBook.fileName ?? null,
               fileSize: audioBook.fileSize ?? null,
+              language: audioBook.language ?? proposal.language ?? null,
             }),
           );
 

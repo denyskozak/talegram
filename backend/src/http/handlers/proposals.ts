@@ -148,7 +148,7 @@ function normalizeLanguage(rawValue: string | undefined): string | null {
         return null;
     }
 
-    return trimmed.slice(0, 16);
+    return trimmed.slice(0, 16).toLocaleLowerCase();
 }
 
 type NormalizedAudiobookMeta = { id: string; title: string | null; file: ParsedFormFile };
