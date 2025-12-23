@@ -690,11 +690,9 @@ export default function BookPage(): JSX.Element {
                         ))}
                     </div>
                     <Card
-                        onClick={handleScrollToReviews}
                         style={{padding: 16, borderRadius: 20, cursor: "pointer"}}
                         role="button"
                         tabIndex={0}
-                        onKeyDown={(event) => event.key === "Enter" && handleScrollToReviews()}
                     >
                         <div style={{display: "flex", flexDirection: "column", gap: 12}}>
                             <div
@@ -706,7 +704,7 @@ export default function BookPage(): JSX.Element {
                                     gap: 12,
                                 }}
                             >
-                                <div style={{flex: 1, minWidth: 200}}>
+                                <div style={{flex: 1, minWidth: 200}} role="button" onClick={handleScrollToReviews}>
                                     <BookRating value={book.rating.average} votes={book.rating.votes}/>
                                 </div>
                                 <Chip mode="outline" style={{fontWeight: 600}}>
