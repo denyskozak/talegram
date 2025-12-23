@@ -35,28 +35,40 @@ export const useBookStore = create<BookStoreState>((set, get) => ({
 
     try {
       const item = await catalogApi.getBook(id);
-      if (item?.categories) {
+      let similarBooks: Book[] = [];
+
+      if (item?.similarBooks && item.similarBooks.length > 0) {
+        const resolved = await Promise.all(
+          item.similarBooks.map(async (similarId) => {
+            if (similarId === item.id) {
+              return null;
+            }
+
+            try {
+              return await catalogApi.getBook(similarId);
+            } catch (error) {
+              console.warn('Failed to load similar book', { id: similarId, error });
+              return null;
+            }
+          }),
+        );
+
+        similarBooks = resolved.filter((book): book is Book => Boolean(book)).slice(0, 6);
+      } else if (item?.categories) {
         const similarBooksResponse = await catalogApi.listBooks({
           categoryId: item.categories,
           limit: 12,
           language,
         });
-        set((state) => ({
-          similarByBook: {
-            ...state.similarByBook,
-            [id]: similarBooksResponse.items
-              .filter((entry) => entry.id !== item.id)
-              .slice(0, 6),
-          },
-        }));
-      } else {
-        set((state) => ({
-          similarByBook: {
-            ...state.similarByBook,
-            [id]: [],
-          },
-        }));
+        similarBooks = similarBooksResponse.items.filter((entry) => entry.id !== item.id).slice(0, 6);
       }
+
+      set((state) => ({
+        similarByBook: {
+          ...state.similarByBook,
+          [id]: similarBooks,
+        },
+      }));
 
       set((state) => ({ books: { ...state.books, [id]: item } }));
     } catch (err) {

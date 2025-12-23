@@ -7,6 +7,7 @@ import { initializeDataSource, appDataSource } from '../utils/data-source.js';
 import { Author } from '../entities/Author.js';
 import { Book } from '../entities/Book.js';
 import { CommunityMember } from '../entities/CommunityMember.js';
+import { deleteStorageDirectories } from '../utils/storage-files.js';
 
 function extractBearerToken(rawHeader: string | string[] | undefined): string | null {
   if (!rawHeader) {
@@ -63,6 +64,7 @@ const baseBookSchema = z.object({
   price: z.number().int().min(0),
   rating: ratingSchema,
   tags: z.array(z.string().trim().min(1)).optional().default([]),
+  similarBooks: z.array(z.string().trim().min(1)).optional().default([]),
   publishedAt: z.string().trim().datetime({ offset: true }).optional(),
   reviewsCount: z.number().int().min(0).optional(),
 });
@@ -196,6 +198,9 @@ export const adminRouter = createRouter({
     if (patch.tags !== undefined) {
       entity.tags = patch.tags;
     }
+    if (patch.similarBooks !== undefined) {
+      entity.similarBooks = patch.similarBooks;
+    }
     if (patch.publishedAt !== undefined) {
       entity.publishedAt = patch.publishedAt ? new Date(patch.publishedAt) : null;
     }
@@ -224,7 +229,11 @@ export const adminRouter = createRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Book not found' });
     }
 
+    const storageIds = [entity.filePath, entity.coverFilePath, entity.audiobookFilePath];
+
     await repository.remove(entity);
+
+    await deleteStorageDirectories(storageIds);
 
     return { success: true } as const;
   }),
@@ -322,4 +331,3 @@ export const adminRouter = createRouter({
     return { success: true } as const;
   }),
 });
-

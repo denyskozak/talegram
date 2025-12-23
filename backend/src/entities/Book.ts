@@ -108,6 +108,14 @@ export class Book {
     })
     tags!: string[];
 
+    @Column({
+        name: 'similar_books',
+        type: 'text',
+        transformer: stringArrayTransformer,
+        default: '[]',
+    })
+    similarBooks!: string[];
+
     @Column({name: 'global_category', type: 'text', nullable: true})
     globalCategory!: string | null;
 
