@@ -647,8 +647,7 @@ export default function AudiobooksFeed(): JSX.Element {
             scroll-snap-align: start;
             position: relative;
             display: flex;
-            align-items: flex-end;
-            justify-content: flex-start;
+            justify-content: center;
             overflow: hidden;
          
           }
@@ -658,7 +657,7 @@ export default function AudiobooksFeed(): JSX.Element {
             left: 50%;
             transform: translateX(-50%);
             width: 60%;
-            max-width: 400px;
+            max-width: 200px;
             height: 40%;
             object-fit: fit;
             border-radius: 20px;
@@ -669,6 +668,8 @@ export default function AudiobooksFeed(): JSX.Element {
             bottom: 20%;
             left: 0;
             width: 100%;
+            display: flex;
+            justify-content: center;
             padding: 24px 20px 96px;
             box-sizing: border-box;
             background: ${theme.background};
