@@ -3,7 +3,7 @@ import {In, type Repository} from 'typeorm';
 import type {Book as CatalogBook, Category, ID, Review} from './types.js';
 import {sortBooks, type BookSort} from '../utils/sortBooks.js';
 import {appDataSource, initializeDataSource} from '../utils/data-source.js';
-import {Book, Book as BookEntity} from '../entities/Book.js';
+import {Book as BookEntity} from '../entities/Book.js';
 import {formatCategoryTitle} from '../utils/categories.js';
 import {BookProposal} from '../entities/BookProposal.js';
 import {AudioBook} from '../entities/AudioBook.js';
