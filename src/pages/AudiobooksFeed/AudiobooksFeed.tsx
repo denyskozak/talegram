@@ -546,7 +546,7 @@ export default function AudiobooksFeed(): JSX.Element {
 
     const load = async () => {
       try {
-        const response = await catalogApi.listAudiobooks(i18n.language);
+        const response = await catalogApi.listAudiobooks();
         if (!cancelled) {
           setBooks(shuffleBooks(response));
         }

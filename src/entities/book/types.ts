@@ -22,15 +22,15 @@ export interface CatalogApi {
   listGlobalCategories(): Promise<string[]>;
   listBooks(params: {
     categoryId?: ID;
-  search?: string;
-  sort?: "popular" | "rating" | "new";
-  tags?: string[];
-  cursor?: string;
-  limit?: number;
-  language?: string;
+    search?: string;
+    sort?: "popular" | "rating" | "new";
+    tags?: string[];
+    cursor?: string;
+    limit?: number;
+    language?: string;
   }): Promise<{ items: Book[]; nextCursor?: string }>;
-  listAudiobooks(language?: string): Promise<Book[]>;
-  getBook(id: ID, language?: string): Promise<Book>;
+  listAudiobooks(): Promise<Book[]>;
+  getBook(id: ID): Promise<Book>;
   listReviews(bookId: ID, cursor?: string, limit?: number): Promise<{ items: Review[]; nextCursor?: string }>;
   createReview(payload: {
     bookId: ID;
