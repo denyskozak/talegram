@@ -481,8 +481,8 @@ export function ReadingOverlay({
                             transform: "translateY(-50%)",
                             zIndex: 2,
                             border: "none",
-                            width: 44,
-                            height: 44,
+                            width: 52,
+                            height: 52,
                             backgroundColor: themeState.background,
                             opacity: 0.85,
                             cursor: "pointer",
@@ -504,8 +504,8 @@ export function ReadingOverlay({
                             transform: "translateY(-50%)",
                             zIndex: 2,
                             border: "none",
-                            width: 44,
-                            height: 44,
+                            width: 52,
+                            height: 52,
                             backgroundColor: themeState.background,
                             opacity: 0.85,
                             cursor: "pointer",
@@ -537,7 +537,7 @@ export function ReadingOverlay({
                                 onClick={() => {
                                     setMenuOpen(!isMenuOpen);
                                     selectionChanged.ifAvailable();
-                                }}><span style={{fontSize: 24}}>⚙️</span></button>
+                                }}><span style={{fontSize: 32}}>⚙️</span></button>
                         {isMenuOpen && !isChaptersModalOpen
                             ? (
                                 <>
@@ -623,8 +623,11 @@ export function ReadingOverlay({
 
                         const doc = view.document;
 
+                        doc.addEventListener('pointerdown', handleRevealControls);
+                        doc.addEventListener('touchstart', handleRevealControls);
+
                         const links = Array.from(doc.querySelectorAll("a"));
-                        console.log("links: ", links);
+
                         links.forEach((a) => {
                             const href = a.getAttribute("href");
                             console.log("href: ", href);
