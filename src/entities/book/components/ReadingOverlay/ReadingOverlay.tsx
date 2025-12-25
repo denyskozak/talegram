@@ -432,10 +432,9 @@ export function ReadingOverlay({
             );
         });
     };
-    console.log("progressPercent: ", progressPercent);
     return (
         <div
-            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
+            style={{background: themeSetting.background, height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
         >
             {/*{areControlsVisible ? (*/}
             {/*    <>*/}
@@ -687,7 +686,7 @@ export function ReadingOverlay({
                     bottom: '20px',
                     width: "100%",
                     height: 6,
-                    background: themeState.separator,
+                    background: themeState.background,
                     zIndex: 100,
 
                 }}
