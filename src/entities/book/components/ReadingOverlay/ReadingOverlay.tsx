@@ -198,6 +198,10 @@ export function ReadingOverlay({
     const readerTheme: IReactReaderStyle = {
         ...ReactReaderStyle,
 
+        container: {
+            ...ReactReaderStyle.container,
+            padding: '20px 0 12px 0'
+        },
         readerArea: {
             ...ReactReaderStyle.readerArea,
             backgroundColor: themeState.background,
@@ -207,7 +211,7 @@ export function ReadingOverlay({
             ...ReactReaderStyle.reader,
             color: themeState.background,
             transition: undefined,
-            inset: '12px 0',
+            inset: 0,
         },
 
         // arrow: {
