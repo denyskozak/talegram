@@ -398,7 +398,7 @@ export function ReadingOverlay({
         h1, h2, h3, h4, h5, h6, p, blockquote, pre { 
           background-color: transparent !important;
         }    
-        iframe { pointer-events: auto !important; }
+      
 
       `)
         );
