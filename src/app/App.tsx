@@ -3,7 +3,7 @@ import {useEffect, useState, type TransitionEvent} from "react";
 import {useTranslation} from "react-i18next";
 
 import {AppRoot} from "@telegram-apps/telegram-ui";
-import { init } from '@tma.js/sdk';
+import {init} from '@tma.js/sdk';
 
 import {TMAProvider, useTMA} from "./providers/TMAProvider";
 import {useTheme} from "./providers/ThemeProvider";
@@ -15,6 +15,9 @@ import {HeaderBar} from "@/widgets/HeaderBar/HeaderBar";
 import {useFooterVisibility, useHeaderVisibility} from "@/shared/hooks/useFooterVisibility";
 import {useLaunchParams} from "@tma.js/sdk-react";
 import {StartRouteHandler} from "@/app/StartHandler.tsx";
+import {SUPPORTED_LANGUAGES} from "@/shared/config/i18n";
+import {SupportedLanguage} from "@/shared/ui/LanguageToggle.tsx";
+
 // import { swipeBehavior } from '@tma.js/sdk';
 
 function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
@@ -86,7 +89,7 @@ function SplashScreen({visible}: { visible: boolean }): JSX.Element | null {
                     }}
                 />
                 <div style={{display: "flex", flexDirection: "column", gap: 4}}>
-                    <span style={{fontSize: 24, fontWeight: 600,      color: theme.text,}}>
+                    <span style={{fontSize: 24, fontWeight: 600, color: theme.text,}}>
                         {t("splashScreen.title")}
                     </span>
                 </div>
@@ -147,7 +150,8 @@ function NavigationControls(): null {
 function AppContent(): JSX.Element {
     const {isTelegram} = useTMA();
     const theme = useTheme();
-    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
+    const {i18n} = useTranslation();
+    const {tgWebAppFullscreen, tgWebAppPlatform, tgWebAppData} = useLaunchParams();
     const [isSplashVisible, setIsSplashVisible] = useState(true);
     const isFooterVisible = useFooterVisibility();
     const isHeaderVisible = useHeaderVisibility();
@@ -158,6 +162,13 @@ function AppContent(): JSX.Element {
         //     if (!swipeBehavior.isMounted()) swipeBehavior.mount();;
         //     swipeBehavior.disableVertical();
         // }
+        console.log("tgWebAppData?.user?.language_code: ", tgWebAppData?.user?.language_code);
+        if (tgWebAppData?.user?.language_code
+            && SUPPORTED_LANGUAGES.includes(tgWebAppData?.user?.language_code as SupportedLanguage)
+            && tgWebAppData?.user?.language_code !== i18n.language) {
+            i18n.changeLanguage(tgWebAppData?.user?.language_code)
+        }
+
         const timeoutId = window.setTimeout(() => {
             setIsSplashVisible(false);
         }, 2000);
@@ -213,10 +224,10 @@ void init();
 export default function App(): JSX.Element {
     return (
         <BrowserRouter>
-            <StartRouteHandler />
-                <TMAProvider>
-                            <AppContent/>
-                </TMAProvider>
+            <StartRouteHandler/>
+            <TMAProvider>
+                <AppContent/>
+            </TMAProvider>
         </BrowserRouter>
     );
 }

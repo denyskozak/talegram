@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { SUPPORTED_LANGUAGES } from "@/shared/config/i18n";
 import { Button } from "@/shared/ui/Button";
 
-type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   en: "EN",
