@@ -13,6 +13,7 @@ import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 import {hapticFeedback} from '@tma.js/sdk';
+import {useLaunchParams} from "@tma.js/sdk-react";
 
 
 const { selectionChanged } = hapticFeedback;
@@ -65,6 +66,7 @@ export function ReadingOverlay({
     const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
     useLayoutEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -200,7 +202,7 @@ export function ReadingOverlay({
 
         container: {
             ...ReactReaderStyle.container,
-            padding: '20px 0 12px 0'
+            padding: `${tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? '5vh' : '12px'} 0 12px 0`
         },
         readerArea: {
             ...ReactReaderStyle.readerArea,
@@ -280,7 +282,7 @@ export function ReadingOverlay({
     const handleRevealControls = useCallback(() => {
         setControlsVisible(true);
         scheduleHideControls();
-        alert(2)
+
     }, [scheduleHideControls]);
 
 
@@ -464,6 +466,7 @@ export function ReadingOverlay({
         <div
             style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
             onPointerDown={handleRevealControls}
+            onTouchMove={handleRevealControls}
         >
             {areControlsVisible ? (
                 <>
