@@ -135,6 +135,7 @@
     "coverAlt": "Обложка книги {{title}}",
     "fallbackCategoryTitle": "Категория",
     "share": "Поделиться",
+    "free": "Бесплатно \uD83C\uDD93",
     "description": {
       "title": "Описание",
       "showLess": "Свернуть",

@@ -707,8 +707,8 @@ export default function BookPage(): JSX.Element {
                                 <div style={{flex: 1, minWidth: 200}} role="button" onClick={handleScrollToReviews}>
                                     <BookRating value={book.rating.average} votes={book.rating.votes}/>
                                 </div>
-                                <Chip mode="outline" style={{fontWeight: 600}}>
-                                    {book.price} {book.currency} ⭐
+                                <Chip mode="outline" style={{fontWeight: 600, color:book.price === 0 ? theme.accent : theme.text}}>
+                                    {book.price === 0 ? t('book.free') : `${book.price} ${book.currency} ⭐`}
                                 </Chip>
                             </div>
                             {/*<div style={{color: "var(--tg-theme-subtitle-text-color, #7f7f81)"}}>*/}

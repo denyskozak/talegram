@@ -140,6 +140,7 @@
     "coverAlt": "Обкладинка книги {{title}}",
     "fallbackCategoryTitle": "Категорія",
     "share": "Поділитися",
+    "free": "Безкоштовно \uD83C\uDD93",
     "description": {
       "title": "Опис",
       "showLess": "Показати менше",

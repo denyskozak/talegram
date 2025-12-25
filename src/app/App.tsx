@@ -162,7 +162,6 @@ function AppContent(): JSX.Element {
         //     if (!swipeBehavior.isMounted()) swipeBehavior.mount();;
         //     swipeBehavior.disableVertical();
         // }
-        console.log("tgWebAppData?.user?.language_code: ", tgWebAppData?.user?.language_code);
         if (tgWebAppData?.user?.language_code
             && SUPPORTED_LANGUAGES.includes(tgWebAppData?.user?.language_code as SupportedLanguage)
             && tgWebAppData?.user?.language_code !== i18n.language) {
@@ -179,7 +178,6 @@ function AppContent(): JSX.Element {
         };
     }, []);
     const isDefaultThemeDark = theme.text === "#ffffff" || theme.text === "#FFFFFF";
-    console.log("isDefaultThemeDark: ", isDefaultThemeDark);
     return (
 
         <AppRoot

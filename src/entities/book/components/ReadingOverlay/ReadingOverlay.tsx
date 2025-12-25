@@ -380,6 +380,45 @@ export function ReadingOverlay({
         }
     }, []);
 
+
+    // const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
+
+    const injectCss = (contents: { document: Document }) => {
+        const doc = contents.document;
+
+        // удалим старый стиль, если он уже был
+        const prev = doc.getElementById("app-link-fix");
+        if (prev) prev.remove();
+
+        const style = doc.createElement("style");
+        style.id = "app-link-fix";
+        style.type = "text/css";
+        style.appendChild(
+            doc.createTextNode(`    
+            
+        
+        /* максимальная "пробивная" сила */
+        a, a:link, a:visited,
+        .calibre6 a, a.calibre6,
+        [class*="calibre"] a {
+          color: ${themeState.accent} !important;
+          text-decoration: underline !important;
+        }
+        a:hover, a:active {
+          opacity: 0.85 !important;
+        }
+        h1, h2, h3, h4, h5, h6, p, blockquote, pre { 
+          background-color: transparent !important;
+        }    
+      
+
+      `)
+        );
+
+        // ВАЖНО: добавляем в КОНЕЦ head, чтобы быть последними по каскаду
+        doc.head.appendChild(style);
+    };
+
     const loadChapters = (r: Rendition) => {
         const book = r.book;
         if (!book) return;
@@ -587,7 +626,7 @@ export function ReadingOverlay({
 
                     renditionRef.current = _rendition
                     bookRef.current = _rendition.book;
-                    // _rendition.hooks.content.register(injectCss);
+                    _rendition.hooks.content.register(injectCss);
 
                     loadChapters(_rendition);
                     ensureLocations(_rendition)
