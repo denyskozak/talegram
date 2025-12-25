@@ -207,7 +207,7 @@ export function ReadingOverlay({
             ...ReactReaderStyle.reader,
             color: themeState.background,
             transition: undefined,
-            inset: 0,
+            inset: '12px 0',
         },
 
         // arrow: {
