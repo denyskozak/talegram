@@ -57,9 +57,11 @@ export function ReadingOverlay({
     const [chaptersLoading, setChaptersLoading] = useState(false);
     const [isMenuModalVisibleGood, setMenuModalVisibleGood] = useState(true);
     const [currentChapterHref, setCurrentChapterHref] = useState<string | null>(null);
+    const [areControlsVisible, setControlsVisible] = useState(true);
 
     const [selection, setSelection] = useState<string | null>(null);
     const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
@@ -256,6 +258,26 @@ export function ReadingOverlay({
         }
     };
 
+    const clearHideControlsTimeout = useCallback(() => {
+        if (hideControlsTimeoutRef.current) {
+            clearTimeout(hideControlsTimeoutRef.current);
+            hideControlsTimeoutRef.current = null;
+        }
+    }, []);
+
+    const scheduleHideControls = useCallback(() => {
+        clearHideControlsTimeout();
+        hideControlsTimeoutRef.current = setTimeout(() => {
+            setControlsVisible(false);
+            setMenuOpen(false);
+        }, 5000);
+    }, [clearHideControlsTimeout]);
+
+    const handleRevealControls = useCallback(() => {
+        setControlsVisible(true);
+        scheduleHideControls();
+    }, [scheduleHideControls]);
+
 
     useEffect(() => {
         const textSizes: Record<number, string> = {
@@ -269,6 +291,10 @@ export function ReadingOverlay({
     }, [textSize])
 
     useEffect(() => () => clearHideHeaderTimeout(), [])
+    useEffect(() => {
+        scheduleHideControls();
+        return () => clearHideControlsTimeout();
+    }, [scheduleHideControls, clearHideControlsTimeout]);
 
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
@@ -430,51 +456,58 @@ export function ReadingOverlay({
 
 
     return (
-        <div style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}>
-            <button
-                type="button"
-                onClick={safePrev}
-                aria-label="Previous"
-                style={{
-                    position: "absolute",
-                    left: '2vw',
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 2,
-                    border: "none",
-                    width: 44,
-                    height: 44,
-                    backgroundColor: themeState.background,
-                    opacity: 0.85,
-                    cursor: "pointer",
-                    fontSize: 32,
-                }}
-            >
-                ⬅️
-            </button>
+        <div
+            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
+            onPointerDown={handleRevealControls}
+        >
+            {areControlsVisible ? (
+                <>
+                    <button
+                        type="button"
+                        onClick={safePrev}
+                        aria-label="Previous"
+                        style={{
+                            position: "absolute",
+                            left: '2vw',
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 2,
+                            border: "none",
+                            width: 44,
+                            height: 44,
+                            backgroundColor: themeState.background,
+                            opacity: 0.85,
+                            cursor: "pointer",
+                            fontSize: 32,
+                        }}
+                    >
+                        ⬅️
+                    </button>
 
-            {/* ПРАВАЯ стрелка */}
-            <button
-                type="button"
-                onClick={safeNext}
-                aria-label="Next"
-                style={{
-                    position: "absolute",
-                    right: '2vw',
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 2,
-                    border: "none",
-                    width: 44,
-                    height: 44,
-                    backgroundColor: themeState.background,
-                    opacity: 0.85,
-                    cursor: "pointer",
-                    fontSize: 32,
-                }}
-            >
-                ➡️
-            </button>
+                    {/* ПРАВАЯ стрелка */}
+                    <button
+                        type="button"
+                        onClick={safeNext}
+                        aria-label="Next"
+                        style={{
+                            position: "absolute",
+                            right: '2vw',
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            zIndex: 2,
+                            border: "none",
+                            width: 44,
+                            height: 44,
+                            backgroundColor: themeState.background,
+                            opacity: 0.85,
+                            cursor: "pointer",
+                            fontSize: 32,
+                        }}
+                    >
+                        ➡️
+                    </button>
+                </>
+            ) : null}
             <div style={{
                 position: "fixed",
                 top: '16vh',
@@ -485,28 +518,31 @@ export function ReadingOverlay({
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-
-                <button style={{
-                    background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
-                    border: 'none',
-                    borderRadius: 900,
-                    opacity: 0.9
-                }}
-                        onClick={() => {
-                            setMenuOpen(!isMenuOpen);
-                            selectionChanged.ifAvailable();
-                        }}><span style={{fontSize: 24}}>⚙️</span></button>
-                {isMenuOpen && !isChaptersModalOpen
-                    ? (
-                        <>
-                            {/*<Button mode="filled" size="s"*/}
-                            {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
-                            <Button mode="filled" size="s"
-                                    onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
-                            <Button mode="filled" size="s"
-                                    onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
-                        </>)
-                    : null}
+                {areControlsVisible ? (
+                    <>
+                        <button style={{
+                            background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
+                            border: 'none',
+                            borderRadius: 900,
+                            opacity: 0.9
+                        }}
+                                onClick={() => {
+                                    setMenuOpen(!isMenuOpen);
+                                    selectionChanged.ifAvailable();
+                                }}><span style={{fontSize: 24}}>⚙️</span></button>
+                        {isMenuOpen && !isChaptersModalOpen
+                            ? (
+                                <>
+                                    {/*<Button mode="filled" size="s"*/}
+                                    {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
+                                    <Button mode="filled" size="s"
+                                            onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
+                                    <Button mode="filled" size="s"
+                                            onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
+                                </>)
+                            : null}
+                    </>
+                ) : null}
             </div>
             <Modal
 
