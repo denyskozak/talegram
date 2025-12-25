@@ -13,9 +13,10 @@ import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 import {hapticFeedback} from '@tma.js/sdk';
 import {useLaunchParams} from "@tma.js/sdk-react";
+import {Animation} from "@/shared/ui/Animation.tsx";
 
 
-const { selectionChanged, impactOccurred } = hapticFeedback;
+const {selectionChanged, impactOccurred} = hapticFeedback;
 
 type ReadingOverlayProps = {
     book?: Book | null;
@@ -50,6 +51,7 @@ export function ReadingOverlay({
     const bookRef = useRef<any | null>(null);
     const renditionRef = useRef<Rendition | undefined>(undefined)
     const [isMenuOpen, setMenuOpen] = useState(false);
+    const [showSwipeTip, setShowSwipeTip] = useState(true);
     const [textSize, setTextSize] = useState(4);
     const rendition = useRef<Rendition | undefined>(undefined)
     const [chapters, setChapters] = useState<TocItem[]>([]);
@@ -67,10 +69,18 @@ export function ReadingOverlay({
     const locationRef = useRef(location);
 
     useLayoutEffect(() => {
-        const timeoutId = setTimeout(() => {
+        const goodMenuVisibleTimeoutId = setTimeout(() => {
             setMenuModalVisibleGood(false)
         }, 6 * 1000);
-        return () => clearTimeout(timeoutId)
+
+        const hideSwipeTipTimeoutId = setTimeout(() => {
+            setShowSwipeTip(false)
+        }, 5 * 1000)
+
+        return () => {
+            clearTimeout(goodMenuVisibleTimeoutId)
+            clearTimeout(hideSwipeTipTimeoutId)
+        }
     }, []);
 
     const navLockRef = useRef(false);
@@ -230,6 +240,7 @@ export function ReadingOverlay({
         themes.override('color', themeState.text)
         themes.override('background', themeState.background)
     }
+
     const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
     const readerTheme: IReactReaderStyle = {
@@ -473,7 +484,13 @@ export function ReadingOverlay({
     };
     return (
         <div
-            style={{background: themeSetting.background, height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
+            style={{
+                background: themeSetting.background,
+                height: isPreview ? '95vh' : '100vh',
+                width: '100vw',
+                position: 'relative',
+                overflow: 'hidden'
+            }}
         >
             {/*{areControlsVisible ? (*/}
             {/*    <>*/}
@@ -533,30 +550,30 @@ export function ReadingOverlay({
                 display: 'flex',
                 flexDirection: 'row-reverse',
             }}
-            onTouchMove={event => event?.preventDefault()}
+                 onTouchMove={event => event?.preventDefault()}
             >
 
-                    <button style={{
-                        background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
-                        border: 'none',
-                        borderRadius: 900,
-                        opacity: isMenuModalVisibleGood ? 0.9 : 0.4
-                    }}
-                            onClick={() => {
-                                setMenuOpen(!isMenuOpen);
-                                selectionChanged.ifAvailable();
-                            }}><span style={{fontSize: 32}}>⚙️</span></button>
-                    {isMenuOpen && !isChaptersModalOpen
-                        ? (
-                            <>
-                                {/*<Button mode="filled" size="s"*/}
-                                {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
-                                <Button mode="filled" size="s"
-                                        onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
-                                <Button mode="filled" size="s"
-                                        onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
-                            </>)
-                        : null}
+                <button style={{
+                    background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
+                    border: 'none',
+                    borderRadius: 900,
+                    opacity: isMenuModalVisibleGood ? 0.9 : 0.4
+                }}
+                        onClick={() => {
+                            setMenuOpen(!isMenuOpen);
+                            selectionChanged.ifAvailable();
+                        }}><span style={{fontSize: 32}}>⚙️</span></button>
+                {isMenuOpen && !isChaptersModalOpen
+                    ? (
+                        <>
+                            {/*<Button mode="filled" size="s"*/}
+                            {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
+                            <Button mode="filled" size="s"
+                                    onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
+                            <Button mode="filled" size="s"
+                                    onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
+                        </>)
+                    : null}
 
             </div>
             <Modal
@@ -732,7 +749,7 @@ export function ReadingOverlay({
 
                 }}
             >
-                <div style={{ textAlign: 'center', fontSize: 14 }}>
+                <div style={{textAlign: 'center', fontSize: 14}}>
                     <span>{progressPercent}%</span>
                 </div>
 
@@ -745,6 +762,27 @@ export function ReadingOverlay({
                     }}
                 />
             </div>
+            {showSwipeTip ? (
+                <div
+                    role="progressbar"
+                    aria-valuemin={1}
+                    aria-valuemax={100}
+                    style={{
+                        position: "fixed",
+                        bottom: '20vh',
+                        left: '50%',
+                        borderRadius: 24,
+                        transform: "translateX(-50%)",
+                        width: 160,
+                        height: 160,
+                        background: themeState.background,
+                        zIndex: 100
+                    }}
+                >
+                    <Animation name="swipe"/></div>
+            ) : null}
         </div>
+
+
     );
 }
