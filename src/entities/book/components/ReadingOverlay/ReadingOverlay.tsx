@@ -461,7 +461,7 @@ export function ReadingOverlay({
 
     return (
         <div
-            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'auto'}}
+            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative'}}
             onPointerDown={handleRevealControls}
         >
             {areControlsVisible ? (
