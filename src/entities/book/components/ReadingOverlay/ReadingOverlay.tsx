@@ -516,7 +516,7 @@ export function ReadingOverlay({
             <div style={{
                 position: "fixed",
                 top: '14vh',
-                right: '1vh',
+                right: '0',
                 zIndex: '100',
                 width: 'fit-content',
                 gap: '5px',
