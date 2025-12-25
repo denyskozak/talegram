@@ -12,7 +12,6 @@ import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 import {hapticFeedback} from '@tma.js/sdk';
-import {useLaunchParams} from "@tma.js/sdk-react";
 
 
 const { selectionChanged } = hapticFeedback;
@@ -57,15 +56,14 @@ export function ReadingOverlay({
     const [chaptersLoading, setChaptersLoading] = useState(false);
     const [isMenuModalVisibleGood, setMenuModalVisibleGood] = useState(true);
     const [currentChapterHref, setCurrentChapterHref] = useState<string | null>(null);
-    // const [areControlsVisible, setControlsVisible] = useState(true);
+
 
     const [selection, setSelection] = useState<string | null>(null);
-    // const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    // const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
-    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
+    const [progressPercent, setProgressPercent] = useState(1);
+    const locationRef = useRef(location);
 
     useLayoutEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -75,9 +73,44 @@ export function ReadingOverlay({
     }, []);
 
     const navLockRef = useRef(false);
+    const locationsReadyRef = useRef(false);
 
     const normalizeHref = (href?: string | null) => href?.split("#")[0] ?? null;
 
+    const ensureLocations = useCallback(async (r: Rendition) => {
+        const b = r.book;
+        if (!b) return false;
+
+        await b.ready;
+
+        const loc = b.locations;
+        if (!loc) return false;
+
+        // если уже готово — выходим
+        if (locationsReadyRef.current && loc.length() > 0) return true;
+
+        if (loc.length() === 0) {
+            await loc.generate(1000); // 1000–1500 обычно норм
+        }
+
+        locationsReadyRef.current = loc.length() > 0;
+        return locationsReadyRef.current;
+    }, []);
+
+    const updateProgressFromCfi = useCallback((epubcfi?: string) => {
+        const b = bookRef.current;
+        const cfi = epubcfi ?? locationRef.current;
+
+        if (!b?.locations || !cfi) return;
+        const total = b.locations.length?.() ?? 0;
+        if (total === 0) return;
+
+        const idx = b.locations.locationFromCfi(cfi);
+        if (typeof idx !== "number" || idx < 0) return;
+
+        const pct = Math.round(((idx + 1) / total) * 100);
+        setProgressPercent(Math.min(100, Math.max(1, pct)));
+    }, []);
     const isCoverItem = (it: any) => {
         const props = Array.isArray(it?.properties) ? it.properties.join(" ") : String(it?.properties || "");
         const idref = String(it?.idref || "").toLowerCase();
@@ -201,7 +234,7 @@ export function ReadingOverlay({
 
         container: {
             ...ReactReaderStyle.container,
-            padding: `${tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? '5vh' : '12px'} 0 12px 0`
+            height: '95vh',
         },
         readerArea: {
             ...ReactReaderStyle.readerArea,
@@ -256,34 +289,6 @@ export function ReadingOverlay({
         }
     }, [theme])
 
-    // const clearHideHeaderTimeout = () => {
-    //     if (hideHeaderTimeoutRef.current) {
-    //         clearTimeout(hideHeaderTimeoutRef.current);
-    //         hideHeaderTimeoutRef.current = null;
-    //     }
-    // };
-    //
-    // const clearHideControlsTimeout = useCallback(() => {
-    //     if (hideControlsTimeoutRef.current) {
-    //         clearTimeout(hideControlsTimeoutRef.current);
-    //         hideControlsTimeoutRef.current = null;
-    //     }
-    // }, []);
-
-    // const scheduleHideControls = useCallback(() => {
-    //     clearHideControlsTimeout();
-    //     hideControlsTimeoutRef.current = setTimeout(() => {
-    //         setControlsVisible(false);
-    //         setMenuOpen(false);
-    //     }, 5000);
-    // }, [clearHideControlsTimeout]);
-
-    // const handleRevealControls = useCallback(() => {
-    //     setControlsVisible(true);
-    //     scheduleHideControls();
-    //
-    // }, [scheduleHideControls]);
-
 
     useEffect(() => {
         const textSizes: Record<number, string> = {
@@ -295,6 +300,10 @@ export function ReadingOverlay({
         }
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
+
+    useEffect(() => {
+        locationRef.current = location;
+    }, [location]);
 
     // useEffect(() => () => clearHideHeaderTimeout(), [])
     // useEffect(() => {
@@ -318,8 +327,6 @@ export function ReadingOverlay({
         selectionChanged.ifAvailable()
     }
     const handleClearSelection = useCallback(() => {
-
-
         setSelection(null);
         selectionChanged.ifAvailable()
     }, [selection]);
@@ -367,45 +374,6 @@ export function ReadingOverlay({
             clearInterval(intervalId);
         }
     }, []);
-
-
-    // const nextThemeTitle = theme === 'dark' ? 'Light' : 'Dark';
-
-    const injectCss = (contents: { document: Document }) => {
-        const doc = contents.document;
-
-        // удалим старый стиль, если он уже был
-        const prev = doc.getElementById("app-link-fix");
-        if (prev) prev.remove();
-
-        const style = doc.createElement("style");
-        style.id = "app-link-fix";
-        style.type = "text/css";
-        style.appendChild(
-            doc.createTextNode(`    
-            
-        
-        /* максимальная "пробивная" сила */
-        a, a:link, a:visited,
-        .calibre6 a, a.calibre6,
-        [class*="calibre"] a {
-          color: ${themeState.accent} !important;
-          text-decoration: underline !important;
-        }
-        a:hover, a:active {
-          opacity: 0.85 !important;
-        }
-        h1, h2, h3, h4, h5, h6, p, blockquote, pre { 
-          background-color: transparent !important;
-        }    
-      
-
-      `)
-        );
-
-        // ВАЖНО: добавляем в КОНЕЦ head, чтобы быть последними по каскаду
-        doc.head.appendChild(style);
-    };
 
     const loadChapters = (r: Rendition) => {
         const book = r.book;
@@ -459,8 +427,7 @@ export function ReadingOverlay({
             );
         });
     };
-
-
+    console.log("progressPercent: ", progressPercent);
     return (
         <div
             style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
@@ -599,21 +566,38 @@ export function ReadingOverlay({
                 url={fileUrl}
                 showToc={false}
                 location={location}
-                locationChanged={(epubcfi: string) => setLocation(epubcfi)}
-                readerStyles={readerTheme}
-                epubOptions={{
-                    flow: 'scrolled',
-                    manager: 'continuous',
+                locationChanged={(epubcfi: string) => {
+                    setLocation(epubcfi);
+                    updateProgressFromCfi(epubcfi);
                 }}
+                readerStyles={readerTheme}
+                // epubOptions={{
+                //     flow: 'scrolled',
+                //     manager: 'continuous',
+                // }}
+                swipeable
                 getRendition={(_rendition) => {
                     updateTheme(_rendition)
 
                     renditionRef.current = _rendition
                     bookRef.current = _rendition.book;
-                    _rendition.hooks.content.register(injectCss);
+                    // _rendition.hooks.content.register(injectCss);
 
                     loadChapters(_rendition);
+                    ensureLocations(_rendition)
+                        .then(() => {
+                            // 2) после построения сразу посчитать
+                            // @ts-ignore
+                            const current = _rendition.currentLocation?.()?.start?.cfi;
+                            if (current) updateProgressFromCfi(current);
+                        })
+                        .catch((e) => console.error("locations.generate failed", e));
 
+                    // 3) и дальше считать на relocated (самый корректный триггер)
+                    _rendition.on("relocated", (loc: any) => {
+                        const cfi = loc?.start?.cfi;
+                        if (cfi) updateProgressFromCfi(cfi);
+                    });
 
                     const handleRendered = (_: string, view: Contents) => {
                         if (view) {
@@ -646,46 +630,76 @@ export function ReadingOverlay({
 
                             // 3️⃣ вешаем своё поведение
 
-                            function logAllEvents(el: EventTarget, label = "") {
-                                const events = [
-                                    // mouse
-                                    "click", "mousedown", "mouseup",
-                                    "mouseenter", "mouseleave", "mouseover", "mouseout",
-
-                                    // touch
-                                    "touchstart", "touchmove", "touchend", "touchcancel",
-
-                                    // pointer
-                                    "pointerdown", "pointermove", "pointerup", "pointercancel",
-
-                                    // keyboard
-                                    "keydown", "keyup",
-
-                                    // focus
-                                    "focus", "blur",
-
-                                    // misc
-                                    "contextmenu",
-                                ];
-
-                                const handler = (e: Event) => {
-                                    console.log(`[${label}]`, e.type, e);
-                                };
-
-                                events.forEach((ev) =>
-                                    el.addEventListener(ev, handler, {capture: true})
-                                );
-
-
-                            }
-
-                            logAllEvents(a)
+                            // function logAllEvents(el: EventTarget, label = "") {
+                            //     const events = [
+                            //         // mouse
+                            //         "click", "mousedown", "mouseup",
+                            //         "mouseenter", "mouseleave", "mouseover", "mouseout",
+                            //
+                            //         // touch
+                            //         "touchstart", "touchmove", "touchend", "touchcancel",
+                            //
+                            //         // pointer
+                            //         "pointerdown", "pointermove", "pointerup", "pointercancel",
+                            //
+                            //         // keyboard
+                            //         "keydown", "keyup",
+                            //
+                            //         // focus
+                            //         "focus", "blur",
+                            //
+                            //         // misc
+                            //         "contextmenu",
+                            //     ];
+                            //
+                            //     const handler = (e: Event) => {
+                            //         console.log(`[${label}]`, e.type, e);
+                            //     };
+                            //
+                            //     events.forEach((ev) =>
+                            //         el.addEventListener(ev, handler, {capture: true})
+                            //     );
+                            //
+                            //
+                            // }
+                            //
+                            // logAllEvents(a)
 
                         });
                     };
                     _rendition.on('rendered', handleRendered);
                 }}
             />
+            <div
+                aria-label={`Reading progress: ${progressPercent}%`}
+                role="progressbar"
+                aria-valuenow={progressPercent}
+                aria-valuemin={1}
+                aria-valuemax={100}
+                style={{
+                    position: "fixed",
+                    left: 0,
+                    bottom: '20px',
+                    width: "100%",
+                    height: 6,
+                    background: themeState.separator,
+                    zIndex: 100,
+
+                }}
+            >
+                <div style={{ textAlign: 'center', fontSize: 14 }}>
+                    <span>{progressPercent}%</span>
+                </div>
+
+                <div
+                    style={{
+                        width: `${progressPercent}%`,
+                        height: "100%",
+                        background: themeState.accent,
+                        transition: "width 0.2s ease-out",
+                    }}
+                />
+            </div>
         </div>
     );
 }
