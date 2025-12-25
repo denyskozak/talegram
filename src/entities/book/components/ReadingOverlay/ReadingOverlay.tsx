@@ -1,6 +1,5 @@
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
 
-import "./ReadingOverlay.css";
 import {IReactReaderStyle, ReactReader, ReactReaderStyle} from "react-reader";
 
 import {Rendition, type Contents} from 'epubjs'
