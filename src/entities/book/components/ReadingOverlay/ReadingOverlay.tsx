@@ -57,11 +57,11 @@ export function ReadingOverlay({
     const [chaptersLoading, setChaptersLoading] = useState(false);
     const [isMenuModalVisibleGood, setMenuModalVisibleGood] = useState(true);
     const [currentChapterHref, setCurrentChapterHref] = useState<string | null>(null);
-    const [areControlsVisible, setControlsVisible] = useState(true);
+    // const [areControlsVisible, setControlsVisible] = useState(true);
 
     const [selection, setSelection] = useState<string | null>(null);
-    const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
@@ -256,33 +256,33 @@ export function ReadingOverlay({
         }
     }, [theme])
 
-    const clearHideHeaderTimeout = () => {
-        if (hideHeaderTimeoutRef.current) {
-            clearTimeout(hideHeaderTimeoutRef.current);
-            hideHeaderTimeoutRef.current = null;
-        }
-    };
+    // const clearHideHeaderTimeout = () => {
+    //     if (hideHeaderTimeoutRef.current) {
+    //         clearTimeout(hideHeaderTimeoutRef.current);
+    //         hideHeaderTimeoutRef.current = null;
+    //     }
+    // };
+    //
+    // const clearHideControlsTimeout = useCallback(() => {
+    //     if (hideControlsTimeoutRef.current) {
+    //         clearTimeout(hideControlsTimeoutRef.current);
+    //         hideControlsTimeoutRef.current = null;
+    //     }
+    // }, []);
 
-    const clearHideControlsTimeout = useCallback(() => {
-        if (hideControlsTimeoutRef.current) {
-            clearTimeout(hideControlsTimeoutRef.current);
-            hideControlsTimeoutRef.current = null;
-        }
-    }, []);
+    // const scheduleHideControls = useCallback(() => {
+    //     clearHideControlsTimeout();
+    //     hideControlsTimeoutRef.current = setTimeout(() => {
+    //         setControlsVisible(false);
+    //         setMenuOpen(false);
+    //     }, 5000);
+    // }, [clearHideControlsTimeout]);
 
-    const scheduleHideControls = useCallback(() => {
-        clearHideControlsTimeout();
-        hideControlsTimeoutRef.current = setTimeout(() => {
-            setControlsVisible(false);
-            setMenuOpen(false);
-        }, 5000);
-    }, [clearHideControlsTimeout]);
-
-    const handleRevealControls = useCallback(() => {
-        setControlsVisible(true);
-        scheduleHideControls();
-
-    }, [scheduleHideControls]);
+    // const handleRevealControls = useCallback(() => {
+    //     setControlsVisible(true);
+    //     scheduleHideControls();
+    //
+    // }, [scheduleHideControls]);
 
 
     useEffect(() => {
@@ -296,11 +296,11 @@ export function ReadingOverlay({
         renditionRef.current?.themes.fontSize(textSizes[textSize])
     }, [textSize])
 
-    useEffect(() => () => clearHideHeaderTimeout(), [])
-    useEffect(() => {
-        scheduleHideControls();
-        return () => clearHideControlsTimeout();
-    }, [scheduleHideControls, clearHideControlsTimeout]);
+    // useEffect(() => () => clearHideHeaderTimeout(), [])
+    // useEffect(() => {
+    //     scheduleHideControls();
+    //     return () => clearHideControlsTimeout();
+    // }, [scheduleHideControls, clearHideControlsTimeout]);
 
     const handleNextTextSize = () => {
         const next = textSize + 1 > 5 ? 1 : textSize + 1;
@@ -464,60 +464,58 @@ export function ReadingOverlay({
     return (
         <div
             style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
-            onPointerDown={handleRevealControls}
-            onTouchStart={handleRevealControls}
         >
-            {areControlsVisible ? (
-                <>
-                    <button
-                        type="button"
-                        onClick={safePrev}
-                        aria-label="Previous"
-                        style={{
-                            position: "absolute",
-                            left: '2vw',
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 2,
-                            border: "none",
-                            width: 52,
-                            height: 52,
-                            backgroundColor: themeState.background,
-                            opacity: 0.85,
-                            cursor: "pointer",
-                            fontSize: 32,
-                        }}
-                    >
-                        ⬅️
-                    </button>
+            {/*{areControlsVisible ? (*/}
+            {/*    <>*/}
+            {/*        <button*/}
+            {/*            type="button"*/}
+            {/*            onClick={safePrev}*/}
+            {/*            aria-label="Previous"*/}
+            {/*            style={{*/}
+            {/*                position: "absolute",*/}
+            {/*                left: '2vw',*/}
+            {/*                top: "50%",*/}
+            {/*                transform: "translateY(-50%)",*/}
+            {/*                zIndex: 2,*/}
+            {/*                border: "none",*/}
+            {/*                width: 52,*/}
+            {/*                height: 52,*/}
+            {/*                backgroundColor: themeState.background,*/}
+            {/*                opacity: 0.85,*/}
+            {/*                cursor: "pointer",*/}
+            {/*                fontSize: 32,*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            ⬅️*/}
+            {/*        </button>*/}
 
-                    {/* ПРАВАЯ стрелка */}
-                    <button
-                        type="button"
-                        onClick={safeNext}
-                        aria-label="Next"
-                        style={{
-                            position: "absolute",
-                            right: '2vw',
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 2,
-                            border: "none",
-                            width: 52,
-                            height: 52,
-                            backgroundColor: themeState.background,
-                            opacity: 0.85,
-                            cursor: "pointer",
-                            fontSize: 32,
-                        }}
-                    >
-                        ➡️
-                    </button>
-                </>
-            ) : null}
+            {/*        /!* ПРАВАЯ стрелка *!/*/}
+            {/*        <button*/}
+            {/*            type="button"*/}
+            {/*            onClick={safeNext}*/}
+            {/*            aria-label="Next"*/}
+            {/*            style={{*/}
+            {/*                position: "absolute",*/}
+            {/*                right: '2vw',*/}
+            {/*                top: "50%",*/}
+            {/*                transform: "translateY(-50%)",*/}
+            {/*                zIndex: 2,*/}
+            {/*                border: "none",*/}
+            {/*                width: 52,*/}
+            {/*                height: 52,*/}
+            {/*                backgroundColor: themeState.background,*/}
+            {/*                opacity: 0.85,*/}
+            {/*                cursor: "pointer",*/}
+            {/*                fontSize: 32,*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            ➡️*/}
+            {/*        </button>*/}
+            {/*    </>*/}
+            {/*) : null}*/}
             <div style={{
                 position: "fixed",
-                top: '16vh',
+                top: '14vh',
                 right: '1vh',
                 zIndex: '100',
                 width: 'fit-content',
@@ -525,31 +523,29 @@ export function ReadingOverlay({
                 display: 'flex',
                 flexDirection: 'row-reverse'
             }}>
-                {areControlsVisible ? (
-                    <>
-                        <button style={{
-                            background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
-                            border: 'none',
-                            borderRadius: 900,
-                            opacity: 0.9
-                        }}
-                                onClick={() => {
-                                    setMenuOpen(!isMenuOpen);
-                                    selectionChanged.ifAvailable();
-                                }}><span style={{fontSize: 32}}>⚙️</span></button>
-                        {isMenuOpen && !isChaptersModalOpen
-                            ? (
-                                <>
-                                    {/*<Button mode="filled" size="s"*/}
-                                    {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
-                                    <Button mode="filled" size="s"
-                                            onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
-                                    <Button mode="filled" size="s"
-                                            onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
-                                </>)
-                            : null}
-                    </>
-                ) : null}
+
+                    <button style={{
+                        background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
+                        border: 'none',
+                        borderRadius: 900,
+                        opacity: isMenuModalVisibleGood ? 0.9 : 0.4
+                    }}
+                            onClick={() => {
+                                setMenuOpen(!isMenuOpen);
+                                selectionChanged.ifAvailable();
+                            }}><span style={{fontSize: 32}}>⚙️</span></button>
+                    {isMenuOpen && !isChaptersModalOpen
+                        ? (
+                            <>
+                                {/*<Button mode="filled" size="s"*/}
+                                {/*        onClick={() => setTheme(nextThemeTitle.toLocaleLowerCase() as 'dark' | 'light')}>{nextThemeTitle}</Button>*/}
+                                <Button mode="filled" size="s"
+                                        onClick={handleNextTextSize}>{t('reading-overlay.toggle-font-size')}{` ${textSize !== 5 ? '🔼' : '⬇️'}`}</Button>
+                                <Button mode="filled" size="s"
+                                        onClick={handleOpenChapters}>{t('reading-overlay.chapters')}</Button>
+                            </>)
+                        : null}
+
             </div>
             <Modal
 
@@ -605,7 +601,10 @@ export function ReadingOverlay({
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 readerStyles={readerTheme}
-
+                epubOptions={{
+                    flow: 'scrolled',
+                    manager: 'continuous',
+                }}
                 getRendition={(_rendition) => {
                     updateTheme(_rendition)
 
@@ -613,26 +612,6 @@ export function ReadingOverlay({
                     bookRef.current = _rendition.book;
                     _rendition.hooks.content.register(injectCss);
 
-                    // ВАЖНО: один раз на каждый contents (каждый iframe/глава)
-                    _rendition.hooks.content.register((contents: Contents) => {
-                        readerIframetRef.current = contents;
-
-                        const doc = contents.document;
-                        const win = contents.window;
-
-                        // 1) tap -> click (на iOS надежнее touchstart)
-                        doc.addEventListener("click", handleRevealControls, { capture: true, passive: true });
-
-                        // 2) выделение текста
-                        doc.addEventListener("selectionchange", handleRevealControls, { passive: true });
-
-                        // 3) прокрутка
-                        win?.addEventListener("scroll", handleRevealControls, { passive: true, capture: true });
-
-                        // 4) на всякий случай pointerdown (где поддерживается)
-                        doc.addEventListener("pointerdown", handleRevealControls, { capture: true, passive: true });
-
-                    });
                     loadChapters(_rendition);
 
 
