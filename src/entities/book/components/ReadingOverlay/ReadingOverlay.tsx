@@ -617,21 +617,21 @@ export function ReadingOverlay({
                     _rendition.hooks.content.register((contents: Contents) => {
                         readerIframetRef.current = contents;
 
-                        // iOS Safari: лучше ловить touch* + click
-                        // contents.on использует внутренние механизмы epub.js и обычно стабильнее
-                        contents.on("touchstart", handleRevealControls);
-                        contents.on("touchmove", handleRevealControls);
-                        contents.on("touchend", handleRevealControls);
+                        const doc = contents.document;
+                        const win = contents.window;
 
-                        // desktop / fallback
-                        contents.on("mousedown", handleRevealControls);
-                        contents.on("mousemove", handleRevealControls);
-                        contents.on("click", handleRevealControls);
+                        // 1) tap -> click (на iOS надежнее touchstart)
+                        doc.addEventListener("click", handleRevealControls, { capture: true, passive: true });
 
-                        // скролл (важно в scrolled-режиме)
-                        try {
-                            contents.window?.addEventListener("scroll", handleRevealControls, { passive: true, capture: true });
-                        } catch {}
+                        // 2) выделение текста
+                        doc.addEventListener("selectionchange", handleRevealControls, { passive: true });
+
+                        // 3) прокрутка
+                        win?.addEventListener("scroll", handleRevealControls, { passive: true, capture: true });
+
+                        // 4) на всякий случай pointerdown (где поддерживается)
+                        doc.addEventListener("pointerdown", handleRevealControls, { capture: true, passive: true });
+
                     });
                     loadChapters(_rendition);
 
