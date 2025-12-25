@@ -238,7 +238,7 @@ export function ReadingOverlay({
         container: {
             ...ReactReaderStyle.container,
             height: '90vh',
-            paddingTop: tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? '10vh' : '4vh',
+            paddingTop: tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? '4vh' : '2vh',
             // padding: 24
         },
         readerArea: {
