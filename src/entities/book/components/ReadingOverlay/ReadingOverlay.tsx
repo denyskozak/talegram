@@ -205,6 +205,7 @@ export function ReadingOverlay({
             ...ReactReaderStyle.reader,
             color: themeState.background,
             transition: undefined,
+            inset: 0,
         },
 
         // arrow: {
@@ -557,6 +558,7 @@ export function ReadingOverlay({
             <ReactReader
                 // readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
+                swipeable
                 showToc={false}
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
