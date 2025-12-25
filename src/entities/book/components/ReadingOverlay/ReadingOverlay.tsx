@@ -603,7 +603,10 @@ export function ReadingOverlay({
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
                 readerStyles={readerTheme}
-
+                epubOptions={{
+                    flow: 'scrolled',
+                    manager: 'continuous',
+                }}
                 getRendition={(_rendition) => {
                     updateTheme(_rendition)
 
