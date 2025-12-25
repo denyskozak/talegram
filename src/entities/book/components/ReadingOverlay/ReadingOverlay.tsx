@@ -612,6 +612,27 @@ export function ReadingOverlay({
                     renditionRef.current = _rendition
                     bookRef.current = _rendition.book;
                     _rendition.hooks.content.register(injectCss);
+
+                    // ВАЖНО: один раз на каждый contents (каждый iframe/глава)
+                    _rendition.hooks.content.register((contents: Contents) => {
+                        readerIframetRef.current = contents;
+
+                        // iOS Safari: лучше ловить touch* + click
+                        // contents.on использует внутренние механизмы epub.js и обычно стабильнее
+                        contents.on("touchstart", handleRevealControls);
+                        contents.on("touchmove", handleRevealControls);
+                        contents.on("touchend", handleRevealControls);
+
+                        // desktop / fallback
+                        contents.on("mousedown", handleRevealControls);
+                        contents.on("mousemove", handleRevealControls);
+                        contents.on("click", handleRevealControls);
+
+                        // скролл (важно в scrolled-режиме)
+                        try {
+                            contents.window?.addEventListener("scroll", handleRevealControls, { passive: true, capture: true });
+                        } catch {}
+                    });
                     loadChapters(_rendition);
 
 
@@ -622,14 +643,11 @@ export function ReadingOverlay({
 
                         const doc = view.document;
 
-                        doc.addEventListener('pointerdown', handleRevealControls);
-                        doc.addEventListener('touchstart', handleRevealControls);
 
                         const links = Array.from(doc.querySelectorAll("a"));
 
                         links.forEach((a) => {
                             const href = a.getAttribute("href");
-                            console.log("href: ", href);
                             if (!href) return;
 
                             // пропускаем внутреннюю навигацию EPUB
