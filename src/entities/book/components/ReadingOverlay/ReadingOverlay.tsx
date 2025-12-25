@@ -71,7 +71,7 @@ export function ReadingOverlay({
     useLayoutEffect(() => {
         const goodMenuVisibleTimeoutId = setTimeout(() => {
             setMenuModalVisibleGood(false)
-        }, 6 * 1000);
+        }, 8 * 1000);
 
         const hideSwipeTipTimeoutId = setTimeout(() => {
             setShowSwipeTip(false)
