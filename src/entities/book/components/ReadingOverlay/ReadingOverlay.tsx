@@ -280,6 +280,7 @@ export function ReadingOverlay({
     const handleRevealControls = useCallback(() => {
         setControlsVisible(true);
         scheduleHideControls();
+        alert(2)
     }, [scheduleHideControls]);
 
 
@@ -463,7 +464,6 @@ export function ReadingOverlay({
         <div
             style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
             onPointerDown={handleRevealControls}
-            onTouchEnd={handleRevealControls}
         >
             {areControlsVisible ? (
                 <>
