@@ -492,8 +492,10 @@ export function ReadingOverlay({
                 width: 'fit-content',
                 gap: '5px',
                 display: 'flex',
-                flexDirection: 'row-reverse'
-            }}>
+                flexDirection: 'row-reverse',
+            }}
+            onTouchMove={event => event?.preventDefault()}
+            >
 
                     <button style={{
                         background: isMenuModalVisibleGood ? themeState.accent : themeState.background,
