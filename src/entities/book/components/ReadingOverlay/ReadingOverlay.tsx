@@ -14,7 +14,7 @@ import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 import {hapticFeedback} from '@tma.js/sdk';
 
 
-const { selectionChanged } = hapticFeedback;
+const { selectionChanged, impactOccurred } = hapticFeedback;
 
 type ReadingOverlayProps = {
     book?: Book | null;
@@ -110,6 +110,7 @@ export function ReadingOverlay({
 
         const pct = Math.round(((idx + 1) / total) * 100);
         setProgressPercent(Math.min(100, Math.max(1, pct)));
+        impactOccurred.ifAvailable('medium');
     }, []);
     const isCoverItem = (it: any) => {
         const props = Array.isArray(it?.properties) ? it.properties.join(" ") : String(it?.properties || "");
@@ -234,7 +235,7 @@ export function ReadingOverlay({
 
         container: {
             ...ReactReaderStyle.container,
-            height: '95vh',
+            height: '90vh',
         },
         readerArea: {
             ...ReactReaderStyle.readerArea,
