@@ -12,6 +12,7 @@ import type {Book} from "@/entities/book/types";
 import {buildMiniAppDirectLink} from "@/shared/lib/telegram.ts";
 // import {useMediaQuery} from "@uidotdev/usehooks";
 import {hapticFeedback} from '@tma.js/sdk';
+import {useLaunchParams} from "@tma.js/sdk-react";
 
 
 const { selectionChanged, impactOccurred } = hapticFeedback;
@@ -229,6 +230,7 @@ export function ReadingOverlay({
         themes.override('color', themeState.text)
         themes.override('background', themeState.background)
     }
+    const {tgWebAppFullscreen, tgWebAppPlatform} = useLaunchParams();
 
     const readerTheme: IReactReaderStyle = {
         ...ReactReaderStyle,
@@ -236,6 +238,8 @@ export function ReadingOverlay({
         container: {
             ...ReactReaderStyle.container,
             height: '90vh',
+            paddingTop: tgWebAppFullscreen && tgWebAppPlatform === 'ios' ? '10vh' : '4vh',
+            // padding: 24
         },
         readerArea: {
             ...ReactReaderStyle.readerArea,
