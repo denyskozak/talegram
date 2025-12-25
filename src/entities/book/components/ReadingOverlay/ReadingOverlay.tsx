@@ -50,7 +50,7 @@ export function ReadingOverlay({
     const bookRef = useRef<any | null>(null);
     const renditionRef = useRef<Rendition | undefined>(undefined)
     const [isMenuOpen, setMenuOpen] = useState(false);
-    const [textSize, setTextSize] = useState(3);
+    const [textSize, setTextSize] = useState(4);
     const rendition = useRef<Rendition | undefined>(undefined)
     const [chapters, setChapters] = useState<TocItem[]>([]);
     const [isChaptersModalOpen, setChaptersModalOpen] = useState(false);
