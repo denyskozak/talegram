@@ -58,14 +58,13 @@ export function ReadingOverlay({
     const [isMenuModalVisibleGood, setMenuModalVisibleGood] = useState(true);
     const [currentChapterHref, setCurrentChapterHref] = useState<string | null>(null);
     const [areControlsVisible, setControlsVisible] = useState(true);
-
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const [selection, setSelection] = useState<string | null>(null);
-    const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const readerIframetRef = useRef<null | Contents>(null);
     const themeState = useTheme();
     const [theme] = useState<ITheme>('dark')
-
+    const hideHeaderTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     useLayoutEffect(() => {
         const timeoutId = setTimeout(() => {
             setMenuModalVisibleGood(false)
@@ -282,7 +281,6 @@ export function ReadingOverlay({
         scheduleHideControls();
     }, [scheduleHideControls]);
 
-
     useEffect(() => {
         const textSizes: Record<number, string> = {
             1: '80%',
@@ -458,60 +456,78 @@ export function ReadingOverlay({
         });
     };
 
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const handleActivity = () => {
+            handleRevealControls();
+        };
+
+        container.addEventListener("touchstart", handleActivity, {passive: true});
+        container.addEventListener("mousedown", handleActivity, {passive: true});
+        container.addEventListener("mousemove", handleActivity, {passive: true});
+
+        return () => {
+            container.removeEventListener("touchstart", handleActivity);
+            container.removeEventListener("mousedown", handleActivity);
+            container.removeEventListener("mousemove", handleActivity);
+        };
+    }, [handleRevealControls]);
 
     return (
         <div
-            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative'}}
-            onPointerDown={handleRevealControls}
+            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
+            ref={containerRef}
         >
-            {areControlsVisible ? (
-                <>
-                    <button
-                        type="button"
-                        onClick={safePrev}
-                        aria-label="Previous"
-                        style={{
-                            position: "absolute",
-                            left: '2vw',
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 2,
-                            border: "none",
-                            width: 44,
-                            height: 44,
-                            backgroundColor: themeState.background,
-                            opacity: 0.85,
-                            cursor: "pointer",
-                            fontSize: 32,
-                        }}
-                    >
-                        ⬅️
-                    </button>
+            {/*{areControlsVisible ? (*/}
+            {/*    <>*/}
+            {/*        <button*/}
+            {/*            type="button"*/}
+            {/*            onClick={safePrev}*/}
+            {/*            aria-label="Previous"*/}
+            {/*            style={{*/}
+            {/*                position: "absolute",*/}
+            {/*                left: '2vw',*/}
+            {/*                top: "50%",*/}
+            {/*                transform: "translateY(-50%)",*/}
+            {/*                zIndex: 2,*/}
+            {/*                border: "none",*/}
+            {/*                width: 44,*/}
+            {/*                height: 44,*/}
+            {/*                backgroundColor: themeState.background,*/}
+            {/*                opacity: 0.85,*/}
+            {/*                cursor: "pointer",*/}
+            {/*                fontSize: 32,*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            ⬅️*/}
+            {/*        </button>*/}
 
-                    {/* ПРАВАЯ стрелка */}
-                    <button
-                        type="button"
-                        onClick={safeNext}
-                        aria-label="Next"
-                        style={{
-                            position: "absolute",
-                            right: '2vw',
-                            top: "50%",
-                            transform: "translateY(-50%)",
-                            zIndex: 2,
-                            border: "none",
-                            width: 44,
-                            height: 44,
-                            backgroundColor: themeState.background,
-                            opacity: 0.85,
-                            cursor: "pointer",
-                            fontSize: 32,
-                        }}
-                    >
-                        ➡️
-                    </button>
-                </>
-            ) : null}
+            {/*        /!* ПРАВАЯ стрелка *!/*/}
+            {/*        <button*/}
+            {/*            type="button"*/}
+            {/*            onClick={safeNext}*/}
+            {/*            aria-label="Next"*/}
+            {/*            style={{*/}
+            {/*                position: "absolute",*/}
+            {/*                right: '2vw',*/}
+            {/*                top: "50%",*/}
+            {/*                transform: "translateY(-50%)",*/}
+            {/*                zIndex: 2,*/}
+            {/*                border: "none",*/}
+            {/*                width: 44,*/}
+            {/*                height: 44,*/}
+            {/*                backgroundColor: themeState.background,*/}
+            {/*                opacity: 0.85,*/}
+            {/*                cursor: "pointer",*/}
+            {/*                fontSize: 32,*/}
+            {/*            }}*/}
+            {/*        >*/}
+            {/*            ➡️*/}
+            {/*        </button>*/}
+            {/*    </>*/}
+            {/*) : null}*/}
             <div style={{
                 position: "fixed",
                 top: '16vh',
