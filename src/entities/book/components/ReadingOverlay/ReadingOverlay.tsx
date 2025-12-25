@@ -461,7 +461,7 @@ export function ReadingOverlay({
 
     return (
         <div
-            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'scroll'}}
+            style={{height: isPreview ? '95vh' : '100vh', width: '100vw', position: 'relative', overflow: 'hidden'}}
             onPointerDown={handleRevealControls}
         >
             {areControlsVisible ? (
@@ -598,7 +598,6 @@ export function ReadingOverlay({
             <ReactReader
                 // readerStyles={theme === 'dark' ? darkReaderTheme : lightReaderTheme}
                 url={fileUrl}
-                swipeable
                 showToc={false}
                 location={location}
                 locationChanged={(epubcfi: string) => setLocation(epubcfi)}
