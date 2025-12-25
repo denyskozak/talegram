@@ -624,7 +624,7 @@ export function ReadingOverlay({
                         const doc = view.document;
 
                         doc.addEventListener('pointerdown', handleRevealControls);
-                        doc.addEventListener('touchmove', handleRevealControls);
+                        doc.addEventListener('click', handleRevealControls);
 
                         const links = Array.from(doc.querySelectorAll("a"));
 
